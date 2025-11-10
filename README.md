@@ -1,36 +1,207 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Armada Den - Your Productivity Hub
+
+A modern, full-featured productivity application built with Next.js 16, featuring Gmail integration, web search, and AI-powered chat capabilities.
+
+## Features
+
+- 🔐 **Authentication**: Secure user authentication with JWT tokens
+- 📧 **Gmail Integration**: Read, compose, and send emails directly from the app
+- 🔍 **Web Search**: Powered by SerpAPI for comprehensive web searches
+- 💬 **AI Chat**: Integrated AI assistant using OpenAI GPT-4
+- 🎨 **Modern UI**: Beautiful, responsive design with dark mode support
+- ⚡ **Real-time Updates**: Live data synchronization and updates
+
+## Tech Stack
+
+- **Framework**: Next.js 16 (App Router)
+- **Language**: TypeScript
+- **Styling**: Tailwind CSS 4
+- **UI Components**: Radix UI, Lucide Icons
+- **AI Integration**: Vercel AI SDK with OpenAI
+- **Backend API**: FastAPI with Composio v0.9.1
+
+## Prerequisites
+
+- Node.js 18+ and pnpm
+- Backend API running (see `COMPOSIO_FRONTEND_INTEGRATION_GUIDE.md`)
+- OpenAI API key (for chat feature)
 
 ## Getting Started
 
-First, run the development server:
+1. **Clone the repository**
+   ```bash
+   git clone <repository-url>
+   cd armada-den-frontend
+   ```
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+2. **Install dependencies**
+   ```bash
+   pnpm install
+   ```
+
+3. **Set up environment variables**
+   ```bash
+   cp .env.local.example .env.local
+   ```
+   
+   Edit `.env.local` and add your configuration:
+   ```env
+   NEXT_PUBLIC_API_URL=http://localhost:8000/api
+   OPENAI_API_KEY=your_openai_api_key_here
+   ```
+
+4. **Start the development server**
+   ```bash
+   pnpm dev
+   ```
+
+5. **Open your browser**
+   Navigate to [http://localhost:3000](http://localhost:3000)
+
+## Project Structure
+
+```
+armada-den-frontend/
+├── app/                      # Next.js app router pages
+│   ├── api/                  # API routes
+│   │   └── chat/            # Chat API endpoint
+│   ├── gmail/               # Gmail OAuth callback
+│   ├── search/              # Search OAuth callback
+│   ├── layout.tsx           # Root layout with providers
+│   └── page.tsx             # Home page
+├── components/              # React components
+│   ├── auth/               # Authentication components
+│   ├── chat/               # Chat interface
+│   ├── gmail/              # Gmail components
+│   ├── layout/             # Layout components
+│   ├── search/             # Search components
+│   └── ui/                 # Reusable UI components
+├── lib/                    # Utility libraries
+│   ├── api.ts             # API client
+│   ├── types.ts           # TypeScript types
+│   └── utils.ts           # Helper functions
+└── public/                # Static assets
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Usage
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Authentication
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+1. Register a new account or sign in with existing credentials
+2. The app uses JWT tokens stored in localStorage for authentication
 
-## Learn More
+### Gmail Integration
 
-To learn more about Next.js, take a look at the following resources:
+1. Navigate to the Gmail tab
+2. Click "Connect Gmail Account"
+3. Authorize the application through Google OAuth
+4. Start reading and composing emails
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### Web Search
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+1. Navigate to the Search tab
+2. Click "Connect Search Engine" (first time only)
+3. Enter your search query and press Enter
+4. View search results and history
 
-## Deploy on Vercel
+### AI Chat
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+1. Navigate to the Chat tab
+2. Type your message in the input field
+3. Get AI-powered responses from GPT-4
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## API Integration
+
+The frontend connects to a FastAPI backend with Composio integration. See `COMPOSIO_FRONTEND_INTEGRATION_GUIDE.md` for detailed API documentation.
+
+### Key Endpoints
+
+- **Auth**: `/api/auth/register`, `/api/auth/jwt/login`
+- **Gmail**: `/api/gmail/connect`, `/api/gmail/read`, `/api/gmail/send`
+- **Search**: `/api/search/connect`, `/api/search/query`
+- **User**: `/api/users/me`
+
+## Development
+
+### Available Scripts
+
+- `pnpm dev` - Start development server
+- `pnpm build` - Build for production
+- `pnpm start` - Start production server
+- `pnpm lint` - Run ESLint
+
+### Code Style
+
+- TypeScript for type safety
+- ESLint for code quality
+- Tailwind CSS for styling
+- Component-based architecture
+
+## Environment Variables
+
+| Variable | Description | Required |
+|----------|-------------|----------|
+| `NEXT_PUBLIC_API_URL` | Backend API URL | Yes |
+| `OPENAI_API_KEY` | OpenAI API key for chat | Yes |
+
+## Features in Detail
+
+### Gmail Integration
+- Read emails with filtering (all/unread)
+- Compose and send emails
+- Create drafts
+- OAuth 2.0 authentication
+- Real-time email synchronization
+
+### Web Search
+- Powered by SerpAPI
+- Search history tracking
+- Result caching
+- Quick re-search from history
+
+### AI Chat
+- GPT-4 powered conversations
+- Context-aware responses
+- Streaming responses
+- Message history
+
+## Troubleshooting
+
+### Backend Connection Issues
+- Ensure the backend API is running on `http://localhost:8000`
+- Check CORS settings in the backend
+- Verify API URL in `.env.local`
+
+### OAuth Callback Errors
+- Ensure callback URLs match in both frontend and backend
+- Check that redirect URLs are properly configured in Composio
+
+### Chat Not Working
+- Verify `OPENAI_API_KEY` is set correctly
+- Check OpenAI API quota and billing
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Submit a pull request
+
+## License
+
+MIT License - see LICENSE file for details
+
+## Support
+
+For issues and questions:
+- Check the `COMPOSIO_FRONTEND_INTEGRATION_GUIDE.md`
+- Review backend logs for API errors
+- Open an issue on GitHub
+
+## Acknowledgments
+
+- Built with [Next.js](https://nextjs.org/)
+- UI components from [Radix UI](https://www.radix-ui.com/)
+- Icons from [Lucide](https://lucide.dev/)
+- AI powered by [OpenAI](https://openai.com/)
+- Backend integration via [Composio](https://composio.dev/)
