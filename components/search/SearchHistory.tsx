@@ -54,7 +54,7 @@ export function SearchHistory({ onSelectQuery }: SearchHistoryProps) {
       <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
         Search History
       </h3>
-      {history.map((item) => (
+      {history.map((item: SearchHistoryItem) => (
         <button
           key={item.id}
           onClick={() => onSelectQuery(item.query)}

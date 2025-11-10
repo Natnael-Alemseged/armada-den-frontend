@@ -7,6 +7,7 @@ import { useAppSelector, useAppDispatch } from '@/lib/hooks';
 import { sendChatMessage, fetchConversations, fetchConversation, deleteConversation } from '@/lib/features/chat/chatThunk';
 import { addOptimisticMessage, clearCurrentConversation } from '@/lib/features/chat/chatSlice';
 import { Message, MessageRole, Conversation } from '@/lib/types';
+import { MessageContent } from './MessageContent';
 
 export function ChatView() {
   const dispatch = useAppDispatch();
@@ -28,8 +29,17 @@ export function ChatView() {
   }, [messages]);
 
   useEffect(() => {
-    // Load conversations on mount
-    dispatch(fetchConversations({ page: 1, pageSize: 50 }));
+    // Load conversations on mount with error handling
+    const loadConversations = async () => {
+      try {
+        await dispatch(fetchConversations({ page: 1, pageSize: 50 })).unwrap();
+      } catch (err) {
+        console.error('Failed to load conversations:', err);
+        // Error is already handled by Redux, just log it
+      }
+    };
+    
+    loadConversations();
   }, [dispatch]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -138,14 +148,14 @@ export function ChatView() {
     }
   };
 
-  const filteredConversations = conversations.filter((conv: Conversation) =>
-    conv.title.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredConversations = (conversations || []).filter((conv: Conversation) =>
+    conv?.title?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   return (
-    <div className="flex flex-col h-full bg-gray-50 dark:bg-gray-900 relative">
+    <div className="flex flex-col h-full bg-gradient-to-br from-gray-50 to-white dark:from-gray-900 dark:to-gray-800 relative">
       {/* Header */}
-      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-4 flex items-center justify-between">
+      <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-b border-gray-200 dark:border-gray-700 p-4 flex items-center justify-between shadow-sm">
         <div className="flex items-center gap-3">
           <button
             onClick={() => setShowHistory(!showHistory)}
@@ -165,7 +175,7 @@ export function ChatView() {
         </div>
         <button
           onClick={handleNewChat}
-          className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+          className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white rounded-lg transition-all duration-200 shadow-md hover:shadow-lg hover:scale-105"
           title="Start new conversation"
         >
           <MessageSquarePlus className="w-5 h-5" />
@@ -180,7 +190,7 @@ export function ChatView() {
             className="fixed inset-0 bg-black/50 z-40"
             onClick={() => setShowHistory(false)}
           />
-          <div className="fixed left-0 top-0 bottom-0 w-80 bg-white dark:bg-gray-800 shadow-xl z-50 flex flex-col">
+          <div className="fixed left-0 top-0 bottom-0 w-80 bg-white dark:bg-gray-800 shadow-2xl z-50 flex flex-col rounded-r-2xl">
             <div className="p-4 border-b border-gray-200 dark:border-gray-700">
               <div className="flex items-center justify-between mb-3">
                 <h3 className="font-semibold text-gray-900 dark:text-white">
@@ -257,8 +267,8 @@ export function ChatView() {
       )}
 
       {/* Messages Area */}
-      <div className="flex-1 overflow-auto p-4 space-y-4">
-        {messages.length === 0 ? (
+      <div className="flex-1 overflow-auto p-4 space-y-4 scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600">
+        {!messages || messages.length === 0 ? (
           <div className="flex items-center justify-center h-full text-gray-500 dark:text-gray-400">
             <div className="text-center max-w-md">
               <Bot className="w-16 h-16 mx-auto mb-4 opacity-50" />
@@ -270,7 +280,7 @@ export function ChatView() {
           </div>
         ) : (
           <>
-            {messages.map((message: Message) => (
+            {(messages || []).map((message: Message) => (
               <div
                 key={message.id}
                 className={cn(
@@ -285,15 +295,16 @@ export function ChatView() {
                 )}
                 <div
                   className={cn(
-                    'max-w-[70%] rounded-lg px-4 py-3',
+                    'max-w-[70%] rounded-2xl px-4 py-3 shadow-sm',
                     message.role === 'USER'
-                      ? 'bg-blue-600 text-white'
+                      ? 'bg-gradient-to-r from-blue-600 to-blue-500 text-white'
                       : 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white border border-gray-200 dark:border-gray-700'
                   )}
                 >
-                  <p className="text-sm whitespace-pre-wrap break-words">
-                    {message.content}
-                  </p>
+                  <MessageContent 
+                    content={message.content} 
+                    isUser={message.role === 'USER'}
+                  />
                   {message.created_at && (
                     <p className={cn(
                       "text-xs mt-1",
@@ -315,7 +326,7 @@ export function ChatView() {
                 <div className="flex-shrink-0 w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
                   <Bot className="w-5 h-5 text-blue-600 dark:text-blue-400" />
                 </div>
-                <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-3">
+                <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl px-4 py-3 shadow-sm">
                   <Loader2 className="w-5 h-5 animate-spin text-blue-600" />
                 </div>
               </div>
@@ -333,7 +344,7 @@ export function ChatView() {
       )}
 
       {/* Input Area */}
-      <div className="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 p-4">
+      <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-t border-gray-200 dark:border-gray-700 p-4 shadow-lg">
         <form onSubmit={handleSubmit} className="flex gap-2">
           <input
             type="text"
@@ -341,12 +352,12 @@ export function ChatView() {
             onChange={(e) => setInput(e.target.value)}
             placeholder="Type your message..."
             disabled={sendingMessage}
-            className="flex-1 px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white disabled:opacity-50"
+            className="flex-1 px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white disabled:opacity-50 shadow-sm transition-all"
           />
           <button
             type="submit"
             disabled={sendingMessage || !input.trim()}
-            className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+            className="px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white rounded-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 shadow-md hover:shadow-lg hover:scale-105"
           >
             {sendingMessage ? (
               <Loader2 className="w-5 h-5 animate-spin" />

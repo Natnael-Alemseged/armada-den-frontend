@@ -1,5 +1,13 @@
 import axios from "axios";
 import { BASE_URL } from "../constants/endpoints";
+import type { AppDispatch } from "../store";
+
+// Store reference will be set after store initialization
+let storeDispatch: AppDispatch | null = null;
+
+export const setStoreDispatch = (dispatch: AppDispatch) => {
+    storeDispatch = dispatch;
+};
 
 // Create axios instance with base configuration
 export const apiClient = axios.create({
@@ -76,14 +84,45 @@ apiClient.interceptors.response.use(
         return response;
     },
     (error) => {
-        const status = error.response?.status;
-        console.error("API Error:", {
-            status,
-            url: error.config?.url,
-            data: error.response?.data,
-        });
+        // Handle different error types
+        if (error.response) {
+            // Server responded with error status
+            console.error("API Error Response:", {
+                status: error.response.status,
+                url: error.config?.url,
+                data: error.response.data,
+                message: error.message,
+            });
 
-        // Removed automatic logout on 401 - let individual components handle auth errors
+            // Handle 401 Unauthorized - logout user
+            if (error.response.status === 401) {
+                console.warn("401 Unauthorized - Logging out user");
+                
+                // Clear token immediately
+                setAuthToken(null);
+                
+                // Dispatch logout action if store is available
+                if (storeDispatch) {
+                    // Import logout action dynamically to avoid circular dependency
+                    import('../slices/authSlice').then(({ logout }) => {
+                        storeDispatch!(logout());
+                    });
+                }
+            }
+        } else if (error.request) {
+            // Request was made but no response received
+            console.error("API Error - No Response:", {
+                url: error.config?.url,
+                message: error.message,
+                code: error.code,
+            });
+        } else {
+            // Error in request setup
+            console.error("API Error - Request Setup:", {
+                message: error.message,
+                stack: error.stack,
+            });
+        }
 
         return Promise.reject(error);
     }

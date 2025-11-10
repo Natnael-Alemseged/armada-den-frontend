@@ -149,7 +149,7 @@ export const WebhookRequestSchema = z.object({
     "Payout",
     "SubGoal",
   ]),
-  data: z.record(z.any()),
+  data: z.record(z.string(), z.unknown()),
   id: z.string().uuid().optional(), // for update/delete operations
 })
 

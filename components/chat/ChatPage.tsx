@@ -2,11 +2,14 @@
 
 import React from 'react';
 import { ChatView } from './ChatView';
+import { ChatErrorBoundary } from './ChatErrorBoundary';
 
 export function ChatPage() {
   return (
     <div className="h-full">
-      <ChatView />
+      <ChatErrorBoundary>
+        <ChatView />
+      </ChatErrorBoundary>
     </div>
   );
 }

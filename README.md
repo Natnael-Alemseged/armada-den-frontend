@@ -142,7 +142,56 @@ The frontend connects to a FastAPI backend with Composio integration. See `COMPO
 | Variable | Description | Required |
 |----------|-------------|----------|
 | `NEXT_PUBLIC_API_URL` | Backend API URL | Yes |
-| `OPENAI_API_KEY` | OpenAI API key for chat | Yes |
+| `NEXT_PUBLIC_APP_URL` | Frontend application URL | Yes |
+| `OPENAI_API_KEY` | OpenAI API key for chat | Optional |
+
+## Deployment
+
+### Quick Deploy to Vercel
+
+1. **Fork/Clone this repository**
+
+2. **Deploy to Vercel**
+   - Visit [vercel.com](https://vercel.com)
+   - Import your repository
+   - Add environment variables:
+     ```
+     NEXT_PUBLIC_API_URL=https://your-backend-api.com/api
+     NEXT_PUBLIC_APP_URL=https://your-domain.vercel.app
+     ```
+   - Click Deploy
+
+3. **Verify deployment**
+   - Test authentication
+   - Check API connectivity
+   - Verify all features work
+
+### Detailed Deployment Guide
+
+For comprehensive deployment instructions including:
+- Vercel deployment (CLI & Dashboard)
+- Netlify deployment
+- AWS Amplify deployment
+- Docker deployment
+- Troubleshooting tips
+
+See **[DEPLOYMENT.md](./DEPLOYMENT.md)** for the complete guide.
+
+### Environment Variables for Production
+
+Copy these to your Vercel/Netlify dashboard:
+
+```bash
+NEXT_PUBLIC_API_URL=https://your-backend-api.com/api
+NEXT_PUBLIC_APP_URL=https://your-frontend-domain.com
+```
+
+Optional variables:
+```bash
+OPENAI_API_KEY=your-openai-key
+NEXT_PUBLIC_GOOGLE_ANALYTICS_ID=your-ga-id
+NEXT_PUBLIC_SENTRY_DSN=your-sentry-dsn
+```
 
 ## Features in Detail
 

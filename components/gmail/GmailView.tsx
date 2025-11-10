@@ -50,9 +50,11 @@ export function GmailView() {
 
     if (!connected) {
         return (
-            <div className="flex items-center justify-center h-full p-8">
+            <div className="flex items-center justify-center h-full p-8 bg-gradient-to-br from-gray-50 to-white dark:from-gray-900 dark:to-gray-800">
                 <div className="text-center max-w-md">
-                    <Mail className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                    <div className="w-20 h-20 bg-gradient-to-br from-blue-600 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg">
+                        <Mail className="w-10 h-10 text-white" />
+                    </div>
                     <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
                         Connect Your Gmail
                     </h2>
@@ -60,13 +62,13 @@ export function GmailView() {
                         Connect your Gmail account to read and send emails directly from Armada Den.
                     </p>
                     {error && (
-                        <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-red-600 dark:text-red-400 text-sm">
+                        <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl text-red-600 dark:text-red-400 text-sm">
                             {error}
                         </div>
                     )}
                     <button
                         onClick={handleConnectGmail}
-                        className="bg-blue-600 hover:bg-blue-700 text-white font-medium px-6 py-3 rounded-lg transition-colors"
+                        className="bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white font-medium px-6 py-3 rounded-xl transition-all duration-200 shadow-md hover:shadow-lg hover:scale-105"
                     >
                         Connect Gmail Account
                     </button>
@@ -76,21 +78,21 @@ export function GmailView() {
     }
 
     return (
-        <div className="flex flex-col h-full">
-            <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-4">
+        <div className="flex flex-col h-full bg-gradient-to-br from-gray-50 to-white dark:from-gray-900 dark:to-gray-800">
+            <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-b border-gray-200 dark:border-gray-700 p-4 shadow-sm">
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-4">
                         <h2 className="text-xl font-bold text-gray-900 dark:text-white">
                             Gmail
                         </h2>
-                        <div className="flex gap-2">
+                        <div className="flex gap-2 bg-gray-100 dark:bg-gray-700/50 p-1 rounded-xl">
                             <button
                                 onClick={() => setFilter('all')}
                                 className={cn(
-                                    'px-3 py-1 rounded-lg text-sm font-medium transition-colors',
+                                    'px-4 py-1.5 rounded-lg text-sm font-medium transition-all duration-200',
                                     filter === 'all'
-                                        ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400'
-                                        : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
+                                        ? 'bg-white dark:bg-gray-800 text-blue-600 dark:text-blue-400 shadow-sm'
+                                        : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
                                 )}
                             >
                                 All
@@ -98,10 +100,10 @@ export function GmailView() {
                             <button
                                 onClick={() => setFilter('unread')}
                                 className={cn(
-                                    'px-3 py-1 rounded-lg text-sm font-medium transition-colors',
+                                    'px-4 py-1.5 rounded-lg text-sm font-medium transition-all duration-200',
                                     filter === 'unread'
-                                        ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400'
-                                        : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
+                                        ? 'bg-white dark:bg-gray-800 text-blue-600 dark:text-blue-400 shadow-sm'
+                                        : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
                                 )}
                             >
                                 Unread
@@ -112,14 +114,14 @@ export function GmailView() {
                         <button
                             onClick={loadEmails}
                             disabled={loading}
-                            className="flex items-center gap-2 px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors disabled:opacity-50"
+                            className="flex items-center gap-2 px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl transition-all duration-200 disabled:opacity-50 hover:scale-105"
                         >
                             <RefreshCw className={cn('w-4 h-4', loading && 'animate-spin')} />
                             Refresh
                         </button>
                         <button
                             onClick={() => setComposeOpen(true)}
-                            className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+                            className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white rounded-xl transition-all duration-200 shadow-md hover:shadow-lg hover:scale-105"
                         >
                             <Plus className="w-4 h-4" />
                             Compose

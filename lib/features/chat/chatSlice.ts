@@ -53,7 +53,11 @@ const chatSlice = createSlice({
         setCurrentConversation: (state, action: PayloadAction<Conversation | null>) => {
             state.currentConversation = action.payload;
             if (action.payload?.messages) {
-                state.messages = action.payload.messages;
+                // Normalize message roles to uppercase
+                state.messages = action.payload.messages.map(msg => ({
+                    ...msg,
+                    role: msg.role.toUpperCase() as any,
+                }));
             }
         },
         clearCurrentConversation: (state) => {
@@ -77,7 +81,7 @@ const chatSlice = createSlice({
             const assistantMessage: Message = {
                 id: action.payload.message_id,
                 conversation_id: action.payload.conversation_id,
-                role: action.payload.role,
+                role: (action.payload.role?.toUpperCase() || 'ASSISTANT') as any,
                 content: action.payload.content,
                 content_type: action.payload.content_type,
                 tool_name: null,
@@ -130,7 +134,11 @@ const chatSlice = createSlice({
         builder.addCase(fetchConversation.fulfilled, (state, action) => {
             state.loading = false;
             state.currentConversation = action.payload;
-            state.messages = action.payload.messages || [];
+            // Normalize message roles to uppercase
+            state.messages = (action.payload.messages || []).map(msg => ({
+                ...msg,
+                role: msg.role.toUpperCase() as any,
+            }));
         });
         builder.addCase(fetchConversation.rejected, (state, action) => {
             state.loading = false;
