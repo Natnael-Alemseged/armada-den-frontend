@@ -3,9 +3,10 @@ import React, { useState, useEffect } from 'react';
 import { useAppDispatch, useAppSelector } from '@/lib/hooks';
 import { getGmailStatus, fetchEmails, connectGmail } from '@/lib/features/gmail/gmailThunk';
 import { Email } from '@/lib/types';
-import { Mail, RefreshCw, Plus, Loader2, AlertCircle } from 'lucide-react';
+import { Mail, RefreshCw, Plus, Loader2, AlertCircle, X, Reply, Forward, Archive, Trash2, Star, MoreVertical, Paperclip, Calendar } from 'lucide-react';
 import { ComposeEmailDialog } from './ComposeEmailDialog';
 import { EmailList } from './EmailList';
+import { EmailDetailPanel } from './EmailDetailPanel';
 import { cn } from '@/lib/utils';
 
 export function GmailView() {
@@ -13,6 +14,7 @@ export function GmailView() {
     const { emails, loading, error, connected } = useAppSelector((state) => state.gmail);
     const [composeOpen, setComposeOpen] = useState(false);
     const [filter, setFilter] = useState<'all' | 'unread'>('all');
+    const [selectedEmail, setSelectedEmail] = useState<Email | null>(null);
 
     const loadEmails = () => {
         const query = filter === 'unread' ? 'is:unread' : '';
@@ -151,7 +153,20 @@ export function GmailView() {
                         </div>
                     </div>
                 ) : (
-                    <EmailList emails={emails} onRefresh={loadEmails} />
+                    <div className="flex h-full">
+                        <EmailList 
+                            emails={emails} 
+                            onRefresh={loadEmails}
+                            selectedEmail={selectedEmail}
+                            onSelectEmail={setSelectedEmail}
+                        />
+                        {selectedEmail && (
+                            <EmailDetailPanel 
+                                email={selectedEmail} 
+                                onClose={() => setSelectedEmail(null)}
+                            />
+                        )}
+                    </div>
                 )}
             </div>
             <ComposeEmailDialog

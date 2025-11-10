@@ -4,19 +4,28 @@ import React from 'react';
 import { Email } from '@/lib/types';
 import { Mail, Clock } from 'lucide-react';
 import { formatDate, truncateText } from '@/lib/utils';
+import { cn } from '@/lib/utils';
 
 interface EmailListProps {
     emails: Email[];
     onRefresh: () => void;
+    selectedEmail: Email | null;
+    onSelectEmail: (email: Email) => void;
 }
 
-export function EmailList({ emails }: EmailListProps) {
+export function EmailList({ emails, selectedEmail, onSelectEmail }: EmailListProps) {
     return (
-        <div className="divide-y divide-gray-200 dark:divide-gray-700">
+        <div className="flex-1 divide-y divide-gray-200 dark:divide-gray-700 overflow-y-auto">
             {emails.map((email) => (
                 <div
                     key={email.messageId}
-                    className="p-4 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors cursor-pointer"
+                    onClick={() => onSelectEmail(email)}
+                    className={cn(
+                        "p-4 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors cursor-pointer border-l-4",
+                        selectedEmail?.messageId === email.messageId
+                            ? "bg-blue-50 dark:bg-blue-900/20 border-blue-600"
+                            : "border-transparent"
+                    )}
                 >
                     <div className="flex items-start gap-3">
                         <div className="flex-shrink-0 mt-1">
