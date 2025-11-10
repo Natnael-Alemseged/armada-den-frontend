@@ -2,7 +2,8 @@
 
 import React, { useState } from 'react';
 import { X, Send, Loader2 } from 'lucide-react';
-import { api } from '@/lib/api';
+import { useAppDispatch } from '@/lib/hooks';
+import { sendEmail } from '@/lib/features/gmail/gmailThunk';
 import { cn } from '@/lib/utils';
 
 interface ComposeEmailDialogProps {
@@ -16,6 +17,7 @@ export function ComposeEmailDialog({
   onOpenChange,
   onEmailSent,
 }: ComposeEmailDialogProps) {
+  const dispatch = useAppDispatch();
   const [to, setTo] = useState('');
   const [subject, setSubject] = useState('');
   const [body, setBody] = useState('');
@@ -33,15 +35,23 @@ export function ComposeEmailDialog({
             const toEmails = to.split(',').map(email => email.trim()).filter(Boolean);
             const ccEmails = cc ? cc.split(',').map(email => email.trim()).filter(Boolean) : [];
             
+            // Backend expects recipient_email (single) and extra_recipients (array)
+            const [primaryRecipient, ...extraRecipients] = toEmails;
+            
+            if (!primaryRecipient) {
+                throw new Error('At least one recipient is required');
+            }
+            
             const payload = {
-                to: toEmails.map(email => ({ email })),
+                recipient_email: primaryRecipient,
                 subject,
                 body,
-                cc: ccEmails.map(email => ({ email })),
-                bcc: []
+                cc: ccEmails,
+                bcc: [],
+                extra_recipients: extraRecipients
             };
 
-            await api.sendEmail(payload);
+            await dispatch(sendEmail(payload)).unwrap();
 
             // Reset form
             setTo('');

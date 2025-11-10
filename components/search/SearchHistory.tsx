@@ -1,7 +1,9 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { api } from '@/lib/api';
+import { useAppDispatch, useAppSelector } from '@/lib/hooks';
+import { getSearchHistory } from '@/lib/features/search/searchThunk';
+
 import { SearchHistoryItem } from '@/lib/types';
 import { Clock, Search, Loader2 } from 'lucide-react';
 import { formatDate } from '@/lib/utils';
@@ -11,26 +13,12 @@ interface SearchHistoryProps {
 }
 
 export function SearchHistory({ onSelectQuery }: SearchHistoryProps) {
-  const [history, setHistory] = useState<SearchHistoryItem[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const dispatch = useAppDispatch();
+  const { history, loading, error } = useAppSelector((state) => state.search);
 
   useEffect(() => {
-    loadHistory();
-  }, []);
-
-  const loadHistory = async () => {
-    try {
-      setLoading(true);
-      setError('');
-      const response = await api.getSearchHistory(1, 20);
-      setHistory(response.searches);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load history');
-    } finally {
-      setLoading(false);
-    }
-  };
+    dispatch(getSearchHistory({ page: 1, pageSize: 20 }));
+  }, [dispatch]);
 
   if (loading) {
     return (

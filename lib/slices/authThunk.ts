@@ -1,6 +1,6 @@
 import { createAsyncThunk } from '@reduxjs/toolkit'
 import { ApiService } from '@/lib/util/apiService'
-import { ENDPOINTS } from '@/lib/constants/endpoints'
+import { ENDPOINTS, BASE_URL } from '@/lib/constants/endpoints'
 import { setAuthToken } from '@/lib/util/apiClient'
 import { User, LoginCredentials, AuthResponse } from './authSlice'
 

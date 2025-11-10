@@ -1,66 +1,89 @@
 import axios from "axios";
 import { BASE_URL } from "../constants/endpoints";
-import { store } from "../store";
-import { logoutUser } from "../slices/authThunk";
 
+// Create axios instance with base configuration
 export const apiClient = axios.create({
     baseURL: BASE_URL,
     timeout: 60000,
     withCredentials: true,
-    // Don't set default Content-Type - let each request set it as needed
 });
 
-// Helper to set/remove token globally (used by store.subscribe and logout)
+// Helper to set/remove token globally
 export const setAuthToken = (token: string | null) => {
-    console.log("ApiClient: Setting auth token", token ? "***" : "null");
+    console.log("ApiClient: Setting auth token", token ? "***" + token.slice(-10) : "null");
 
     if (token) {
+        // Set the Authorization header with Bearer token
         apiClient.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+        console.log("ApiClient: Authorization header set to", apiClient.defaults.headers.common["Authorization"]);
     } else {
+        // Remove the Authorization header
         delete apiClient.defaults.headers.common["Authorization"];
+        console.log("ApiClient: Authorization header removed");
     }
 };
 
-// Request Interceptor to conditionally remove Authorization per request
+// Request Interceptor - handles token inclusion/exclusion per request
 apiClient.interceptors.request.use(
     (config) => {
-        // If request explicitly says token is NOT needed, remove Authorization header
-        if (config.headers?.["X-Token-Needed"] === "false") {
+        console.log("Request interceptor - URL:", config.url);
+        console.log("Request interceptor - Headers before processing:", { ...config.headers });
+        
+        // Check if this specific request should NOT include the token
+        const tokenNeeded = config.headers?.["X-Token-Needed"];
+        
+        if (tokenNeeded === "false") {
+            // Explicitly remove Authorization for this request
             delete config.headers["Authorization"];
+            console.log("Request interceptor - Token NOT needed, removed Authorization header");
+        } else {
+            // Ensure Authorization header is present from defaults
+            if (apiClient.defaults.headers.common["Authorization"]) {
+                config.headers["Authorization"] = apiClient.defaults.headers.common["Authorization"];
+                console.log("Request interceptor - Token needed, Authorization header:", config.headers["Authorization"]);
+            } else {
+                console.warn("Request interceptor - Token needed but no token available in defaults");
+            }
         }
         
-        // Always clean up the flag so it doesn't go to server
-        delete config.headers?.["X-Token-Needed"];
+        // Clean up the custom flag so it doesn't go to the server
+        delete config.headers["X-Token-Needed"];
         
-        // Set Content-Type for JSON requests only
-        if (config.data && !(config.data instanceof FormData) && !config.headers?.["Content-Type"]) {
+        // Set Content-Type for JSON requests
+        if (config.data && !(config.data instanceof FormData) && !config.headers["Content-Type"]) {
             config.headers["Content-Type"] = "application/json";
         }
         
-        // For FormData requests, ensure no Content-Type is set
+        // For FormData, let browser set Content-Type with boundary
         if (config.data instanceof FormData) {
             delete config.headers["Content-Type"];
         }
         
+        console.log("Request interceptor - Final headers:", { ...config.headers });
+        
         return config;
     },
     (error) => {
+        console.error("Request interceptor error:", error);
         return Promise.reject(error);
     }
 );
 
-// Response Interceptor for error handling
+// Response Interceptor - handles errors
 apiClient.interceptors.response.use(
-    (response) => response,
+    (response) => {
+        console.log("Response received:", response.status, response.config.url);
+        return response;
+    },
     (error) => {
         const status = error.response?.status;
-        console.log(`API Error: ${JSON.stringify(error.response?.data, null, 2)}`);
+        console.error("API Error:", {
+            status,
+            url: error.config?.url,
+            data: error.response?.data,
+        });
 
-        if (status === 401) {
-            // Handle unauthorized - logout user and clear data
-            console.warn("Unauthorized request - logging out user");
-            store.dispatch(logoutUser());
-        }
+        // Removed automatic logout on 401 - let individual components handle auth errors
 
         return Promise.reject(error);
     }

@@ -1,47 +1,32 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { api } from '@/lib/api';
+import { useAppDispatch, useAppSelector } from '@/lib/hooks';
+import { getSearchStatus, connectSearch, performSearch } from '@/lib/features/search/searchThunk';
+
 import { SearchResult } from '@/lib/types';
 import { Search, Loader2, AlertCircle, ExternalLink, History } from 'lucide-react';
 import { SearchResultsList } from './SearchResultsList';
 import { SearchHistory } from './SearchHistory';
 
 export function SearchView() {
+  const dispatch = useAppDispatch();
+  const { results, loading, error, isConnected, checkingConnection } = useAppSelector((state) => state.search);
   const [query, setQuery] = useState('');
-  const [results, setResults] = useState<SearchResult[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [isConnected, setIsConnected] = useState(false);
-  const [checkingConnection, setCheckingConnection] = useState(true);
   const [showHistory, setShowHistory] = useState(false);
 
   useEffect(() => {
-    checkConnection();
-  }, []);
+    dispatch(getSearchStatus());
+  }, [dispatch]);
 
-  const checkConnection = async () => {
+  const handleConnectSearch = async () => {
     try {
-      setCheckingConnection(true);
-      const status = await api.getSearchStatus();
-      setIsConnected(status.connected);
+      const result = await dispatch(connectSearch({
+        redirectUrl: window.location.origin + '/search/callback'
+      })).unwrap();
+      window.location.href = result.connection_url;
     } catch (err) {
-      console.error('Failed to check search connection:', err);
-      setIsConnected(false);
-    } finally {
-      setCheckingConnection(false);
-    }
-  };
-
-  const connectSearch = async () => {
-    try {
-      setError('');
-      const response = await api.connectSearch(
-        window.location.origin + '/search/callback'
-      );
-      window.location.href = response.connection_url;
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to connect search');
+      console.error('Failed to connect search:', err);
     }
   };
 
@@ -50,21 +35,15 @@ export function SearchView() {
     if (!query.trim()) return;
 
     try {
-      setLoading(true);
-      setError('');
       setShowHistory(false);
-      const response = await api.performSearch({
+      await dispatch(performSearch({
         query: query.trim(),
         num_results: 10,
         engine: 'SERPAPI',
         save_to_db: true,
-      });
-      setResults(response.results);
+      })).unwrap();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Search failed');
-      setResults([]);
-    } finally {
-      setLoading(false);
+      console.error('Search failed:', err);
     }
   };
 
@@ -93,7 +72,7 @@ export function SearchView() {
             </div>
           )}
           <button
-            onClick={connectSearch}
+            onClick={handleConnectSearch}
             className="bg-blue-600 hover:bg-blue-700 text-white font-medium px-6 py-3 rounded-lg transition-colors"
           >
             Connect Search Engine

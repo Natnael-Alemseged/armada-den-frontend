@@ -1,97 +1,46 @@
 'use client';
 import React, { useState, useEffect } from 'react';
-import { api } from '@/lib/api';
-import { Email } from '@/lib/types'; // Ensure this matches the API structure (see comment below)
+import { useAppDispatch, useAppSelector } from '@/lib/hooks';
+import { getGmailStatus, fetchEmails, connectGmail } from '@/lib/features/gmail/gmailThunk';
+import { Email } from '@/lib/types';
 import { Mail, RefreshCw, Plus, Loader2, AlertCircle } from 'lucide-react';
 import { ComposeEmailDialog } from './ComposeEmailDialog';
 import { EmailList } from './EmailList';
 import { cn } from '@/lib/utils';
 
-// Expected Email type shape based on your API response:
-// export interface Email {
-//   attachmentList: { filename: string; mimeType: string }[];
-//   labelIds: string[];
-//   messageId: string;
-//   messageText: string;
-//   messageTimestamp: string;
-//   payload: { /* complex object with headers, parts, body, etc. */ };
-//   preview: { body: string; subject: string };
-//   sender: string;
-//   subject: string;
-//   threadId: string;
-//   to: string;
-// }
-
 export function GmailView() {
-    const [emails, setEmails] = useState<Email[]>([]);
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState('');
-    const [isConnected, setIsConnected] = useState(false);
-    const [checkingConnection, setCheckingConnection] = useState(true);
+    const dispatch = useAppDispatch();
+    const { emails, loading, error, connected } = useAppSelector((state) => state.gmail);
     const [composeOpen, setComposeOpen] = useState(false);
     const [filter, setFilter] = useState<'all' | 'unread'>('all');
 
-    useEffect(() => {
-        checkConnection();
-    }, []);
+    const loadEmails = () => {
+        const query = filter === 'unread' ? 'is:unread' : '';
+        dispatch(fetchEmails({ maxResults: 20, query }));
+    };
+
+    const handleConnectGmail = async () => {
+        try {
+            const result = await dispatch(connectGmail({
+                redirectUrl: window.location.origin + '/gmail/callback'
+            })).unwrap();
+            window.location.href = result.connection_url;
+        } catch (err) {
+            console.error('Failed to connect Gmail:', err);
+        }
+    };
 
     useEffect(() => {
-        if (isConnected) {
+        dispatch(getGmailStatus());
+    }, [dispatch]);
+
+    useEffect(() => {
+        if (connected) {
             loadEmails();
         }
-    }, [filter, isConnected]); // Reload on filter change
+    }, [filter, connected, dispatch]);
 
-    const checkConnection = async () => {
-        try {
-            setCheckingConnection(true);
-            const status = await api.getGmailStatus();
-            setIsConnected(status.connected);
-            if (status.connected) {
-                loadEmails();
-            }
-        } catch (err) {
-            console.error('Failed to check Gmail connection:', err);
-            setIsConnected(false);
-        } finally {
-            setCheckingConnection(false);
-        }
-    };
-
-    const connectGmail = async () => {
-        try {
-            setError('');
-            const response = await api.connectGmail(
-                window.location.origin + '/gmail/callback'
-            );
-            window.location.href = response.connection_url;
-        } catch (err) {
-            setError(err instanceof Error ? err.message : 'Failed to connect Gmail');
-        }
-    };
-
-    const loadEmails = async () => {
-        try {
-            setLoading(true);
-            setError('');
-            const query = filter === 'unread' ? 'is:unread' : '';
-            const response = await api.readEmails(20, query);
-            // Optional: Decode HTML entities in previews if displaying raw
-            const decodedEmails = response.emails.map((email: Email) => ({
-                ...email,
-                preview: {
-                    ...email.preview,
-                    body: email.preview.body.replace(/&#39;/g, "'"), // Add more decoding as needed
-                },
-            }));
-            setEmails(decodedEmails);
-        } catch (err) {
-            setError(err instanceof Error ? err.message : 'Failed to load emails');
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    if (checkingConnection) {
+    if (loading && emails.length === 0) {
         return (
             <div className="flex items-center justify-center h-full">
                 <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
@@ -99,7 +48,7 @@ export function GmailView() {
         );
     }
 
-    if (!isConnected) {
+    if (!connected) {
         return (
             <div className="flex items-center justify-center h-full p-8">
                 <div className="text-center max-w-md">
@@ -116,7 +65,7 @@ export function GmailView() {
                         </div>
                     )}
                     <button
-                        onClick={connectGmail}
+                        onClick={handleConnectGmail}
                         className="bg-blue-600 hover:bg-blue-700 text-white font-medium px-6 py-3 rounded-lg transition-colors"
                     >
                         Connect Gmail Account

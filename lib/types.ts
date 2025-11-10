@@ -32,6 +32,15 @@ export interface EmailRecipient {
 }
 
 export interface SendEmailRequest {
+    recipient_email: string;
+    subject: string;
+    body: string;
+    cc?: string[];
+    bcc?: string[];
+    extra_recipients?: string[];
+}
+
+export interface EmailDraftRequest {
     to: EmailRecipient[];
     subject: string;
     body: string;
@@ -184,12 +193,118 @@ export interface SearchStatusResponse {
     }>;
 }
 
+// Callback Types
+export interface CallbackResponse {
+    status: string;
+    message: string;
+    user_id: string;
+}
+
+// Tools Types
+export interface Tool {
+    name: string;
+    description: string;
+}
+
+export interface ToolsResponse {
+    status: string;
+    tools: Tool[];
+    count: number;
+}
+
+// Search Details Types
+export interface SearchDetailsResponse {
+    id: string;
+    query: string;
+    engine: string;
+    created_at: string;
+    raw_results: Record<string, unknown>;
+    summary: string | null;
+}
+
 // API Error
 export interface APIError {
     detail: string;
 }
 
-// Chat Types
+// Chat/Conversation Types
+export type MessageRole = 'USER' | 'ASSISTANT' | 'SYSTEM' | 'TOOL';
+export type ContentType = 'TEXT' | 'MARKDOWN' | 'CODE';
+
+export interface Message {
+    id: string;
+    conversation_id: string;
+    role: MessageRole;
+    content: string;
+    content_type: ContentType;
+    tool_name?: string | null;
+    tool_input?: Record<string, unknown> | null;
+    tool_output?: Record<string, unknown> | null;
+    meta_data?: Record<string, unknown>;
+    is_deleted: boolean;
+    created_at: string;
+    updated_at: string;
+}
+
+export interface Conversation {
+    id: string;
+    user_id: string;
+    title: string;
+    created_at: string;
+    updated_at: string | null;
+    deleted_at: string | null;
+    message_count: number;
+    messages?: Message[];
+}
+
+export interface ChatRequest {
+    message: string;
+    conversation_id?: string;
+    agent_type?: string;
+}
+
+export interface ChatResponse {
+    conversation_id: string;
+    message_id: string;
+    role: MessageRole;
+    content: string;
+    content_type: ContentType;
+    tool_calls_executed: unknown[];
+    created_at: string;
+}
+
+export interface ConversationsListResponse {
+    conversations: Conversation[];
+    total: number;
+    page: number;
+    page_size: number;
+    has_more: boolean;
+}
+
+export interface CreateConversationRequest {
+    title?: string;
+}
+
+export interface UpdateConversationRequest {
+    title: string;
+}
+
+export interface CreateMessageRequest {
+    role: MessageRole;
+    content: string;
+    content_type?: ContentType;
+    tool_name?: string | null;
+    tool_input?: Record<string, unknown> | null;
+    tool_output?: Record<string, unknown> | null;
+    meta_data?: Record<string, unknown>;
+}
+
+export interface UpdateMessageRequest {
+    content?: string;
+    is_deleted?: boolean;
+}
+
+// Legacy chat type for backward compatibility
 export interface ChatMessage {
     id: string;
     role: 'user' | 'assistant';

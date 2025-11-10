@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { Sidebar } from './Sidebar';
 import { GmailView } from '@/components/gmail/GmailView';
 import { SearchView } from '@/components/search/SearchView';
-import { ChatView } from '@/components/chat/ChatView';
+import { ChatPage } from '@/components/chat/ChatPage';
 
 export function MainLayout() {
   const [activeTab, setActiveTab] = useState<'gmail' | 'search' | 'chat'>('gmail');
@@ -15,7 +15,7 @@ export function MainLayout() {
       <main className="flex-1 overflow-hidden">
         {activeTab === 'gmail' && <GmailView />}
         {activeTab === 'search' && <SearchView />}
-        {activeTab === 'chat' && <ChatView />}
+        {activeTab === 'chat' && <ChatPage />}
       </main>
     </div>
   );

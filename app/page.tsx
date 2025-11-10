@@ -6,7 +6,7 @@ import { MainLayout } from '@/components/layout/MainLayout';
 import { Loader2 } from 'lucide-react';
 
 export default function Home() {
-  const { user, loading } = useAppSelector((state) => state.auth);
+  const { user, loading,token } = useAppSelector((state) => state.auth);
   const isAuthenticated = !!user;
 
   if (loading) {

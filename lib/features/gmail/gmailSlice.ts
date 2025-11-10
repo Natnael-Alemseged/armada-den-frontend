@@ -1,6 +1,14 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { fetchEmails, sendEmail, createDraft, connectGmail, getGmailStatus } from "./gmailThunk";
-import { Email } from "@/lib/types";
+import {
+    fetchEmails,
+    sendEmail,
+    createDraft,
+    connectGmail,
+    getGmailStatus,
+    handleGmailCallback,
+    getGmailTools
+} from "./gmailThunk";
+import { Email, Tool } from "@/lib/types";
 
 export interface GmailState {
     emails: Email[];
@@ -9,6 +17,8 @@ export interface GmailState {
     connected: boolean;
     entityId: string | null;
     connectionUrl: string | null;
+    tools: Tool[];
+    callbackStatus: 'idle' | 'loading' | 'success' | 'error';
 }
 
 const initialState: GmailState = {
@@ -18,6 +28,8 @@ const initialState: GmailState = {
     connected: false,
     entityId: null,
     connectionUrl: null,
+    tools: [],
+    callbackStatus: 'idle',
 };
 
 const gmailSlice = createSlice({
@@ -103,6 +115,34 @@ const gmailSlice = createSlice({
         builder.addCase(createDraft.rejected, (state, action) => {
             state.loading = false;
             state.error = action.payload || "Failed to create draft";
+        });
+
+        // Handle Gmail Callback
+        builder.addCase(handleGmailCallback.pending, (state) => {
+            state.callbackStatus = 'loading';
+            state.error = null;
+        });
+        builder.addCase(handleGmailCallback.fulfilled, (state) => {
+            state.callbackStatus = 'success';
+            state.connected = true;
+        });
+        builder.addCase(handleGmailCallback.rejected, (state, action) => {
+            state.callbackStatus = 'error';
+            state.error = action.payload || "Failed to handle Gmail callback";
+        });
+
+        // Get Gmail Tools
+        builder.addCase(getGmailTools.pending, (state) => {
+            state.loading = true;
+            state.error = null;
+        });
+        builder.addCase(getGmailTools.fulfilled, (state, action) => {
+            state.loading = false;
+            state.tools = action.payload.tools;
+        });
+        builder.addCase(getGmailTools.rejected, (state, action) => {
+            state.loading = false;
+            state.error = action.payload || "Failed to get Gmail tools";
         });
     },
 });

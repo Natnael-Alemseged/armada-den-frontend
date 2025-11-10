@@ -1,12 +1,15 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import { ApiService } from "@/lib/util/apiService";
-import { ENDPOINTS } from "@/lib/constants/endpoints";
+import { ENDPOINTS, BASE_URL } from "@/lib/constants/endpoints";
 import {
     SearchConnectionResponse,
     SearchStatusResponse,
     WebSearchRequest,
     WebSearchResponse,
     SearchHistoryResponse,
+    CallbackResponse,
+    ToolsResponse,
+    SearchDetailsResponse,
 } from "@/lib/types";
 
 // Connect Search
@@ -84,5 +87,58 @@ export const getSearchHistory = createAsyncThunk<
         return res.data;
     } catch (err: any) {
         return rejectWithValue(err.response?.data?.detail || "Failed to get search history");
+    }
+});
+
+// Handle Search OAuth Callback
+export const handleSearchCallback = createAsyncThunk<
+    CallbackResponse,
+    { code: string; state?: string },
+    { rejectValue: string }
+>("search/handleCallback", async (payload, { rejectWithValue }) => {
+    try {
+        const url = `${BASE_URL}${ENDPOINTS.SEARCH_CALLBACK}?code=${payload.code}${payload.state ? `&state=${payload.state}` : ''}`;
+        
+        const response = await fetch(url, {
+            method: 'GET',
+            credentials: 'include',
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        return data;
+    } catch (err: any) {
+        return rejectWithValue(err.message || "Failed to handle search callback");
+    }
+});
+
+// Get Search Details
+export const getSearchDetails = createAsyncThunk<
+    SearchDetailsResponse,
+    string,
+    { rejectValue: string }
+>("search/getDetails", async (searchId, { rejectWithValue }) => {
+    try {
+        const res = await ApiService.get(ENDPOINTS.SEARCH_DETAILS(searchId), undefined, true);
+        return res.data;
+    } catch (err: any) {
+        return rejectWithValue(err.response?.data?.detail || "Failed to get search details");
+    }
+});
+
+// Get Search Tools
+export const getSearchTools = createAsyncThunk<
+    ToolsResponse,
+    void,
+    { rejectValue: string }
+>("search/getTools", async (_, { rejectWithValue }) => {
+    try {
+        const res = await ApiService.get(ENDPOINTS.SEARCH_TOOLS, undefined, true);
+        return res.data;
+    } catch (err: any) {
+        return rejectWithValue(err.response?.data?.detail || "Failed to get search tools");
     }
 });

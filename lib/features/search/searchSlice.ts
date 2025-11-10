@@ -4,8 +4,11 @@ import {
     getSearchHistory,
     connectSearch,
     getSearchStatus,
+    handleSearchCallback,
+    getSearchDetails,
+    getSearchTools,
 } from "./searchThunk";
-import { SearchResult, SearchHistoryItem } from "@/lib/types";
+import { SearchResult, SearchHistoryItem, Tool, SearchDetailsResponse } from "@/lib/types";
 
 export interface SearchState {
     results: SearchResult[];
@@ -19,6 +22,9 @@ export interface SearchState {
     totalHistory: number;
     currentPage: number;
     pageSize: number;
+    tools: Tool[];
+    callbackStatus: 'idle' | 'loading' | 'success' | 'error';
+    searchDetails: SearchDetailsResponse | null;
 }
 
 const initialState: SearchState = {
@@ -33,6 +39,9 @@ const initialState: SearchState = {
     totalHistory: 0,
     currentPage: 1,
     pageSize: 20,
+    tools: [],
+    callbackStatus: 'idle',
+    searchDetails: null,
 };
 
 const searchSlice = createSlice({
@@ -114,6 +123,48 @@ const searchSlice = createSlice({
         builder.addCase(getSearchHistory.rejected, (state, action) => {
             state.loading = false;
             state.error = action.payload || "Failed to get search history";
+        });
+
+        // Handle Search Callback
+        builder.addCase(handleSearchCallback.pending, (state) => {
+            state.callbackStatus = 'loading';
+            state.error = null;
+        });
+        builder.addCase(handleSearchCallback.fulfilled, (state) => {
+            state.callbackStatus = 'success';
+            state.connected = true;
+        });
+        builder.addCase(handleSearchCallback.rejected, (state, action) => {
+            state.callbackStatus = 'error';
+            state.error = action.payload || "Failed to handle search callback";
+        });
+
+        // Get Search Details
+        builder.addCase(getSearchDetails.pending, (state) => {
+            state.loading = true;
+            state.error = null;
+        });
+        builder.addCase(getSearchDetails.fulfilled, (state, action) => {
+            state.loading = false;
+            state.searchDetails = action.payload;
+        });
+        builder.addCase(getSearchDetails.rejected, (state, action) => {
+            state.loading = false;
+            state.error = action.payload || "Failed to get search details";
+        });
+
+        // Get Search Tools
+        builder.addCase(getSearchTools.pending, (state) => {
+            state.loading = true;
+            state.error = null;
+        });
+        builder.addCase(getSearchTools.fulfilled, (state, action) => {
+            state.loading = false;
+            state.tools = action.payload.tools;
+        });
+        builder.addCase(getSearchTools.rejected, (state, action) => {
+            state.loading = false;
+            state.error = action.payload || "Failed to get search tools";
         });
     },
 });

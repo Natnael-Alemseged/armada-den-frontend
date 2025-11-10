@@ -2,17 +2,19 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { api } from '@/lib/api';
+import { useAppDispatch } from '@/lib/hooks';
+import { handleSearchCallback } from '@/lib/features/search/searchThunk';
 import { Loader2, CheckCircle, XCircle } from 'lucide-react';
 
 export default function SearchCallbackPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const dispatch = useAppDispatch();
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
   const [message, setMessage] = useState('Connecting search engine...');
 
   useEffect(() => {
-    const handleCallback = async () => {
+    const processCallback = async () => {
       const code = searchParams.get('code');
       const state = searchParams.get('state');
 
@@ -23,10 +25,15 @@ export default function SearchCallbackPage() {
       }
 
       try {
-        await api.handleSearchCallback(code, state || '');
+        // Use the thunk to handle the callback
+        const result = await dispatch(handleSearchCallback({
+          code,
+          state: state || undefined
+        })).unwrap();
+
         setStatus('success');
-        setMessage('Search engine connected successfully!');
-        
+        setMessage(result.message || 'Search engine connected successfully!');
+
         // Redirect to main app after 2 seconds
         setTimeout(() => {
           router.push('/');
@@ -37,8 +44,8 @@ export default function SearchCallbackPage() {
       }
     };
 
-    handleCallback();
-  }, [searchParams, router]);
+    processCallback();
+  }, [searchParams, router, dispatch]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 p-4">

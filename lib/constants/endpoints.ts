@@ -32,6 +32,15 @@ export const ENDPOINTS = {
     SEARCH_DETAILS: (searchId: string) => `/search/history/${searchId}`,
     SEARCH_TOOLS: '/search/tools',
 
-    // Chat (if needed in future)
-    CHAT: '/chat',
+    // AI Chat & Conversations
+    AI_CHAT: '/ai',
+    CONVERSATIONS_LIST: '/conversations',
+    CONVERSATIONS_CREATE: '/conversations',
+    CONVERSATIONS_GET: (conversationId: string) => `/conversations/${conversationId}`,
+    CONVERSATIONS_UPDATE: (conversationId: string) => `/conversations/${conversationId}`,
+    CONVERSATIONS_DELETE: (conversationId: string) => `/conversations/${conversationId}`,
+    CONVERSATIONS_MESSAGES: (conversationId: string) => `/conversations/${conversationId}/messages`,
+    CONVERSATIONS_MESSAGE_CREATE: (conversationId: string) => `/conversations/${conversationId}/messages`,
+    CONVERSATIONS_MESSAGE_UPDATE: (conversationId: string, messageId: string) => `/conversations/${conversationId}/messages/${messageId}`,
+    CONVERSATIONS_GENERATE_TITLE: (conversationId: string) => `/conversations/${conversationId}/generate-title`,
 };

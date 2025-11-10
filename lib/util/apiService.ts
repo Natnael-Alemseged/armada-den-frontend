@@ -1,28 +1,53 @@
-import { AxiosRequestConfig, AxiosResponse } from "axios";
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { AxiosRequestConfig } from "axios";
 import { apiClient } from "./apiClient";
 
-// Helper to merge tokenNeeded flag into headers
-const withTokenFlag = (
-    config: AxiosRequestConfig | undefined,
-    tokenNeeded: boolean,
+/**
+ * Helper function to create request config with token flag
+ * This flag tells the interceptor whether to include the Authorization header
+ */
+const createConfig = (
+    config?: AxiosRequestConfig,
+    tokenNeeded: boolean = true,
     signal?: AbortSignal
 ): AxiosRequestConfig => {
     return {
         ...config,
         headers: {
             ...config?.headers,
+            // This flag is used by the request interceptor to decide whether to include the token
             "X-Token-Needed": String(tokenNeeded),
         },
         ...(signal ? { signal } : {}),
     };
 };
 
-// Expose a clean service API with tokenNeeded support
+/**
+ * API Service - Wrapper around axios client with token management
+ * All methods support a tokenNeeded parameter (default: true)
+ * When tokenNeeded is false, the Authorization header will be excluded from that specific request
+ */
 export const ApiService = {
-    get: (url: string, config?: AxiosRequestConfig, tokenNeeded: boolean = true) =>
-        apiClient.get(url, withTokenFlag(config, tokenNeeded)),
+    /**
+     * GET request
+     * @param url - The endpoint URL
+     * @param config - Optional axios config
+     * @param tokenNeeded - Whether to include the bearer token (default: true)
+     */
+    get: (url: string, config?: AxiosRequestConfig, tokenNeeded: boolean = true) => {
+        console.log(`ApiService.get: ${url}, tokenNeeded: ${tokenNeeded}`);
+        return apiClient.get(url, createConfig(config, tokenNeeded));
+    },
 
-    getWithQuery: async (
+    /**
+     * GET request with query parameters
+     * @param endpoint - The endpoint URL
+     * @param queryProps - Query parameters as key-value pairs
+     * @param tokenNeeded - Whether to include the bearer token (default: true)
+     * @param config - Optional axios config
+     * @param signal - Optional abort signal
+     */
+    getWithQuery: (
         endpoint: string,
         queryProps?: Record<string, any>,
         tokenNeeded: boolean = true,
@@ -34,14 +59,32 @@ export const ApiService = {
             const query = new URLSearchParams(queryProps).toString();
             url += `?${query}`;
         }
-
-        return apiClient.get(url, withTokenFlag(config, tokenNeeded, signal));
+        console.log(`ApiService.getWithQuery: ${url}, tokenNeeded: ${tokenNeeded}`);
+        return apiClient.get(url, createConfig(config, tokenNeeded, signal));
     },
 
-    post: (url: string, body?: any, config?: AxiosRequestConfig, tokenNeeded: boolean = true) =>
-        apiClient.post(url, body, withTokenFlag(config, tokenNeeded)),
+    /**
+     * POST request
+     * @param url - The endpoint URL
+     * @param body - Request body
+     * @param config - Optional axios config
+     * @param tokenNeeded - Whether to include the bearer token (default: true)
+     */
+    post: (url: string, body?: any, config?: AxiosRequestConfig, tokenNeeded: boolean = true) => {
+        console.log(`ApiService.post: ${url}, tokenNeeded: ${tokenNeeded}`);
+        return apiClient.post(url, body, createConfig(config, tokenNeeded));
+    },
 
-    postWithQuery: async (
+    /**
+     * POST request with query parameters
+     * @param endpoint - The endpoint URL
+     * @param body - Request body
+     * @param queryProps - Query parameters as key-value pairs
+     * @param tokenNeeded - Whether to include the bearer token (default: true)
+     * @param config - Optional axios config
+     * @param signal - Optional abort signal
+     */
+    postWithQuery: (
         endpoint: string,
         body: any,
         queryProps?: Record<string, any>,
@@ -54,32 +97,63 @@ export const ApiService = {
             const query = new URLSearchParams(queryProps).toString();
             url += `?${query}`;
         }
-
-        return apiClient.post(url, body, withTokenFlag(config, tokenNeeded, signal));
+        console.log(`ApiService.postWithQuery: ${url}, tokenNeeded: ${tokenNeeded}`);
+        return apiClient.post(url, body, createConfig(config, tokenNeeded, signal));
     },
 
-    patch: (url: string, body?: any, config?: AxiosRequestConfig, tokenNeeded: boolean = true) =>
-        apiClient.patch(url, body, withTokenFlag(config, tokenNeeded)),
+    /**
+     * PATCH request
+     * @param url - The endpoint URL
+     * @param body - Request body
+     * @param config - Optional axios config
+     * @param tokenNeeded - Whether to include the bearer token (default: true)
+     */
+    patch: (url: string, body?: any, config?: AxiosRequestConfig, tokenNeeded: boolean = true) => {
+        console.log(`ApiService.patch: ${url}, tokenNeeded: ${tokenNeeded}`);
+        return apiClient.patch(url, body, createConfig(config, tokenNeeded));
+    },
 
-    put: (url: string, body?: any, config?: AxiosRequestConfig, tokenNeeded: boolean = true) =>
-        apiClient.put(url, body, withTokenFlag(config, tokenNeeded)),
+    /**
+     * PUT request
+     * @param url - The endpoint URL
+     * @param body - Request body
+     * @param config - Optional axios config
+     * @param tokenNeeded - Whether to include the bearer token (default: true)
+     */
+    put: (url: string, body?: any, config?: AxiosRequestConfig, tokenNeeded: boolean = true) => {
+        console.log(`ApiService.put: ${url}, tokenNeeded: ${tokenNeeded}`);
+        return apiClient.put(url, body, createConfig(config, tokenNeeded));
+    },
 
-    delete: (url: string, body?: any, config?: AxiosRequestConfig, tokenNeeded: boolean = true) =>
-        apiClient.delete(url, {
-            ...withTokenFlag(config, tokenNeeded),
+    /**
+     * DELETE request
+     * @param url - The endpoint URL
+     * @param body - Optional request body
+     * @param config - Optional axios config
+     * @param tokenNeeded - Whether to include the bearer token (default: true)
+     */
+    delete: (url: string, body?: any, config?: AxiosRequestConfig, tokenNeeded: boolean = true) => {
+        console.log(`ApiService.delete: ${url}, tokenNeeded: ${tokenNeeded}`);
+        return apiClient.delete(url, {
+            ...createConfig(config, tokenNeeded),
             data: body,
-        }),
+        });
+    },
 
+    /**
+     * Upload a single file
+     * @param url - The endpoint URL
+     * @param file - The file to upload
+     * @param tokenNeeded - Whether to include the bearer token (default: true)
+     */
     uploadFile: (url: string, file: any, tokenNeeded: boolean = true) => {
+        console.log(`ApiService.uploadFile: ${url}, tokenNeeded: ${tokenNeeded}`);
         const formData = new FormData();
         formData.append("file", file);
 
-        const config = withTokenFlag(
+        const config = createConfig(
             {
-                headers: {},
-                transformRequest: (data: any) => {
-                    return data;
-                },
+                transformRequest: (data: any) => data, // Don't transform FormData
             },
             tokenNeeded
         );
@@ -87,18 +161,17 @@ export const ApiService = {
         return apiClient.post(url, formData, config);
     },
 
+    /**
+     * Upload multiple files
+     * @param url - The endpoint URL
+     * @param files - Array of files to upload
+     * @param tokenNeeded - Whether to include the bearer token (default: true)
+     */
     uploadFiles: (url: string, files: any[], tokenNeeded: boolean = true) => {
+        console.log(`ApiService.uploadFiles: ${url}, tokenNeeded: ${tokenNeeded}`);
         const formData = new FormData();
         files.forEach((file) => formData.append("files", file));
-        return apiClient.post(
-            url,
-            formData,
-            withTokenFlag(
-                {
-                    headers: { "Content-Type": "multipart/form-data" },
-                },
-                tokenNeeded
-            )
-        );
+
+        return apiClient.post(url, formData, createConfig({}, tokenNeeded));
     },
 };

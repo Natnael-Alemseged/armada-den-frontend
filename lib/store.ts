@@ -1,67 +1,71 @@
-import { configureStore } from '@reduxjs/toolkit'
-// 1. Imports for Redux Persist
-import { persistStore, persistReducer } from 'redux-persist'
-import storage from 'redux-persist/lib/storage' // defaults to localStorage for web
-import { combineReducers } from '@reduxjs/toolkit'
+// store.ts
+import { configureStore, combineReducers } from '@reduxjs/toolkit';
+import { persistStore, persistReducer } from 'redux-persist';
+import storage from 'redux-persist/lib/storage'; // localStorage for web
+import { setAuthToken, apiClient } from './util/apiClient';
 
-// Assuming these reducers exist at these paths
-import authReducer from './slices/authSlice'
-import goalReducer from './features/goal/goalsSlice';
-import gmailReducer from "./features/gmail/gmailSlice";
-import searchReducer from "./features/search/searchSlice";
+import authReducer from './slices/authSlice';
+import gmailReducer from './features/gmail/gmailSlice';
+import searchReducer from './features/search/searchSlice';
+import chatReducer from './features/chat/chatSlice';
 
-// 3. Combine reducers (required when using Redux Persist with configureStore)
+// 1️⃣ Combine reducers
 const rootReducer = combineReducers({
     auth: authReducer,
-    goal: goalReducer,
     gmail: gmailReducer,
     search: searchReducer,
-})
+    chat: chatReducer,
+});
 
-// 4. Create the persisted reducer (only on client side)
-const persistedReducer = typeof window !== 'undefined'
-    ? persistReducer({
-        key: 'root',
-        storage,
-        // Only the 'auth' slice will be persisted/rehydrated.
-        // We keep 'role' out as it often contains API data that should be fetched fresh.
-        whitelist: ['auth']
-    }, rootReducer)
-    : rootReducer
+// 2️⃣ Persist config
+const persistConfig = {
+    key: 'root',
+    storage,
+    whitelist: ['auth'], // persist only auth slice
+};
 
-// 5. Configure the store using the persisted reducer
+const persistedReducer = persistReducer(persistConfig, rootReducer);
+
+// 3️⃣ Configure store
 export const store = configureStore({
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    reducer: persistedReducer as any, // Type assertion to handle Redux Persist types
-    // 6. Middleware configuration to suppress serializability warnings
-    // caused by Redux Persist's internal actions (PERSIST and REHYDRATE).
+    reducer: persistedReducer as any,
     middleware: (getDefaultMiddleware) =>
         getDefaultMiddleware({
             serializableCheck: {
                 ignoredActions: ['persist/PERSIST', 'persist/REHYDRATE', 'persist/REGISTER'],
             },
         }),
-})
+});
 
-// 7. Create the persistor object (needed for use in the root components)
-export const persistor = persistStore(store)
+// 4️⃣ Create persistor
+export const persistor = persistStore(store);
 
-// 8. Set up token synchronization with axios when store is rehydrated
-import { setAuthToken } from './util/apiClient'
-
+// 5️⃣ Token synchronization with Axios
 // Initialize token from current state (handles rehydration)
-const currentState = store.getState()
-if (currentState.auth?.token) {
-    setAuthToken(currentState.auth.token)
-}
+const initializeToken = () => {
+    const token = store.getState().auth?.token || null;
+    console.log("Store: Initializing token on startup:", token ? "***" + token.slice(-10) : "null");
+    setAuthToken(token);
+};
 
-// Listen for store changes to sync token with axios
+// Set initial token
+initializeToken();
+
+// Subscribe to token changes
 store.subscribe(() => {
-    const state = store.getState()
-    const token = state.auth?.token
-    setAuthToken(token || null)
-})
+    const token = store.getState().auth?.token || null;
+    const currentAuthHeader = apiClient.defaults.headers.common["Authorization"];
+    const currentToken = typeof currentAuthHeader === 'string' && currentAuthHeader.startsWith('Bearer ')
+        ? currentAuthHeader.replace("Bearer ", "")
+        : null;
 
-// Define types for state and dispatch
-export type RootState = ReturnType<typeof store.getState>
-export type AppDispatch = typeof store.dispatch
+    if (token !== currentToken) {
+        console.log("Store: Token changed, updating axios:", token ? "***" + token.slice(-10) : "null");
+        setAuthToken(token);
+    }
+});
+
+// 6️⃣ Types
+export type RootState = ReturnType<typeof store.getState>;
+export type AppDispatch = typeof store.dispatch;
+
