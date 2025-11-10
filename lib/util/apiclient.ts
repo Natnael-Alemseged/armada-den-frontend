@@ -1,12 +1,15 @@
 import axios from "axios";
 import { BASE_URL } from "../constants/endpoints";
 import type { AppDispatch } from "../store";
+import type { AnyAction } from "@reduxjs/toolkit";
 
 // Store reference will be set after store initialization
 let storeDispatch: AppDispatch | null = null;
+let logoutActionCreator: (() => AnyAction) | null = null;
 
-export const setStoreDispatch = (dispatch: AppDispatch) => {
+export const setStoreDispatch = (dispatch: AppDispatch, logoutCreator: () => AnyAction) => {
     storeDispatch = dispatch;
+    logoutActionCreator = logoutCreator;
 };
 
 // Create axios instance with base configuration
@@ -102,11 +105,8 @@ apiClient.interceptors.response.use(
                 setAuthToken(null);
                 
                 // Dispatch logout action if store is available
-                if (storeDispatch) {
-                    // Import logout action dynamically to avoid circular dependency
-                    import('../slices/authSlice').then(({ logout }) => {
-                        storeDispatch!(logout());
-                    });
+                if (storeDispatch && logoutActionCreator) {
+                    storeDispatch(logoutActionCreator());
                 }
             }
         } else if (error.request) {

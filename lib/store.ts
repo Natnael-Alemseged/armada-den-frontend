@@ -3,6 +3,7 @@ import { configureStore, combineReducers } from '@reduxjs/toolkit';
 import { persistStore, persistReducer } from 'redux-persist';
 import storage from 'redux-persist/lib/storage'; // localStorage for web
 import { setAuthToken, apiClient, setStoreDispatch } from './util/apiClient';
+import { logout } from './slices/authSlice';
 
 import authReducer from './slices/authSlice';
 import gmailReducer from './features/gmail/gmailSlice';
@@ -41,7 +42,7 @@ export const store = configureStore({
 export const persistor = persistStore(store);
 
 // Set store dispatch for API client 401 handling
-setStoreDispatch(store.dispatch);
+setStoreDispatch(store.dispatch, () => logout());
 
 // 5️⃣ Token synchronization with Axios
 // Initialize token from current state (handles rehydration)
