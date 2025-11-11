@@ -9,6 +9,7 @@ import authReducer from './slices/authSlice';
 import gmailReducer from './features/gmail/gmailSlice';
 import searchReducer from './features/search/searchSlice';
 import chatReducer from './features/chat/chatSlice';
+import realtimeChatReducer from './features/realTimeChat/realtimeChatSlice';
 
 // 1️⃣ Combine reducers
 const rootReducer = combineReducers({
@@ -16,6 +17,7 @@ const rootReducer = combineReducers({
     gmail: gmailReducer,
     search: searchReducer,
     chat: chatReducer,
+    realtimeChat: realtimeChatReducer,
 });
 
 // 2️⃣ Persist config

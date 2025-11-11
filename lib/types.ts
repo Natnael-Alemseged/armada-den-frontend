@@ -23,6 +23,26 @@ export interface User {
     is_active: boolean;
     is_superuser: boolean;
     is_verified: boolean;
+    full_name?: string;
+}
+
+export interface UserWithChatInfo extends User {
+    last_message?: {
+        content: string;
+        created_at: string;
+        sender_id: string;
+        message_type: string;
+    } | null;
+    unread_count: number;
+    room_id: string | null;
+}
+
+export interface UsersListResponse {
+    users: UserWithChatInfo[];
+    total: number;
+    page: number;
+    page_size: number;
+    has_more: boolean;
 }
 
 // Gmail Types
@@ -310,4 +330,228 @@ export interface ChatMessage {
     role: 'user' | 'assistant';
     content: string;
     timestamp: Date;
+}
+
+// Real-Time Chat Types
+export type RoomType = 'direct' | 'group';
+export type ChatMessageType = 'text' | 'image' | 'video' | 'audio' | 'file';
+
+export interface ChatRoom {
+    id: string;
+    name: string | null;
+    room_type: RoomType;
+    description: string | null;
+    avatar_url: string | null;
+    created_by: string;
+    created_at: string;
+    updated_at: string;
+    is_active: boolean;
+    members?: ChatRoomMember[];
+    last_message?: ChatRoomMessage;
+    unread_count?: number;
+}
+
+export interface ChatRoomMember {
+    id: string;
+    room_id: string;
+    user_id: string;
+    joined_at: string;
+    last_read_at: string | null;
+    is_admin: boolean;
+    is_active: boolean;
+    user?: User;
+}
+
+export interface ChatRoomMessage {
+    id: string;
+    room_id: string;
+    sender_id: string;
+    message_type: ChatMessageType;
+    content: string;
+    media_url: string | null;
+    media_filename: string | null;
+    media_size: number | null;
+    media_mime_type: string | null;
+    reply_to_id: string | null;
+    forwarded_from_id: string | null;
+    is_edited: boolean;
+    edited_at: string | null;
+    is_deleted: boolean;
+    deleted_at: string | null;
+    created_at: string;
+    sender?: User;
+    reply_to?: ChatRoomMessage;
+    read_by?: string[];
+}
+
+export interface MessageReadReceipt {
+    id: string;
+    message_id: string;
+    user_id: string;
+    read_at: string;
+}
+
+// Chat API Request/Response Types
+export interface CreateChatRoomRequest {
+    name?: string;
+    room_type: RoomType;
+    description?: string;
+    avatar_url?: string;
+    member_ids: string[];
+}
+
+export interface UpdateChatRoomRequest {
+    name?: string;
+    description?: string;
+    avatar_url?: string;
+}
+
+export interface CreateChatMessageRequest {
+    room_id: string;
+    message_type: ChatMessageType;
+    content: string;
+    media_url?: string;
+    media_filename?: string;
+    media_size?: number;
+    media_mime_type?: string;
+    reply_to_id?: string;
+    forwarded_from_id?: string;
+}
+
+export interface UpdateChatMessageRequest {
+    content: string;
+}
+
+export interface MarkMessagesReadRequest {
+    message_ids: string[];
+}
+
+export interface ChatRoomsResponse {
+    rooms: ChatRoom[];
+    total: number;
+    page: number;
+    page_size: number;
+    has_more: boolean;
+}
+
+export interface ChatMessagesResponse {
+    messages: ChatRoomMessage[];
+    total: number;
+    page: number;
+    page_size: number;
+    has_more: boolean;
+}
+
+export interface MediaUploadResponse {
+    url: string;
+    filename: string;
+    size: number;
+    mime_type: string;
+}
+
+// Socket.IO Event Types
+export interface SocketAuthData {
+    token: string;
+}
+
+export interface SocketJoinRoomData {
+    room_id: string;
+}
+
+export interface SocketLeaveRoomData {
+    room_id: string;
+}
+
+export interface SocketSendMessageData {
+    room_id: string;
+    message_id: string;
+}
+
+export interface SocketTypingData {
+    room_id: string;
+    is_typing: boolean;
+}
+
+export interface SocketMarkReadData {
+    room_id: string;
+    message_ids: string[];
+}
+
+export interface SocketConnectedEvent {
+    user_id: string;
+    message: string;
+}
+
+export interface SocketRoomJoinedEvent {
+    room_id: string;
+    user_id: string;
+}
+
+export interface SocketRoomLeftEvent {
+    room_id: string;
+    user_id: string;
+}
+
+export interface SocketUserJoinedEvent {
+    room_id: string;
+    user_id: string;
+    user: User;
+}
+
+export interface SocketUserLeftEvent {
+    room_id: string;
+    user_id: string;
+}
+
+export interface SocketNewMessageEvent {
+    room_id: string;
+    message: ChatRoomMessage;
+}
+
+export interface SocketMessageEditedEvent {
+    room_id: string;
+    message_id: string;
+    content: string;
+    edited_at: string;
+}
+
+export interface SocketMessageDeletedEvent {
+    room_id: string;
+    message_id: string;
+    deleted_at: string;
+}
+
+export interface SocketMessagesReadEvent {
+    room_id: string;
+    user_id: string;
+    message_ids: string[];
+}
+
+export interface SocketUserTypingEvent {
+    room_id: string;
+    user_id: string;
+    is_typing: boolean;
+}
+
+export interface SocketRoomCreatedEvent {
+    room: ChatRoom;
+}
+
+export interface SocketRoomUpdatedEvent {
+    room: ChatRoom;
+}
+
+export interface SocketMemberAddedEvent {
+    room_id: string;
+    member: ChatRoomMember;
+}
+
+export interface SocketMemberRemovedEvent {
+    room_id: string;
+    user_id: string;
+}
+
+export interface SocketErrorEvent {
+    message: string;
+    code?: string;
 }

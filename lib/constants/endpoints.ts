@@ -13,6 +13,9 @@ export const ENDPOINTS = {
     AUTH_LOGIN: '/auth/jwt/login',
     AUTH_LOGOUT: '/auth/jwt/logout',
     AUTH_ME: '/users/me',
+    
+    // Users
+    USERS_LIST: '/users/users',
 
     // Gmail
     GMAIL_CONNECT: '/gmail/connect',
@@ -43,4 +46,20 @@ export const ENDPOINTS = {
     CONVERSATIONS_MESSAGE_CREATE: (conversationId: string) => `/conversations/${conversationId}/messages`,
     CONVERSATIONS_MESSAGE_UPDATE: (conversationId: string, messageId: string) => `/conversations/${conversationId}/messages/${messageId}`,
     CONVERSATIONS_GENERATE_TITLE: (conversationId: string) => `/conversations/${conversationId}/generate-title`,
+
+    // Real-Time Chat
+    CHAT_ROOMS: '/chat/rooms',
+    CHAT_ROOM_CREATE: '/chat/rooms',
+    CHAT_ROOM_GET: (roomId: string) => `/chat/rooms/${roomId}`,
+    CHAT_ROOM_UPDATE: (roomId: string) => `/chat/rooms/${roomId}`,
+    CHAT_ROOM_ADD_MEMBER: (roomId: string, userId: string) => `/chat/rooms/${roomId}/members/${userId}`,
+    CHAT_ROOM_REMOVE_MEMBER: (roomId: string, userId: string) => `/chat/rooms/${roomId}/members/${userId}`,
+    CHAT_MESSAGES: '/chat/messages',
+    CHAT_MESSAGE_CREATE: '/chat/messages',
+    CHAT_MESSAGE_UPDATE: (messageId: string) => `/chat/messages/${messageId}`,
+    CHAT_MESSAGE_DELETE: (messageId: string) => `/chat/messages/${messageId}`,
+    CHAT_ROOM_MESSAGES: (roomId: string) => `/chat/rooms/${roomId}/messages`,
+    CHAT_MARK_READ: (roomId: string) => `/chat/rooms/${roomId}/read`,
+    CHAT_UPLOAD: '/chat/upload',
+    CHAT_SIGNED_URL: '/chat/upload/signed-url',
 };
