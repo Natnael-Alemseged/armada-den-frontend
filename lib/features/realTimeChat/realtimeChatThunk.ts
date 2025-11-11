@@ -225,7 +225,10 @@ export const markMessagesAsRead = createAsyncThunk<
   try {
     await ApiService.post(
       ENDPOINTS.CHAT_MARK_READ(payload.roomId),
-      { message_ids: payload.messageIds } as MarkMessagesReadRequest,
+      { 
+        room_id: payload.roomId,
+        message_ids: payload.messageIds 
+      } as MarkMessagesReadRequest,
       undefined,
       true
     );

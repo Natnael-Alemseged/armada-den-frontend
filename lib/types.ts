@@ -423,6 +423,7 @@ export interface UpdateChatMessageRequest {
 }
 
 export interface MarkMessagesReadRequest {
+    room_id: string;
     message_ids: string[];
 }
 

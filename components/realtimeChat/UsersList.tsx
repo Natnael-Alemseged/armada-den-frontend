@@ -189,11 +189,19 @@ export function UsersList() {
                   {/* User Info */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between mb-1">
-                      <h3 className="font-semibold text-sm text-gray-900 dark:text-white truncate">
-                        {user.full_name || user.email}
-                      </h3>
+                      <div className="flex items-center gap-2 min-w-0 flex-1">
+                        <h3 className="font-semibold text-sm text-gray-900 dark:text-white truncate">
+                          {user.full_name || user.email}
+                        </h3>
+                        {/* Unread Badge */}
+                        {user.unread_count > 0 && (
+                          <span className="inline-flex items-center justify-center px-2 py-0.5 text-xs font-bold text-white bg-blue-600 rounded-full flex-shrink-0">
+                            {user.unread_count > 99 ? '99+' : user.unread_count}
+                          </span>
+                        )}
+                      </div>
                       {user.last_message && (
-                        <span className="text-xs text-gray-500 dark:text-gray-400 ml-2">
+                        <span className="text-xs text-gray-500 dark:text-gray-400 ml-2 flex-shrink-0">
                           {formatTime(user.last_message.created_at)}
                         </span>
                       )}
@@ -206,7 +214,7 @@ export function UsersList() {
                     {user.last_message ? (
                       <p className="text-sm text-gray-600 dark:text-gray-400 truncate">
                         {user.last_message.sender_id === currentUser?.id ? 'You: ' : ''}
-                        {user.last_message.message_type === 'TEXT'
+                        {user.last_message.message_type === 'text'
                           ? user.last_message.content
                           : `📎 ${user.last_message.message_type.toLowerCase()}`}
                       </p>
@@ -214,15 +222,6 @@ export function UsersList() {
                       <p className="text-sm text-gray-400 dark:text-gray-500 italic">
                         No messages yet
                       </p>
-                    )}
-
-                    {/* Unread Badge */}
-                    {user.unread_count > 0 && (
-                      <div className="mt-1">
-                        <span className="inline-flex items-center justify-center px-2 py-0.5 text-xs font-bold text-white bg-blue-600 rounded-full">
-                          {user.unread_count > 99 ? '99+' : user.unread_count}
-                        </span>
-                      </div>
                     )}
                   </div>
                 </div>

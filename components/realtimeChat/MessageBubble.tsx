@@ -69,7 +69,7 @@ export function MessageBubble({ message, isOwn, onReply }: MessageBubbleProps) {
     if (!message.media_url) return null;
 
     switch (message.message_type) {
-      case 'IMAGE':
+      case 'image':
         return (
           <img
             src={message.media_url}
@@ -78,7 +78,7 @@ export function MessageBubble({ message, isOwn, onReply }: MessageBubbleProps) {
             onClick={() => window.open(message.media_url!, '_blank')}
           />
         );
-      case 'VIDEO':
+      case 'video':
         return (
           <video
             src={message.media_url}
@@ -86,11 +86,11 @@ export function MessageBubble({ message, isOwn, onReply }: MessageBubbleProps) {
             className="max-w-sm rounded-lg"
           />
         );
-      case 'AUDIO':
+      case 'audio':
         return (
           <audio src={message.media_url} controls className="max-w-sm" />
         );
-      case 'FILE':
+      case 'file':
         return (
           <a
             href={message.media_url}

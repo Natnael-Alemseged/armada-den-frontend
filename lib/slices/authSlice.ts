@@ -124,7 +124,8 @@ const authSlice = createSlice({
             })
             .addCase(logoutUser.rejected, (state, action) => {
                 state.loading = false
-                state.error = action.payload || 'Logout failed'
+                // Don't set error on logout rejection - user is being logged out anyway
+                state.error = null
                 state.user = null
                 state.token = null
             })

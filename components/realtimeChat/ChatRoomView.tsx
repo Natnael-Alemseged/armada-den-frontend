@@ -11,7 +11,7 @@ import { addOptimisticMessage } from '@/lib/features/realTimeChat/realtimeChatSl
 import { socketService } from '@/lib/services/socketService';
 import { ChatRoomMessage, ChatMessageType } from '@/lib/types';
 import { MessageBubble } from './MessageBubble';
-import { Send, Paperclip, Loader2, Users, Phone, Video, MoreVertical } from 'lucide-react';
+import { Send, Paperclip, Loader2, Users } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export function ChatRoomView() {
@@ -95,7 +95,7 @@ export function ChatRoomView() {
       id: `temp-${Date.now()}`,
       room_id: currentRoom.id,
       sender_id: user?.id || '',
-      message_type: 'TEXT',
+      message_type: 'text',
       content: messageContent,
       media_url: null,
       media_filename: null,
@@ -119,7 +119,7 @@ export function ChatRoomView() {
       await dispatch(
         createChatMessage({
           room_id: currentRoom.id,
-          message_type: 'TEXT',
+          message_type: 'text',
           content: messageContent,
           reply_to_id: replyTo?.id,
         })
@@ -140,13 +140,13 @@ export function ChatRoomView() {
       const mediaData = await dispatch(uploadMedia({ file })).unwrap();
 
       // Determine message type based on MIME type
-      let messageType: ChatMessageType = 'FILE';
+      let messageType: ChatMessageType = 'file';
       if (mediaData.mime_type.startsWith('image/')) {
-        messageType = 'IMAGE';
+        messageType = 'image';
       } else if (mediaData.mime_type.startsWith('video/')) {
-        messageType = 'VIDEO';
+        messageType = 'video';
       } else if (mediaData.mime_type.startsWith('audio/')) {
-        messageType = 'AUDIO';
+        messageType = 'audio';
       }
 
       // Send message with media
@@ -195,7 +195,7 @@ export function ChatRoomView() {
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
-      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-4 flex items-center justify-between">
+      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-4">
         <div className="flex items-center gap-3">
           {currentRoom.avatar_url ? (
             <img
@@ -218,18 +218,6 @@ export function ChatRoomView() {
               </p>
             )}
           </div>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <button className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">
-            <Phone className="w-5 h-5 text-gray-600 dark:text-gray-400" />
-          </button>
-          <button className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">
-            <Video className="w-5 h-5 text-gray-600 dark:text-gray-400" />
-          </button>
-          <button className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors">
-            <MoreVertical className="w-5 h-5 text-gray-600 dark:text-gray-400" />
-          </button>
         </div>
       </div>
 

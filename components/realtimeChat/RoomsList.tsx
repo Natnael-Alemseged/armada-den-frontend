@@ -127,7 +127,7 @@ export function RoomsList() {
                 <p className="text-sm text-gray-600 dark:text-gray-400 truncate">
                   {room.last_message.is_deleted
                     ? 'Message deleted'
-                    : room.last_message.message_type === 'TEXT'
+                    : room.last_message.message_type === 'text'
                     ? room.last_message.content
                     : `📎 ${room.last_message.message_type.toLowerCase()}`}
                 </p>
