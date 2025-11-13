@@ -49,7 +49,7 @@ export const loginUser = createAsyncThunk<
 
 export const registerUser = createAsyncThunk<
     User,
-    { email: string; password: string },
+    { email: string; password: string; full_name?: string },
     { rejectValue: string }
 >(
     'auth/registerUser',
@@ -60,6 +60,7 @@ export const registerUser = createAsyncThunk<
                 {
                     email: credentials.email,
                     password: credentials.password,
+                    full_name: credentials.full_name,
                     is_active: true,
                     is_superuser: false,
                     is_verified: false,

@@ -556,3 +556,222 @@ export interface SocketErrorEvent {
     message: string;
     code?: string;
 }
+
+// Channels & Topics Types
+export type UserRole = 'ADMIN' | 'USER';
+
+export interface Channel {
+    id: string;
+    name: string;
+    description: string | null;
+    icon: string | null;
+    color: string | null;
+    created_by: string;
+    created_at: string;
+    updated_at: string;
+}
+
+export interface Topic {
+    id: string;
+    channel_id: string;
+    name: string;
+    description: string | null;
+    is_pinned: boolean;
+    created_by: string;
+    created_at: string;
+    updated_at: string;
+    channel?: Channel;
+    unread_count?: number;
+    last_message?: TopicMessage;
+}
+
+export interface TopicMember {
+    id: string;
+    topic_id: string;
+    user_id: string;
+    joined_at: string;
+    last_read_at: string | null;
+    is_active: boolean;
+    user?: User;
+}
+
+export interface TopicMessage {
+    id: string;
+    topic_id: string;
+    sender_id: string;
+    content: string;
+    reply_to_id: string | null;
+    is_edited: boolean;
+    edited_at: string | null;
+    is_deleted: boolean;
+    deleted_at: string | null;
+    created_at: string;
+    sender?: User;
+    reply_to?: TopicMessage;
+    mentions?: MessageMention[];
+    reactions?: MessageReaction[];
+}
+
+export interface MessageMention {
+    id: string;
+    message_id: string;
+    mentioned_user_id: string;
+    is_read: boolean;
+    created_at: string;
+    mentioned_user?: User;
+}
+
+export interface MessageReaction {
+    id: string;
+    message_id: string;
+    user_id: string;
+    emoji: string;
+    created_at: string;
+    user?: User;
+}
+
+// Channel API Request/Response Types
+export interface CreateChannelRequest {
+    name: string;
+    description?: string;
+    icon?: string;
+    color?: string;
+}
+
+export interface UpdateChannelRequest {
+    name?: string;
+    description?: string;
+    icon?: string;
+    color?: string;
+}
+
+export interface ChannelsResponse {
+    channels: Channel[];
+    total: number;
+}
+
+// Topic API Request/Response Types
+export interface CreateTopicRequest {
+    channel_id: string;
+    name: string;
+    description?: string;
+    member_ids?: string[];
+}
+
+export interface UpdateTopicRequest {
+    name?: string;
+    description?: string;
+    is_pinned?: boolean;
+}
+
+export interface TopicsResponse {
+    topics: Topic[];
+    total: number;
+}
+
+// Topic Message API Request/Response Types
+export interface CreateTopicMessageRequest {
+    topic_id: string;
+    content: string;
+    reply_to_id?: string;
+    mentioned_user_ids?: string[];
+}
+
+export interface UpdateTopicMessageRequest {
+    content: string;
+}
+
+export interface TopicMessagesResponse {
+    messages: TopicMessage[];
+    total: number;
+    page: number;
+    page_size: number;
+    has_more: boolean;
+}
+
+// Reaction API Request/Response Types
+export interface AddReactionRequest {
+    emoji: string;
+}
+
+// Socket.IO Events for Channels/Topics
+export interface SocketJoinTopicData {
+    topic_id: string;
+}
+
+export interface SocketLeaveTopicData {
+    topic_id: string;
+}
+
+export interface SocketTopicTypingData {
+    topic_id: string;
+    is_typing: boolean;
+}
+
+export interface SocketTopicCreatedEvent {
+    topic_id: string;
+    channel_id: string;
+    name: string;
+    created_by: string;
+}
+
+export interface SocketTopicUpdatedEvent {
+    topic_id: string;
+    updated_by: string;
+}
+
+export interface SocketMemberAddedToTopicEvent {
+    topic_id: string;
+    user_id: string;
+    added_by: string;
+}
+
+export interface SocketMemberRemovedFromTopicEvent {
+    topic_id: string;
+    user_id: string;
+    removed_by: string;
+}
+
+export interface SocketNewTopicMessageEvent {
+    topic_id: string;
+    message: TopicMessage;
+}
+
+export interface SocketTopicMessageEditedEvent {
+    topic_id: string;
+    message_id: string;
+    content: string;
+    edited_by: string;
+}
+
+export interface SocketTopicMessageDeletedEvent {
+    topic_id: string;
+    message_id: string;
+    deleted_by: string;
+}
+
+export interface SocketUserTypingTopicEvent {
+    topic_id: string;
+    user_id: string;
+    is_typing: boolean;
+}
+
+export interface SocketMentionedEvent {
+    topic_id: string;
+    message_id: string;
+    mentioned_by: string;
+}
+
+export interface SocketReactionAddedEvent {
+    topic_id: string;
+    message_id: string;
+    user_id: string;
+    emoji: string;
+}
+
+export interface SocketReactionRemovedEvent {
+    topic_id: string;
+    message_id: string;
+    user_id: string;
+    emoji: string;
+}

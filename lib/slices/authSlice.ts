@@ -6,6 +6,8 @@ export interface User {
     id: string
     email: string
     name?: string
+    full_name?: string
+    role?: 'ADMIN' | 'USER'
     employment_type?: string
     management_level?: string
     capabilities?: string[]

@@ -10,6 +10,7 @@ import gmailReducer from './features/gmail/gmailSlice';
 import searchReducer from './features/search/searchSlice';
 import chatReducer from './features/chat/chatSlice';
 import realtimeChatReducer from './features/realTimeChat/realtimeChatSlice';
+import channelsReducer from './features/channels/channelsSlice';
 
 // 1️⃣ Combine reducers
 const rootReducer = combineReducers({
@@ -18,6 +19,7 @@ const rootReducer = combineReducers({
     search: searchReducer,
     chat: chatReducer,
     realtimeChat: realtimeChatReducer,
+    channels: channelsReducer,
 });
 
 // 2️⃣ Persist config

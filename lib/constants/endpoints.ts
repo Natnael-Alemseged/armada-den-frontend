@@ -62,4 +62,34 @@ export const ENDPOINTS = {
     CHAT_MARK_READ: (roomId: string) => `/chat/rooms/${roomId}/read`,
     CHAT_UPLOAD: '/chat/upload',
     CHAT_SIGNED_URL: '/chat/upload/signed-url',
+
+    // Channels & Topics
+    CHANNELS_LIST: '/channels',
+    CHANNELS_CREATE: '/channels',
+    CHANNELS_GET: (channelId: string) => `/channels/${channelId}`,
+    CHANNELS_UPDATE: (channelId: string) => `/channels/${channelId}`,
+    CHANNELS_DELETE: (channelId: string) => `/channels/${channelId}`,
+    CHANNELS_TOPICS: (channelId: string) => `/channels/${channelId}/topics`,
+    
+    TOPICS_LIST: '/channels/topics',
+    TOPICS_MY: '/channels/topics/my',
+    TOPICS_CREATE: '/channels/topics',
+    TOPICS_GET: (topicId: string) => `/channels/topics/${topicId}`,
+    TOPICS_UPDATE: (topicId: string) => `/channels/topics/${topicId}`,
+    TOPICS_DELETE: (topicId: string) => `/channels/topics/${topicId}`,
+    TOPICS_PIN: (topicId: string) => `/channels/topics/${topicId}/pin`,
+    TOPICS_UNPIN: (topicId: string) => `/channels/topics/${topicId}/unpin`,
+    
+    TOPICS_MEMBERS: (topicId: string) => `/channels/topics/${topicId}/members`,
+    TOPICS_MEMBER_ADD: (topicId: string) => `/channels/topics/${topicId}/members`,
+    TOPICS_MEMBER_REMOVE: (topicId: string, userId: string) => `/channels/topics/${topicId}/members/${userId}`,
+    
+    TOPICS_MESSAGES: (topicId: string) => `/channels/topics/${topicId}/messages`,
+    TOPICS_MESSAGE_CREATE: '/channels/topics/messages',
+    TOPICS_MESSAGE_GET: (messageId: string) => `/channels/topics/messages/${messageId}`,
+    TOPICS_MESSAGE_UPDATE: (messageId: string) => `/channels/topics/messages/${messageId}`,
+    TOPICS_MESSAGE_DELETE: (messageId: string) => `/channels/topics/messages/${messageId}`,
+    
+    TOPICS_MESSAGE_REACTION_ADD: (messageId: string) => `/channels/topics/messages/${messageId}/reactions`,
+    TOPICS_MESSAGE_REACTION_REMOVE: (messageId: string, emoji: string) => `/channels/topics/messages/${messageId}/reactions/${encodeURIComponent(emoji)}`,
 };

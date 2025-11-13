@@ -8,6 +8,7 @@ import { Mail, Lock, Loader2 } from 'lucide-react';
 export function LoginForm() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [fullName, setFullName] = useState('');
   const [error, setError] = useState('');
   const [isRegister, setIsRegister] = useState(false);
   const dispatch = useAppDispatch();
@@ -19,7 +20,7 @@ export function LoginForm() {
 
     try {
       if (isRegister) {
-        await dispatch(registerUser({ email, password })).unwrap();
+        await dispatch(registerUser({ email, password, full_name: fullName })).unwrap();
       } else {
         await dispatch(loginUser({ email, password })).unwrap();
       }
@@ -65,6 +66,24 @@ export function LoginForm() {
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
+            {isRegister && (
+              <div>
+                <label htmlFor="fullName" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Full Name
+                </label>
+                <div className="relative">
+                  <input
+                    id="fullName"
+                    type="text"
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
+                    required
+                    className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white shadow-sm transition-all"
+                    placeholder="John Doe"
+                  />
+                </div>
+              </div>
+            )}
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Email
@@ -170,6 +189,7 @@ export function LoginForm() {
               onClick={() => {
                 setIsRegister(!isRegister);
                 setError('');
+                setFullName('');
               }}
               className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 text-sm font-medium"
             >

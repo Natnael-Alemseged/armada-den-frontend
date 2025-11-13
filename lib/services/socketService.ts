@@ -263,6 +263,165 @@ class SocketService {
   offError(callback?: (data: SocketErrorEvent) => void): void {
     this.socket?.off('error', callback);
   }
+
+  /**
+   * Channels/Topics Methods
+   */
+
+  // Join a topic
+  joinTopic(topicId: string): void {
+    if (!this.socket) {
+      throw new Error('Socket not connected');
+    }
+    this.socket.emit('join_topic', { topic_id: topicId });
+  }
+
+  // Leave a topic
+  leaveTopic(topicId: string): void {
+    if (!this.socket) {
+      throw new Error('Socket not connected');
+    }
+    this.socket.emit('leave_topic', { topic_id: topicId });
+  }
+
+  // Send typing indicator for topic
+  sendTopicTyping(topicId: string, isTyping: boolean): void {
+    if (!this.socket) {
+      throw new Error('Socket not connected');
+    }
+    this.socket.emit('topic_typing', {
+      topic_id: topicId,
+      is_typing: isTyping,
+    });
+  }
+
+  /**
+   * Channels/Topics Event Listeners
+   */
+
+  onTopicCreated(callback: (data: any) => void): void {
+    this.socket?.on('topic_created', callback);
+  }
+
+  onTopicUpdated(callback: (data: any) => void): void {
+    this.socket?.on('topic_updated', callback);
+  }
+
+  onTopicJoined(callback: (data: any) => void): void {
+    this.socket?.on('topic_joined', callback);
+  }
+
+  onTopicLeft(callback: (data: any) => void): void {
+    this.socket?.on('topic_left', callback);
+  }
+
+  onMemberAddedToTopic(callback: (data: any) => void): void {
+    this.socket?.on('member_added', callback);
+  }
+
+  onMemberRemovedFromTopic(callback: (data: any) => void): void {
+    this.socket?.on('member_removed', callback);
+  }
+
+  onUserJoinedTopic(callback: (data: any) => void): void {
+    this.socket?.on('user_joined_topic', callback);
+  }
+
+  onUserLeftTopic(callback: (data: any) => void): void {
+    this.socket?.on('user_left_topic', callback);
+  }
+
+  onNewTopicMessage(callback: (data: any) => void): void {
+    this.socket?.on('new_topic_message', callback);
+  }
+
+  onTopicMessageEdited(callback: (data: any) => void): void {
+    this.socket?.on('topic_message_edited', callback);
+  }
+
+  onTopicMessageDeleted(callback: (data: any) => void): void {
+    this.socket?.on('topic_message_deleted', callback);
+  }
+
+  onUserTypingTopic(callback: (data: any) => void): void {
+    this.socket?.on('user_typing_topic', callback);
+  }
+
+  onMentioned(callback: (data: any) => void): void {
+    this.socket?.on('mentioned', callback);
+  }
+
+  onReactionAdded(callback: (data: any) => void): void {
+    this.socket?.on('reaction_added', callback);
+  }
+
+  onReactionRemoved(callback: (data: any) => void): void {
+    this.socket?.on('reaction_removed', callback);
+  }
+
+  /**
+   * Remove Channels/Topics event listeners
+   */
+
+  offTopicCreated(callback?: (data: any) => void): void {
+    this.socket?.off('topic_created', callback);
+  }
+
+  offTopicUpdated(callback?: (data: any) => void): void {
+    this.socket?.off('topic_updated', callback);
+  }
+
+  offTopicJoined(callback?: (data: any) => void): void {
+    this.socket?.off('topic_joined', callback);
+  }
+
+  offTopicLeft(callback?: (data: any) => void): void {
+    this.socket?.off('topic_left', callback);
+  }
+
+  offMemberAddedToTopic(callback?: (data: any) => void): void {
+    this.socket?.off('member_added', callback);
+  }
+
+  offMemberRemovedFromTopic(callback?: (data: any) => void): void {
+    this.socket?.off('member_removed', callback);
+  }
+
+  offUserJoinedTopic(callback?: (data: any) => void): void {
+    this.socket?.off('user_joined_topic', callback);
+  }
+
+  offUserLeftTopic(callback?: (data: any) => void): void {
+    this.socket?.off('user_left_topic', callback);
+  }
+
+  offNewTopicMessage(callback?: (data: any) => void): void {
+    this.socket?.off('new_topic_message', callback);
+  }
+
+  offTopicMessageEdited(callback?: (data: any) => void): void {
+    this.socket?.off('topic_message_edited', callback);
+  }
+
+  offTopicMessageDeleted(callback?: (data: any) => void): void {
+    this.socket?.off('topic_message_deleted', callback);
+  }
+
+  offUserTypingTopic(callback?: (data: any) => void): void {
+    this.socket?.off('user_typing_topic', callback);
+  }
+
+  offMentioned(callback?: (data: any) => void): void {
+    this.socket?.off('mentioned', callback);
+  }
+
+  offReactionAdded(callback?: (data: any) => void): void {
+    this.socket?.off('reaction_added', callback);
+  }
+
+  offReactionRemoved(callback?: (data: any) => void): void {
+    this.socket?.off('reaction_removed', callback);
+  }
 }
 
 // Export singleton instance
