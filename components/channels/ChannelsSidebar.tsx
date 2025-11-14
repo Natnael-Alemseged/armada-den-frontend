@@ -97,7 +97,7 @@ export function ChannelsSidebar({
                       toggleChannel(channel.id);
                       onChannelSelect(channel);
                     }}
-                    className={`w-full flex items-center gap-2 px-2 py-1.5 rounded hover:bg-[#522653] transition-colors ${
+                    className={`group w-full flex items-center gap-2 px-2 py-1.5 rounded hover:bg-[#522653] transition-colors ${
                       currentChannel?.id === channel.id ? 'bg-[#1164A3]' : ''
                     }`}
                   >
@@ -117,7 +117,7 @@ export function ChannelsSidebar({
                           setShowCreateTopic(true);
                           onChannelSelect(channel);
                         }}
-                        className="p-1 hover:bg-[#350d36] rounded transition-colors opacity-0 group-hover:opacity-100"
+                        className="p-1 hover:bg-[#350d36] rounded transition-colors group-hover:opacity-100 opacity-70"
                         title="Create Topic"
                       >
                         <Plus className="w-3 h-3" />

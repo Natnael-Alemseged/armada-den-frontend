@@ -160,7 +160,7 @@ export function UsersList() {
           </div>
         ) : (
           filteredUsers.map((user) => {
-            const isSelected = currentRoom?.members?.some((m) => m.user_id === user.id);
+            const isSelected = currentRoom?.members?.some((m: any) => m.user_id === user.id);
             const hasNoMessages = !user.last_message;
 
             return (

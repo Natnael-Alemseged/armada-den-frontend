@@ -331,11 +331,13 @@ const channelsSlice = createSlice({
       })
       .addCase(fetchTopicMessages.fulfilled, (state, action) => {
         state.messagesLoading = false;
+        // Reverse messages so oldest is first, newest is last (bottom)
+        const sortedMessages = [...action.payload.messages].reverse();
         if (action.payload.page === 1) {
-          state.messages = action.payload.messages;
+          state.messages = sortedMessages;
         } else {
           // Prepend older messages
-          state.messages = [...action.payload.messages, ...state.messages];
+          state.messages = [...sortedMessages, ...state.messages];
         }
         state.hasMoreMessages = action.payload.has_more;
         state.currentPage = action.payload.page;

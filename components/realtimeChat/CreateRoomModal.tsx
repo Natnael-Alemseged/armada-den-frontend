@@ -29,7 +29,7 @@ export function CreateRoomModal({ onClose }: CreateRoomModalProps) {
   }, []); // Empty dependency array - only run once on mount
 
   // Filter users based on search
-  const filteredUsers = users.filter((user) =>
+  const filteredUsers = users.filter((user: any) =>
     searchQuery
       ? user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
         user.full_name?.toLowerCase().includes(searchQuery.toLowerCase())
@@ -226,8 +226,8 @@ export function CreateRoomModal({ onClose }: CreateRoomModalProps) {
                 </div>
               ) : (
                 <div className="divide-y divide-gray-200 dark:divide-gray-700">
-                  {filteredUsers.map((user) => {
-                    const isSelected = selectedUsers.some((u) => u.id === user.id);
+                  {filteredUsers.map((user: any) => {
+                    const isSelected = selectedUsers.some((u: any) => u.id === user.id);
                     return (
                       <button
                         key={user.id}

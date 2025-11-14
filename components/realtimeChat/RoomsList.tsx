@@ -54,11 +54,11 @@ export function RoomsList() {
   };
 
   const getRoomName = (room: ChatRoom) => {
-    if (room.room_type === 'GROUP') {
+    if (room.room_type === 'group') {
       return room.name || 'Unnamed Group';
     }
     // For direct chats, show the other user's name
-    const otherMember = room.members?.find((m) => m.user_id !== user?.id);
+    const otherMember = room.members?.find((m: any) => m.user_id !== user?.id);
     return otherMember?.user?.email || 'Unknown User';
   };
 
@@ -80,7 +80,7 @@ export function RoomsList() {
 
   return (
     <div className="divide-y divide-gray-200 dark:divide-gray-700">
-      {rooms.map((room) => (
+      {rooms.map((room: any) => (
         <button
           key={room.id}
           onClick={() => handleSelectRoom(room)}

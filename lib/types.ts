@@ -45,6 +45,14 @@ export interface UsersListResponse {
     has_more: boolean;
 }
 
+export interface UserForTopicAddition {
+    id: string;
+    email: string;
+    full_name?: string;
+    avatar_url?: string | null;
+    is_member: boolean;
+}
+
 // Gmail Types
 export interface EmailRecipient {
     email: string;
@@ -606,6 +614,12 @@ export interface TopicMessage {
     is_deleted: boolean;
     deleted_at: string | null;
     created_at: string;
+    // Backend provides these fields directly
+    sender_email: string;
+    sender_full_name: string | null;
+    mention_count: number;
+    reaction_count: number;
+    // Optional nested objects
     sender?: User;
     reply_to?: TopicMessage;
     mentions?: MessageMention[];

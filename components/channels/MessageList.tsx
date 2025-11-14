@@ -1,14 +1,16 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { TopicMessage } from '@/lib/types';
 import { formatDistanceToNow } from 'date-fns';
 import { MoreVertical, Reply, Smile, Edit2, Trash2 } from 'lucide-react';
 import { useAppDispatch } from '@/lib/hooks';
+import EmojiPicker, { EmojiClickData } from 'emoji-picker-react';
 import {
   updateTopicMessage,
   deleteTopicMessage,
   addReaction,
+  removeReaction,
 } from '@/lib/features/channels/channelsThunk';
 
 interface MessageListProps {
@@ -21,6 +23,8 @@ export function MessageList({ messages, currentUserId }: MessageListProps) {
   const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
   const [editContent, setEditContent] = useState('');
   const [hoveredMessageId, setHoveredMessageId] = useState<string | null>(null);
+  const [showEmojiPicker, setShowEmojiPicker] = useState<string | null>(null);
+  const emojiPickerRef = useRef<HTMLDivElement>(null);
 
   const handleEdit = (message: TopicMessage) => {
     setEditingMessageId(message.id);
@@ -52,12 +56,43 @@ export function MessageList({ messages, currentUserId }: MessageListProps) {
     }
   };
 
-  const handleAddReaction = async (messageId: string, emoji: string) => {
+  // Close emoji picker when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (emojiPickerRef.current && !emojiPickerRef.current.contains(event.target as Node)) {
+        setShowEmojiPicker(null);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const handleToggleReaction = async (messageId: string, emoji: string) => {
+    const message = messages.find((m) => m.id === messageId);
+    if (!message) return;
+
+    // Check if current user has already reacted with this emoji
+    const userReaction = message.reactions?.find(
+      (r) => r.user_id === currentUserId && r.emoji === emoji
+    );
+
     try {
-      await dispatch(addReaction({ messageId, emoji })).unwrap();
+      if (userReaction) {
+        // Remove reaction
+        await dispatch(removeReaction({ messageId, emoji })).unwrap();
+      } else {
+        // Add reaction
+        await dispatch(addReaction({ messageId, emoji })).unwrap();
+      }
     } catch (error) {
-      console.error('Failed to add reaction:', error);
+      console.error('Failed to toggle reaction:', error);
     }
+  };
+
+  const handleEmojiSelect = async (messageId: string, emojiData: EmojiClickData) => {
+    setShowEmojiPicker(null); // Close picker immediately
+    await handleToggleReaction(messageId, emojiData.emoji);
   };
 
   const groupReactions = (reactions: TopicMessage['reactions']) => {
@@ -73,7 +108,7 @@ export function MessageList({ messages, currentUserId }: MessageListProps) {
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3 px-4">
       {messages.map((message) => {
         const isOwnMessage = message.sender_id === currentUserId;
         const isEditing = editingMessageId === message.id;
@@ -83,10 +118,9 @@ export function MessageList({ messages, currentUserId }: MessageListProps) {
           return (
             <div
               key={message.id}
-              className="flex gap-3 text-gray-400 dark:text-gray-500 italic text-sm"
+              className="flex justify-center text-gray-500 italic text-xs"
             >
-              <div className="w-8 h-8 rounded bg-gray-200 dark:bg-gray-700" />
-              <div>Message deleted</div>
+              <div className="bg-[#1A1A1A] px-3 py-1 rounded-full">Message deleted</div>
             </div>
           );
         }
@@ -94,113 +128,147 @@ export function MessageList({ messages, currentUserId }: MessageListProps) {
         return (
           <div
             key={message.id}
-            className="flex gap-3 group"
+            className={`flex gap-2 group ${isOwnMessage ? 'flex-row-reverse' : 'flex-row'}`}
             onMouseEnter={() => setHoveredMessageId(message.id)}
             onMouseLeave={() => setHoveredMessageId(null)}
           >
             {/* Avatar */}
-            <div className="w-8 h-8 rounded bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white font-semibold text-sm flex-shrink-0">
-              {message.sender?.full_name?.[0]?.toUpperCase() ||
-                message.sender?.email?.[0]?.toUpperCase() ||
+            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white font-semibold text-xs flex-shrink-0">
+              {message.sender_full_name?.[0]?.toUpperCase() ||
+                message.sender_email?.[0]?.toUpperCase() ||
                 'U'}
             </div>
 
             {/* Message Content */}
-            <div className="flex-1 min-w-0">
+            <div className={`flex flex-col max-w-[70%] ${isOwnMessage ? 'items-end' : 'items-start'}`}>
               {/* Header */}
-              <div className="flex items-baseline gap-2 mb-1">
-                <span className="font-semibold text-gray-900 dark:text-white text-sm">
-                  {message.sender?.full_name || message.sender?.email || 'Unknown User'}
+              <div className={`flex items-baseline gap-2 mb-1 px-1 ${isOwnMessage ? 'flex-row-reverse' : 'flex-row'}`}>
+                <span className="font-medium text-white text-xs">
+                  {message.sender_full_name || message.sender_email || 'Unknown User'}
                 </span>
-                <span className="text-xs text-gray-500 dark:text-gray-400">
+                <span className="text-[10px] text-gray-500">
                   {formatDistanceToNow(new Date(message.created_at), { addSuffix: true })}
                 </span>
                 {message.is_edited && (
-                  <span className="text-xs text-gray-400 dark:text-gray-500">(edited)</span>
+                  <span className="text-[10px] text-gray-600">(edited)</span>
                 )}
               </div>
 
-              {/* Message Body */}
-              {isEditing ? (
-                <div className="space-y-2">
-                  <textarea
-                    value={editContent}
-                    onChange={(e) => setEditContent(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white resize-none"
-                    rows={3}
-                    autoFocus
-                  />
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => handleSaveEdit(message.id)}
-                      className="px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700"
-                    >
-                      Save
-                    </button>
-                    <button
-                      onClick={() => setEditingMessageId(null)}
-                      className="px-3 py-1 bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-gray-200 text-sm rounded hover:bg-gray-400 dark:hover:bg-gray-500"
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                <>
-                  <p className="text-gray-900 dark:text-gray-100 text-sm whitespace-pre-wrap break-words">
-                    {message.content}
-                  </p>
-
-                  {/* Reactions */}
-                  {message.reactions && message.reactions.length > 0 && (
-                    <div className="flex flex-wrap gap-1 mt-2">
-                      {groupReactions(message.reactions).map(([emoji, reactions]) => (
-                        <button
-                          key={emoji}
-                          onClick={() => handleAddReaction(message.id, emoji)}
-                          className="inline-flex items-center gap-1 px-2 py-0.5 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-full text-sm transition-colors"
-                        >
-                          <span>{emoji}</span>
-                          <span className="text-xs text-gray-600 dark:text-gray-400">
-                            {reactions.length}
-                          </span>
-                        </button>
-                      ))}
+              {/* Message Bubble */}
+              <div className="relative group/message">
+                {isEditing ? (
+                  <div className="space-y-2 min-w-[300px]">
+                    <textarea
+                      value={editContent}
+                      onChange={(e) => setEditContent(e.target.value)}
+                      className="w-full px-3 py-2 border border-[#2A2A2A] rounded-lg focus:outline-none focus:border-[#1A73E8] bg-[#1A1A1A] text-white resize-none text-sm"
+                      rows={3}
+                      autoFocus
+                    />
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => handleSaveEdit(message.id)}
+                        className="px-3 py-1 bg-[#1A73E8] text-white text-xs rounded-md hover:bg-[#1557B0]"
+                      >
+                        Save
+                      </button>
+                      <button
+                        onClick={() => setEditingMessageId(null)}
+                        className="px-3 py-1 bg-[#2A2A2A] text-gray-300 text-xs rounded-md hover:bg-[#3A3A3A]"
+                      >
+                        Cancel
+                      </button>
                     </div>
-                  )}
-                </>
-              )}
+                  </div>
+                ) : (
+                  <>
+                    <div className={`px-3 py-2 rounded-2xl ${
+                      isOwnMessage 
+                        ? 'bg-[#1A73E8] text-white' 
+                        : 'bg-[#1A1A1A] text-gray-200'
+                    }`}>
+                      <p className="text-sm whitespace-pre-wrap break-words leading-relaxed">
+                        {message.content}
+                      </p>
+                    </div>
 
-              {/* Action Buttons */}
-              {!isEditing && isHovered && (
-                <div className="absolute right-4 -mt-8 flex gap-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg p-1">
-                  <button
-                    onClick={() => handleAddReaction(message.id, '👍')}
-                    className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors"
-                    title="Add reaction"
-                  >
-                    <Smile className="w-4 h-4 text-gray-600 dark:text-gray-400" />
-                  </button>
-                  {isOwnMessage && (
-                    <>
-                      <button
-                        onClick={() => handleEdit(message)}
-                        className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors"
-                        title="Edit message"
-                      >
-                        <Edit2 className="w-4 h-4 text-gray-600 dark:text-gray-400" />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(message.id)}
-                        className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors"
-                        title="Delete message"
-                      >
-                        <Trash2 className="w-4 h-4 text-red-600 dark:text-red-400" />
-                      </button>
-                    </>
-                  )}
-                </div>
-              )}
+                    {/* Reactions */}
+                    {message.reactions && message.reactions.length > 0 && (
+                      <div className="flex flex-wrap gap-1 mt-1">
+                        {groupReactions(message.reactions).map(([emoji, reactions]) => {
+                          const userReacted = reactions.some((r) => r.user_id === currentUserId);
+                          const userNames = reactions
+                            .map((r) => r.user?.full_name || r.user?.email || 'Unknown')
+                            .join(', ');
+                          
+                          return (
+                            <button
+                              key={emoji}
+                              onClick={() => handleToggleReaction(message.id, emoji)}
+                              className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-xs transition-colors ${
+                                userReacted
+                                  ? 'bg-[#1A73E8]/20 border border-[#1A73E8] text-[#1A73E8]'
+                                  : 'bg-[#0D0D0D] border border-[#2A2A2A] hover:border-[#3A3A3A] text-gray-400'
+                              }`}
+                              title={userNames}
+                            >
+                              <span>{emoji}</span>
+                              <span className="text-[10px]">
+                                {reactions.length}
+                              </span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
+
+                    {/* Action Buttons */}
+                    {!isEditing && isHovered && (
+                      <div className={`absolute top-0 flex gap-0.5 bg-[#0D0D0D] border border-[#2A2A2A] rounded-lg shadow-lg p-0.5 opacity-0 group-hover/message:opacity-100 transition-opacity ${
+                        isOwnMessage ? 'right-full mr-2' : 'left-full ml-2'
+                      }`}>
+                        <div className="relative">
+                          <button
+                            onClick={() => setShowEmojiPicker(showEmojiPicker === message.id ? null : message.id)}
+                            className="p-1.5 hover:bg-[#2A2A2A] rounded transition-colors"
+                            title="Add reaction"
+                          >
+                            <Smile className="w-3.5 h-3.5 text-gray-400" />
+                          </button>
+                          {showEmojiPicker === message.id && (
+                            <div ref={emojiPickerRef} className={`absolute top-full mt-2 z-50 ${
+                              isOwnMessage ? 'right-0' : 'left-0'
+                            }`}>
+                              <EmojiPicker
+                                onEmojiClick={(emojiData) => handleEmojiSelect(message.id, emojiData)}
+                                autoFocusSearch={false}
+                              />
+                            </div>
+                          )}
+                        </div>
+                        {isOwnMessage && (
+                          <>
+                            <button
+                              onClick={() => handleEdit(message)}
+                              className="p-1.5 hover:bg-[#2A2A2A] rounded transition-colors"
+                              title="Edit message"
+                            >
+                              <Edit2 className="w-3.5 h-3.5 text-gray-400" />
+                            </button>
+                            <button
+                              onClick={() => handleDelete(message.id)}
+                              className="p-1.5 hover:bg-[#2A2A2A] rounded transition-colors"
+                              title="Delete message"
+                            >
+                              <Trash2 className="w-3.5 h-3.5 text-red-400" />
+                            </button>
+                          </>
+                        )}
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
             </div>
           </div>
         );

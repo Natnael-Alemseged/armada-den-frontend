@@ -12,6 +12,7 @@ import {
   CreateTopicMessageRequest,
   UpdateTopicMessageRequest,
   AddReactionRequest,
+  UserForTopicAddition,
 } from '@/lib/types';
 
 // Channel Thunks
@@ -176,6 +177,22 @@ export const updateTopic = createAsyncThunk<
   }
 );
 
+export const deleteTopic = createAsyncThunk<
+  string,
+  string,
+  { rejectValue: string }
+>(
+  'channels/deleteTopic',
+  async (topicId, { rejectWithValue }) => {
+    try {
+      await ApiService.delete(ENDPOINTS.TOPICS_DELETE(topicId));
+      return topicId;
+    } catch (err: any) {
+      return rejectWithValue(err.response?.data?.detail || 'Failed to delete topic');
+    }
+  }
+);
+
 export const addTopicMember = createAsyncThunk<
   void,
   { topicId: string; userId: string },
@@ -184,7 +201,7 @@ export const addTopicMember = createAsyncThunk<
   'channels/addTopicMember',
   async ({ topicId, userId }, { rejectWithValue }) => {
     try {
-      await ApiService.post(ENDPOINTS.TOPICS_MEMBER_ADD(topicId), { userId });
+      await ApiService.post(ENDPOINTS.TOPICS_MEMBER_ADD(topicId, userId));
     } catch (err: any) {
       return rejectWithValue(err.response?.data?.detail || 'Failed to add member');
     }
@@ -202,6 +219,22 @@ export const removeTopicMember = createAsyncThunk<
       await ApiService.delete(ENDPOINTS.TOPICS_MEMBER_REMOVE(topicId, userId));
     } catch (err: any) {
       return rejectWithValue(err.response?.data?.detail || 'Failed to remove member');
+    }
+  }
+);
+
+export const fetchUsersForTopicAddition = createAsyncThunk<
+  UserForTopicAddition[],
+  { topicId: string; search?: string },
+  { rejectValue: string }
+>(
+  'channels/fetchUsersForTopicAddition',
+  async ({ topicId, search }, { rejectWithValue }) => {
+    try {
+      const res = await ApiService.get(ENDPOINTS.TOPICS_USERS_FOR_ADDITION(topicId, search));
+      return res.data;
+    } catch (err: any) {
+      return rejectWithValue(err.response?.data?.detail || 'Failed to fetch users');
     }
   }
 );
@@ -238,7 +271,8 @@ export const createTopicMessage = createAsyncThunk<
   'channels/createTopicMessage',
   async (data, { rejectWithValue }) => {
     try {
-      const res = await ApiService.post(ENDPOINTS.TOPICS_MESSAGE_CREATE, data);
+      const { topic_id, ...messageData } = data;
+      const res = await ApiService.post(ENDPOINTS.TOPICS_MESSAGE_CREATE(topic_id), messageData);
       return res.data;
     } catch (err: any) {
       return rejectWithValue(err.response?.data?.detail || 'Failed to send message');

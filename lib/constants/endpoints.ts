@@ -81,11 +81,13 @@ export const ENDPOINTS = {
     TOPICS_UNPIN: (topicId: string) => `/channels/topics/${topicId}/unpin`,
     
     TOPICS_MEMBERS: (topicId: string) => `/channels/topics/${topicId}/members`,
-    TOPICS_MEMBER_ADD: (topicId: string) => `/channels/topics/${topicId}/members`,
+    TOPICS_MEMBER_ADD: (topicId: string, userId: string) => `/channels/topics/${topicId}/members/${userId}`,
     TOPICS_MEMBER_REMOVE: (topicId: string, userId: string) => `/channels/topics/${topicId}/members/${userId}`,
+    TOPICS_USERS_FOR_ADDITION: (topicId: string, search?: string) => 
+      `/channels/topics/${topicId}/users-for-addition${search ? `?search=${encodeURIComponent(search)}` : ''}`,
     
     TOPICS_MESSAGES: (topicId: string) => `/channels/topics/${topicId}/messages`,
-    TOPICS_MESSAGE_CREATE: '/channels/topics/messages',
+    TOPICS_MESSAGE_CREATE: (topicId: string) => `/channels/topics/${topicId}/messages`,
     TOPICS_MESSAGE_GET: (messageId: string) => `/channels/topics/messages/${messageId}`,
     TOPICS_MESSAGE_UPDATE: (messageId: string) => `/channels/topics/messages/${messageId}`,
     TOPICS_MESSAGE_DELETE: (messageId: string) => `/channels/topics/messages/${messageId}`,

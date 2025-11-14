@@ -40,8 +40,8 @@ export function ChatRoomView() {
     if (!currentRoom || messages.length === 0) return;
 
     const unreadMessages = messages
-      .filter((m) => m.sender_id !== user?.id && !m.read_by?.includes(user?.id || ''))
-      .map((m) => m.id);
+      .filter((m: any) => m.sender_id !== user?.id && !m.read_by?.includes(user?.id || ''))
+      .map((m: any) => m.id);
 
     if (unreadMessages.length > 0) {
       dispatch(
@@ -176,14 +176,14 @@ export function ChatRoomView() {
     if (currentRoom.room_type === 'GROUP') {
       return currentRoom.name || 'Unnamed Group';
     }
-    const otherMember = currentRoom.members?.find((m) => m.user_id !== user?.id);
+    const otherMember = currentRoom.members?.find((m: any) => m.user_id !== user?.id);
     return otherMember?.user?.email || 'Unknown User';
   };
 
   const getTypingText = () => {
     if (!currentRoom) return '';
     const typingUserIds = typingUsers[currentRoom.id] || [];
-    const typingUsersList = typingUserIds.filter((id) => id !== user?.id);
+    const typingUsersList = typingUserIds.filter((id: any) => id !== user?.id);
     
     if (typingUsersList.length === 0) return '';
     if (typingUsersList.length === 1) return 'Someone is typing...';
@@ -229,7 +229,7 @@ export function ChatRoomView() {
           </div>
         ) : (
           <>
-            {messages.map((message) => (
+            {messages.map((message: any) => (
               <MessageBubble
                 key={message.id}
                 message={message}
