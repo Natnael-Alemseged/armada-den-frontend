@@ -1,7 +1,7 @@
 import { createAsyncThunk } from '@reduxjs/toolkit'
 import { ApiService } from '@/lib/util/apiService'
 import { ENDPOINTS, BASE_URL } from '@/lib/constants/endpoints'
-import { setAuthToken } from '@/lib/util/apiClient.ts'
+import { setAuthToken } from '@/lib/util/apiClient'
 import { User, LoginCredentials, AuthResponse } from './authSlice'
 
 // Async thunks

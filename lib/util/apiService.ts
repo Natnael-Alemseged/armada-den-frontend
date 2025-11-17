@@ -1,6 +1,6 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import { AxiosRequestConfig } from "axios";
-import { apiClient } from "./apiClient.ts";
+import { apiClient } from "./apiClient";
 
 /**
  * Helper function to create request config with token flag
