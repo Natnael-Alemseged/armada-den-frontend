@@ -2,7 +2,7 @@
 import { configureStore, combineReducers } from '@reduxjs/toolkit';
 import { persistStore, persistReducer } from 'redux-persist';
 import storage from 'redux-persist/lib/storage'; // localStorage for web
-import { setAuthToken, apiClient, setStoreDispatch } from './util/apiClient';
+import { setAuthToken, apiClient, setStoreDispatch } from '@/lib/util/apiClient'
 import { logout } from './slices/authSlice';
 
 import authReducer from './slices/authSlice';
