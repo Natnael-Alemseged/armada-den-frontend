@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-import { TopicMessage } from '@/lib/types';
+import {GroupedReaction, MessageReaction, TopicMessage} from '@/lib/types';
 import { formatDistanceToNow } from 'date-fns';
 import { Send, Loader2, X } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '@/lib/hooks';
@@ -105,28 +105,45 @@ export function ThreadDetailView({
               {/* Reactions on parent */}
               {parentMessage.reactions && parentMessage.reactions.length > 0 && (
                 <div className="flex flex-wrap gap-1 mt-3">
-                  {Object.entries(
-                    parentMessage.reactions.reduce((acc, r) => {
-                      if (!acc[r.emoji]) acc[r.emoji] = [];
-                      acc[r.emoji].push(r);
-                      return acc;
-                    }, {} as Record<string, typeof parentMessage.reactions>)
-                  ).map(([emoji, reactions]) => {
-                    const userReacted = reactions.some((r) => r.user_id === user?.id);
-                    return (
-                      <span
-                        key={emoji}
-                        className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-sm ${
-                          userReacted
-                            ? 'bg-blue-900 border border-blue-500 text-blue-300'
-                            : 'bg-gray-700 text-gray-300'
-                        }`}
-                      >
-                        <span>{emoji}</span>
-                        <span className="text-xs">{reactions.length}</span>
-                      </span>
-                    );
-                  })}
+                    {/* Reactions on parent */}
+                    {parentMessage.reactions && parentMessage.reactions.length > 0 && (
+                        <div className="flex flex-wrap gap-1 mt-3">
+                            {Object.values(
+                                (parentMessage.reactions as MessageReaction[]).reduce((acc, r) => {
+                                    const emoji = r.emoji;
+
+                                    if (!acc[emoji]) {
+                                        acc[emoji] = {
+                                            emoji,
+                                            count: 0,
+                                            users: [],
+                                            user_reacted: false,
+                                        };
+                                    }
+
+                                    acc[emoji].count += 1;
+                                    acc[emoji].users.push(r.user_id);
+                                    if (r.user_id === user?.id) {
+                                        acc[emoji].user_reacted = true;
+                                    }
+
+                                    return acc;
+                                }, {} as Record<string, GroupedReaction>)
+                            ).map((reaction) => (
+                                <span
+                                    key={reaction.emoji}
+                                    className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-sm transition-colors ${
+                                        reaction.user_reacted
+                                            ? 'bg-blue-900 border border-blue-500 text-blue-300'
+                                            : 'bg-gray-700 text-gray-300'
+                                    }`}
+                                >
+        <span>{reaction.emoji}</span>
+        <span className="text-xs font-medium">{reaction.count}</span>
+      </span>
+                            ))}
+                        </div>
+                    )}
                 </div>
               )}
             </div>
