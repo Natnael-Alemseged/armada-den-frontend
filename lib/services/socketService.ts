@@ -359,6 +359,14 @@ class SocketService {
     this.socket?.on('reaction_removed', callback);
   }
 
+  onTyping(callback: (data: any) => void): void {
+    this.socket?.on('typing', callback);
+  }
+
+  onAiError(callback: (data: any) => void): void {
+    this.socket?.on('ai_error', callback);
+  }
+
   /**
    * Remove Channels/Topics event listeners
    */
@@ -421,6 +429,14 @@ class SocketService {
 
   offReactionRemoved(callback?: (data: any) => void): void {
     this.socket?.off('reaction_removed', callback);
+  }
+
+  offTyping(callback?: (data: any) => void): void {
+    this.socket?.off('typing', callback);
+  }
+
+  offAiError(callback?: (data: any) => void): void {
+    this.socket?.off('ai_error', callback);
   }
 }
 

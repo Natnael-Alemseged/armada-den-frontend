@@ -117,11 +117,35 @@ export const googleLogin = createAsyncThunk<
     'auth/googleLogin',
     async (_, { rejectWithValue }) => {
         try {
-            // Redirect to Google OAuth endpoint
-            window.location.href = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8002'}/api/auth/google/authorize`
+            // Redirect to Google OAuth endpoint defined by backend
+            const apiBase = BASE_URL.replace(/\/$/, '')
+            window.location.href = `${apiBase}/auth/google/authorize`
             // This will redirect away from the page, so we don't return anything
         } catch (err: any) {
             return rejectWithValue('Failed to initiate Google login')
+        }
+    }
+)
+
+export const handleGoogleAuthCallback = createAsyncThunk<
+    { token: string; user: User },
+    { token: string },
+    { rejectValue: string }
+>(
+    'auth/handleGoogleAuthCallback',
+    async ({ token }, { rejectWithValue }) => {
+        try {
+            setAuthToken(token)
+            const userRes = await ApiService.get(ENDPOINTS.AUTH_ME, undefined, true)
+
+            return {
+                token,
+                user: userRes.data as User,
+            }
+        } catch (err: any) {
+            setAuthToken(null)
+            const message = err.response?.data?.detail || err.message || 'Failed to finalize Google login'
+            return rejectWithValue(message)
         }
     }
 )

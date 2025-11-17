@@ -370,6 +370,8 @@ export interface ChatRoomMember {
     user?: User;
 }
 
+export type MessageStatus = 'pending' | 'sent' | 'delivered' | 'read' | 'failed';
+
 export interface ChatRoomMessage {
     id: string;
     room_id: string;
@@ -390,6 +392,7 @@ export interface ChatRoomMessage {
     sender?: User;
     reply_to?: ChatRoomMessage;
     read_by?: string[];
+    status?: MessageStatus; // Client-side only field for tracking message delivery status
 }
 
 export interface MessageReadReceipt {
@@ -623,7 +626,7 @@ export interface TopicMessage {
     sender?: User;
     reply_to?: TopicMessage;
     mentions?: MessageMention[];
-    reactions?: MessageReaction[];
+    reactions?: MessageReaction[] | GroupedReaction[]; // Support both formats
 }
 
 export interface MessageMention {
@@ -642,6 +645,14 @@ export interface MessageReaction {
     emoji: string;
     created_at: string;
     user?: User;
+}
+
+// Grouped reaction format from backend
+export interface GroupedReaction {
+    emoji: string;
+    count: number;
+    users: string[]; // Array of user IDs
+    user_reacted: boolean; // Whether current user has reacted
 }
 
 // Channel API Request/Response Types

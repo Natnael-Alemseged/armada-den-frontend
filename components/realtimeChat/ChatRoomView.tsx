@@ -7,7 +7,7 @@ import {
   uploadMedia,
   markMessagesAsRead,
 } from '@/lib/features/realTimeChat/realtimeChatThunk';
-import { addOptimisticMessage } from '@/lib/features/realTimeChat/realtimeChatSlice';
+import { addOptimisticMessage, removeOptimisticMessage } from '@/lib/features/realTimeChat/realtimeChatSlice';
 import { socketService } from '@/lib/services/socketService';
 import { ChatRoomMessage, ChatMessageType } from '@/lib/types';
 import { MessageBubble } from './MessageBubble';
@@ -77,6 +77,48 @@ export function ChatRoomView() {
     }, 2000);
   };
 
+  const sendMessage = async (content: string, replyToId?: string) => {
+    if (!currentRoom) return;
+
+    // Create optimistic message
+    const optimisticMessage: ChatRoomMessage = {
+      id: `temp-${Date.now()}`,
+      room_id: currentRoom.id,
+      sender_id: user?.id || '',
+      message_type: 'text',
+      content: content,
+      media_url: null,
+      media_filename: null,
+      media_size: null,
+      media_mime_type: null,
+      reply_to_id: replyToId || null,
+      forwarded_from_id: null,
+      is_edited: false,
+      edited_at: null,
+      is_deleted: false,
+      deleted_at: null,
+      created_at: new Date().toISOString(),
+      sender: user || undefined,
+      reply_to: replyToId ? messages.find((m: any) => m.id === replyToId) : undefined,
+    };
+
+    dispatch(addOptimisticMessage(optimisticMessage));
+
+    // Send message
+    try {
+      await dispatch(
+        createChatMessage({
+          room_id: currentRoom.id,
+          message_type: 'text',
+          content: content,
+          reply_to_id: replyToId,
+        })
+      ).unwrap();
+    } catch (error) {
+      console.error('Failed to send message:', error);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!input.trim() || !currentRoom || sendingMessage) return;
@@ -90,45 +132,15 @@ export function ChatRoomView() {
       socketService.sendTyping(currentRoom.id, false);
     }
 
-    // Create optimistic message
-    const optimisticMessage: ChatRoomMessage = {
-      id: `temp-${Date.now()}`,
-      room_id: currentRoom.id,
-      sender_id: user?.id || '',
-      message_type: 'text',
-      content: messageContent,
-      media_url: null,
-      media_filename: null,
-      media_size: null,
-      media_mime_type: null,
-      reply_to_id: replyTo?.id || null,
-      forwarded_from_id: null,
-      is_edited: false,
-      edited_at: null,
-      is_deleted: false,
-      deleted_at: null,
-      created_at: new Date().toISOString(),
-      sender: user || undefined,
-      reply_to: replyTo || undefined,
-    };
+    await sendMessage(messageContent, replyTo?.id);
+    setReplyTo(null);
+  };
 
-    dispatch(addOptimisticMessage(optimisticMessage));
-
-    // Send message
-    try {
-      await dispatch(
-        createChatMessage({
-          room_id: currentRoom.id,
-          message_type: 'text',
-          content: messageContent,
-          reply_to_id: replyTo?.id,
-        })
-      ).unwrap();
-      
-      setReplyTo(null);
-    } catch (error) {
-      console.error('Failed to send message:', error);
-    }
+  const handleRetry = (message: ChatRoomMessage) => {
+    // Remove the failed message
+    dispatch(removeOptimisticMessage(message.id));
+    // Resend the message
+    sendMessage(message.content, message.reply_to_id || undefined);
   };
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -235,6 +247,7 @@ export function ChatRoomView() {
                 message={message}
                 isOwn={message.sender_id === user?.id}
                 onReply={() => setReplyTo(message)}
+                onRetry={message.status === 'failed' ? () => handleRetry(message) : undefined}
               />
             ))}
             <div ref={messagesEndRef} />

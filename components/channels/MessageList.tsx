@@ -1,9 +1,10 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-import { TopicMessage } from '@/lib/types';
+import { TopicMessage, GroupedReaction } from '@/lib/types';
+import { OptimisticMessage } from '@/lib/features/channels/channelsSlice';
 import { formatDistanceToNow } from 'date-fns';
-import { MoreVertical, Reply, Smile, Edit2, Trash2 } from 'lucide-react';
+import { MoreVertical, Reply, Smile, Edit2, Trash2, AlertCircle, RefreshCw, X, Clock } from 'lucide-react';
 import { useAppDispatch } from '@/lib/hooks';
 import EmojiPicker, { EmojiClickData } from 'emoji-picker-react';
 import {
@@ -12,18 +13,32 @@ import {
   addReaction,
   removeReaction,
 } from '@/lib/features/channels/channelsThunk';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 interface MessageListProps {
-  messages: TopicMessage[];
+  messages: OptimisticMessage[];
   currentUserId: string;
+  onRetryMessage?: (tempId: string, content: string) => void;
+  onCancelMessage?: (tempId: string) => void;
 }
 
-export function MessageList({ messages, currentUserId }: MessageListProps) {
+export function MessageList({ messages, currentUserId, onRetryMessage, onCancelMessage }: MessageListProps) {
   const dispatch = useAppDispatch();
   const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
   const [editContent, setEditContent] = useState('');
   const [hoveredMessageId, setHoveredMessageId] = useState<string | null>(null);
   const [showEmojiPicker, setShowEmojiPicker] = useState<string | null>(null);
+  const [messageToDelete, setMessageToDelete] = useState<TopicMessage | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   const emojiPickerRef = useRef<HTMLDivElement>(null);
 
   const handleEdit = (message: TopicMessage) => {
@@ -46,13 +61,16 @@ export function MessageList({ messages, currentUserId }: MessageListProps) {
     }
   };
 
-  const handleDelete = async (messageId: string) => {
-    if (window.confirm('Are you sure you want to delete this message?')) {
-      try {
-        await dispatch(deleteTopicMessage(messageId)).unwrap();
-      } catch (error) {
-        console.error('Failed to delete message:', error);
-      }
+  const handleDelete = async () => {
+    if (!messageToDelete) return;
+    setIsDeleting(true);
+    try {
+      await dispatch(deleteTopicMessage(messageToDelete.id)).unwrap();
+      setMessageToDelete(null);
+    } catch (error) {
+      console.error('Failed to delete message:', error);
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -70,15 +88,26 @@ export function MessageList({ messages, currentUserId }: MessageListProps) {
 
   const handleToggleReaction = async (messageId: string, emoji: string) => {
     const message = messages.find((m) => m.id === messageId);
-    if (!message) return;
+    if (!message || !message.reactions) return;
 
-    // Check if current user has already reacted with this emoji
-    const userReaction = message.reactions?.find(
-      (r) => r.user_id === currentUserId && r.emoji === emoji
-    );
+    // Check if reactions are in grouped format
+    const isGroupedFormat = message.reactions.length > 0 && 'user_reacted' in message.reactions[0];
+    
+    let userHasReacted = false;
+    if (isGroupedFormat) {
+      // Backend grouped format
+      const groupedReactions = message.reactions as GroupedReaction[];
+      const reaction = groupedReactions.find((r) => r.emoji === emoji);
+      userHasReacted = reaction?.user_reacted || false;
+    } else {
+      // Legacy individual format
+      userHasReacted = message.reactions.some(
+        (r: any) => r.user_id === currentUserId && r.emoji === emoji
+      );
+    }
 
     try {
-      if (userReaction) {
+      if (userHasReacted) {
         // Remove reaction
         await dispatch(removeReaction({ messageId, emoji })).unwrap();
       } else {
@@ -95,16 +124,9 @@ export function MessageList({ messages, currentUserId }: MessageListProps) {
     await handleToggleReaction(messageId, emojiData.emoji);
   };
 
-  const groupReactions = (reactions: TopicMessage['reactions']) => {
-    if (!reactions) return [];
-    const grouped = reactions.reduce((acc, reaction) => {
-      if (!acc[reaction.emoji]) {
-        acc[reaction.emoji] = [];
-      }
-      acc[reaction.emoji].push(reaction);
-      return acc;
-    }, {} as Record<string, typeof reactions>);
-    return Object.entries(grouped);
+  // Helper to check if reactions are in grouped format
+  const isGroupedReactions = (reactions: TopicMessage['reactions']): reactions is GroupedReaction[] => {
+    return reactions !== undefined && reactions.length > 0 && 'user_reacted' in reactions[0];
   };
 
   return (
@@ -125,10 +147,14 @@ export function MessageList({ messages, currentUserId }: MessageListProps) {
           );
         }
 
+        const isPending = message._pending;
+        const isFailed = message._failed;
+        const isOptimistic = message._optimistic;
+
         return (
           <div
             key={message.id}
-            className={`flex gap-2 group ${isOwnMessage ? 'flex-row-reverse' : 'flex-row'}`}
+            className={`flex gap-2 group ${isOwnMessage ? 'flex-row-reverse' : 'flex-row'} ${isFailed ? 'opacity-60' : ''}`}
             onMouseEnter={() => setHoveredMessageId(message.id)}
             onMouseLeave={() => setHoveredMessageId(null)}
           >
@@ -151,6 +177,18 @@ export function MessageList({ messages, currentUserId }: MessageListProps) {
                 </span>
                 {message.is_edited && (
                   <span className="text-[10px] text-gray-600">(edited)</span>
+                )}
+                {isPending && (
+                  <span className="text-[10px] text-gray-500 flex items-center gap-1">
+                    <Clock className="w-3 h-3 animate-pulse" />
+                    Sending...
+                  </span>
+                )}
+                {isFailed && (
+                  <span className="text-[10px] text-red-400 flex items-center gap-1">
+                    <AlertCircle className="w-3 h-3" />
+                    Failed
+                  </span>
                 )}
               </div>
 
@@ -184,7 +222,7 @@ export function MessageList({ messages, currentUserId }: MessageListProps) {
                   <>
                     <div className={`px-3 py-2 rounded-2xl ${
                       isOwnMessage 
-                        ? 'bg-[#1A73E8] text-white' 
+                        ? isFailed ? 'bg-red-500/20 border border-red-500/50 text-red-200' : 'bg-[#1A73E8] text-white'
                         : 'bg-[#1A1A1A] text-gray-200'
                     }`}>
                       <p className="text-sm whitespace-pre-wrap break-words leading-relaxed">
@@ -192,38 +230,82 @@ export function MessageList({ messages, currentUserId }: MessageListProps) {
                       </p>
                     </div>
 
+                    {/* Failed Message Actions */}
+                    {isFailed && isOwnMessage && onRetryMessage && onCancelMessage && message._tempId && (
+                      <div className="flex items-center gap-2 mt-2">
+                        <button
+                          onClick={() => onRetryMessage(message._tempId!, message.content)}
+                          className="flex items-center gap-1 px-2 py-1 bg-[#1A73E8] text-white text-xs rounded-md hover:bg-[#1557B0] transition-colors"
+                        >
+                          <RefreshCw className="w-3 h-3" />
+                          Retry
+                        </button>
+                        <button
+                          onClick={() => onCancelMessage(message._tempId!)}
+                          className="flex items-center gap-1 px-2 py-1 bg-[#2A2A2A] text-gray-300 text-xs rounded-md hover:bg-[#3A3A3A] transition-colors"
+                        >
+                          <X className="w-3 h-3" />
+                          Cancel
+                        </button>
+                      </div>
+                    )}
+
                     {/* Reactions */}
                     {message.reactions && message.reactions.length > 0 && (
                       <div className="flex flex-wrap gap-1 mt-1">
-                        {groupReactions(message.reactions).map(([emoji, reactions]) => {
-                          const userReacted = reactions.some((r) => r.user_id === currentUserId);
-                          const userNames = reactions
-                            .map((r) => r.user?.full_name || r.user?.email || 'Unknown')
-                            .join(', ');
-                          
-                          return (
+                        {isGroupedReactions(message.reactions) ? (
+                          // Backend grouped format
+                          message.reactions.map((reaction) => (
                             <button
-                              key={emoji}
-                              onClick={() => handleToggleReaction(message.id, emoji)}
+                              key={reaction.emoji}
+                              onClick={() => handleToggleReaction(message.id, reaction.emoji)}
                               className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-xs transition-colors ${
-                                userReacted
+                                reaction.user_reacted
                                   ? 'bg-[#1A73E8]/20 border border-[#1A73E8] text-[#1A73E8]'
                                   : 'bg-[#0D0D0D] border border-[#2A2A2A] hover:border-[#3A3A3A] text-gray-400'
                               }`}
-                              title={userNames}
+                              title={`${reaction.count} reaction${reaction.count > 1 ? 's' : ''}`}
                             >
-                              <span>{emoji}</span>
+                              <span>{reaction.emoji}</span>
                               <span className="text-[10px]">
-                                {reactions.length}
+                                {reaction.count}
                               </span>
                             </button>
-                          );
-                        })}
+                          ))
+                        ) : (
+                          // Legacy individual format - group them
+                          Object.entries(
+                            message.reactions.reduce((acc: any, r: any) => {
+                              if (!acc[r.emoji]) acc[r.emoji] = [];
+                              acc[r.emoji].push(r);
+                              return acc;
+                            }, {})
+                          ).map(([emoji, reactions]: [string, any]) => {
+                            const userReacted = reactions.some((r: any) => r.user_id === currentUserId);
+                            return (
+                              <button
+                                key={emoji}
+                                onClick={() => handleToggleReaction(message.id, emoji)}
+                                className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-xs transition-colors ${
+                                  userReacted
+                                    ? 'bg-[#1A73E8]/20 border border-[#1A73E8] text-[#1A73E8]'
+                                    : 'bg-[#0D0D0D] border border-[#2A2A2A] hover:border-[#3A3A3A] text-gray-400'
+                                }`}
+                                title={`${reactions.length} reaction${reactions.length > 1 ? 's' : ''}`}
+                              >
+                                <span>{emoji}</span>
+                                <span className="text-[10px]">
+                                  {reactions.length}
+                                </span>
+                              </button>
+                            );
+                          })
+                        )}
                       </div>
                     )}
 
                     {/* Action Buttons */}
-                    {!isEditing && isHovered && (
+                    {!isEditing && isHovered && !isFailed && !isPending && (
                       <div className={`absolute top-0 flex gap-0.5 bg-[#0D0D0D] border border-[#2A2A2A] rounded-lg shadow-lg p-0.5 opacity-0 group-hover/message:opacity-100 transition-opacity ${
                         isOwnMessage ? 'right-full mr-2' : 'left-full ml-2'
                       }`}>
@@ -256,7 +338,7 @@ export function MessageList({ messages, currentUserId }: MessageListProps) {
                               <Edit2 className="w-3.5 h-3.5 text-gray-400" />
                             </button>
                             <button
-                              onClick={() => handleDelete(message.id)}
+                              onClick={() => setMessageToDelete(message)}
                               className="p-1.5 hover:bg-[#2A2A2A] rounded transition-colors"
                               title="Delete message"
                             >
@@ -273,6 +355,29 @@ export function MessageList({ messages, currentUserId }: MessageListProps) {
           </div>
         );
       })}
+      <AlertDialog
+        open={!!messageToDelete}
+        onOpenChange={(open: boolean) => {
+          if (!open) {
+            setMessageToDelete(null);
+          }
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete this message?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete the selected message for everyone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} disabled={isDeleting}>
+              {isDeleting ? 'Deleting...' : 'Delete'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

@@ -15,16 +15,31 @@ import {
   Check,
   CheckCheck,
   MoreVertical,
+  Clock,
+  AlertCircle,
+  RefreshCw,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 
 interface MessageBubbleProps {
   message: ChatRoomMessage;
   isOwn: boolean;
   onReply: () => void;
+  onRetry?: () => void;
 }
 
-export function MessageBubble({ message, isOwn, onReply }: MessageBubbleProps) {
+export function MessageBubble({ message, isOwn, onReply, onRetry }: MessageBubbleProps) {
   const dispatch = useAppDispatch();
   const { user } = useAppSelector((state) => state.auth);
   const [showActions, setShowActions] = useState(false);
@@ -50,13 +65,18 @@ export function MessageBubble({ message, isOwn, onReply }: MessageBubbleProps) {
     }
   };
 
-  const handleDelete = async () => {
-    if (!confirm('Are you sure you want to delete this message?')) return;
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
+  const handleDelete = async () => {
+    setIsDeleting(true);
     try {
       await dispatch(deleteChatMessage({ messageId: message.id })).unwrap();
+      setShowDeleteConfirm(false);
     } catch (error) {
       console.error('Failed to delete message:', error);
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -157,13 +177,30 @@ export function MessageBubble({ message, isOwn, onReply }: MessageBubbleProps) {
           >
             <Edit2 className="w-4 h-4 text-gray-600 dark:text-gray-400" />
           </button>
-          <button
-            onClick={handleDelete}
-            className="p-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded"
-            title="Delete"
-          >
-            <Trash2 className="w-4 h-4 text-red-600 dark:text-red-400" />
-          </button>
+          <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+            <AlertDialogTrigger asChild>
+              <button
+                onClick={() => setShowActions(false)}
+                className="flex items-center gap-2 px-3 py-2 text-sm text-red-500 hover:bg-red-500/10"
+              >
+                <Trash2 className="h-4 w-4" /> Delete
+              </button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Delete message?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This will permanently remove the message for everyone.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={handleDelete} disabled={isDeleting}>
+                  {isDeleting ? 'Deleting…' : 'Delete'}
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </div>
       )}
 
@@ -247,11 +284,42 @@ export function MessageBubble({ message, isOwn, onReply }: MessageBubbleProps) {
           <span>{formatTime(message.created_at)}</span>
           {message.is_edited && <span>(edited)</span>}
           {isOwn && (
-            <span>
-              {message.read_by && message.read_by.length > 0 ? (
-                <CheckCheck className="w-4 h-4 text-blue-200" />
-              ) : (
-                <Check className="w-4 h-4 text-blue-200" />
+            <span className="flex items-center">
+              {message.status === 'pending' && (
+                <span title="Sending...">
+                  <Clock className="w-4 h-4 text-blue-200" />
+                </span>
+              )}
+              {message.status === 'sent' && (
+                <span title="Sent">
+                  <Check className="w-4 h-4 text-blue-200" />
+                </span>
+              )}
+              {message.status === 'delivered' && (
+                <span title="Delivered">
+                  <CheckCheck className="w-4 h-4 text-blue-200" />
+                </span>
+              )}
+              {message.status === 'read' && (
+                <span title="Read">
+                  <CheckCheck className="w-4 h-4 text-blue-400" />
+                </span>
+              )}
+              {message.status === 'failed' && (
+                <>
+                  <span title="Failed to send">
+                    <AlertCircle className="w-4 h-4 text-red-300" />
+                  </span>
+                  {onRetry && (
+                    <button
+                      onClick={onRetry}
+                      className="ml-1 p-0.5 hover:bg-blue-700 rounded transition-colors"
+                      title="Retry sending"
+                    >
+                      <RefreshCw className="w-3 h-3 text-blue-200" />
+                    </button>
+                  )}
+                </>
               )}
             </span>
           )}

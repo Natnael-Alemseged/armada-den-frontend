@@ -4,6 +4,8 @@ import React, { useEffect, useState } from 'react';
 import { useAppDispatch, useAppSelector } from '@/lib/hooks';
 import { fetchChannels, fetchUserTopics, fetchTopicsByChannel } from '@/lib/features/channels/channelsThunk';
 import { setCurrentChannel, setCurrentTopic } from '@/lib/features/channels/channelsSlice';
+import { getGmailStatus } from '@/lib/features/gmail/gmailThunk';
+import { getSearchStatus } from '@/lib/features/search/searchThunk';
 import { ChannelsList } from './ChannelsList';
 import { TopicsList } from './TopicsList';
 import { TopicView } from './TopicView';
@@ -25,6 +27,10 @@ export function ChannelsLayout() {
     // Fetch channels and user's topics on mount
     dispatch(fetchChannels());
     dispatch(fetchUserTopics());
+    
+    // Check Gmail and Search connection status
+    dispatch(getGmailStatus());
+    // dispatch(getSearchStatus());
   }, [dispatch]);
 
   useEffect(() => {

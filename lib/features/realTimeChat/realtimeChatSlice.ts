@@ -114,7 +114,14 @@ const realtimeChatSlice = createSlice({
         // Check if message already exists
         const exists = state.messages.some((m) => m.id === message.id);
         if (!exists) {
-          state.messages.push(message);
+          // Mark socket messages as 'delivered' by default
+          state.messages.push({ ...message, status: 'delivered' as const });
+        } else {
+          // Update existing message status to 'delivered' if it was pending/sent
+          const existingMsg = state.messages.find((m) => m.id === message.id);
+          if (existingMsg && (existingMsg.status === 'pending' || existingMsg.status === 'sent')) {
+            existingMsg.status = 'delivered';
+          }
         }
       }
       
@@ -160,6 +167,10 @@ const realtimeChatSlice = createSlice({
           if (!message.read_by.includes(user_id)) {
             message.read_by.push(user_id);
           }
+          // Update status to 'read' if message has been read by anyone
+          if (message.read_by.length > 0) {
+            message.status = 'read';
+          }
         }
       });
     },
@@ -181,10 +192,18 @@ const realtimeChatSlice = createSlice({
       }
     },
     addOptimisticMessage: (state, action: PayloadAction<ChatRoomMessage>) => {
-      state.messages.push(action.payload);
+      // Add message with 'pending' status
+      const messageWithStatus = { ...action.payload, status: 'pending' as const };
+      state.messages.push(messageWithStatus);
     },
     removeOptimisticMessage: (state, action: PayloadAction<string>) => {
       state.messages = state.messages.filter((m) => m.id !== action.payload);
+    },
+    updateMessageStatus: (state, action: PayloadAction<{ messageId: string; status: 'pending' | 'sent' | 'delivered' | 'read' | 'failed' }>) => {
+      const message = state.messages.find((m) => m.id === action.payload.messageId);
+      if (message) {
+        message.status = action.payload.status;
+      }
     },
   },
   extraReducers: (builder) => {
@@ -329,23 +348,33 @@ const realtimeChatSlice = createSlice({
     });
     builder.addCase(createChatMessage.fulfilled, (state, action) => {
       state.sendingMessage = false;
-      // Remove optimistic message if exists
-      state.messages = state.messages.filter(
-        (m) => !m.id.startsWith('temp-')
-      );
-      // Add real message
-      const exists = state.messages.some((m) => m.id === action.payload.id);
-      if (!exists) {
-        state.messages.push(action.payload);
+      
+      // Find and update the optimistic message instead of removing it
+      const optimisticMsgIndex = state.messages.findIndex((m) => m.id.startsWith('temp-'));
+      
+      if (optimisticMsgIndex !== -1) {
+        // Replace optimistic message with real message and set status to 'sent'
+        state.messages[optimisticMsgIndex] = {
+          ...action.payload,
+          status: 'sent',
+        };
+      } else {
+        // If no optimistic message found, add the new message with 'sent' status
+        const exists = state.messages.some((m) => m.id === action.payload.id);
+        if (!exists) {
+          state.messages.push({ ...action.payload, status: 'sent' });
+        }
       }
     });
     builder.addCase(createChatMessage.rejected, (state, action) => {
       state.sendingMessage = false;
       state.error = action.payload || 'Failed to send message';
-      // Remove optimistic message on error
-      state.messages = state.messages.filter(
-        (m) => !m.id.startsWith('temp-')
-      );
+      
+      // Mark optimistic message as failed instead of removing it
+      const optimisticMsg = state.messages.find((m) => m.id.startsWith('temp-'));
+      if (optimisticMsg) {
+        optimisticMsg.status = 'failed';
+      }
     });
 
     // Update Message
@@ -441,6 +470,7 @@ export const {
   handleUserTyping,
   addOptimisticMessage,
   removeOptimisticMessage,
+  updateMessageStatus,
 } = realtimeChatSlice.actions;
 
 export default realtimeChatSlice.reducer;

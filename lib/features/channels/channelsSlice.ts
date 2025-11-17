@@ -24,14 +24,22 @@ import {
   Topic,
   TopicMessage,
   MessageReaction,
+  GroupedReaction,
 } from '@/lib/types';
+
+export interface OptimisticMessage extends TopicMessage {
+  _optimistic?: boolean;
+  _pending?: boolean;
+  _failed?: boolean;
+  _tempId?: string;
+}
 
 export interface ChannelsState {
   channels: Channel[];
   currentChannel: Channel | null;
   topics: Topic[];
   currentTopic: Topic | null;
-  messages: TopicMessage[];
+  messages: OptimisticMessage[];
   loading: boolean;
   error: string | null;
   messagesLoading: boolean;
@@ -78,6 +86,36 @@ const channelsSlice = createSlice({
         state.messages.push(action.payload);
       }
     },
+    addOptimisticMessage: (state, action: PayloadAction<OptimisticMessage>) => {
+      // Add optimistic message immediately
+      state.messages.push(action.payload);
+    },
+    updateOptimisticMessage: (state, action: PayloadAction<{ tempId: string; message: TopicMessage }>) => {
+      // Update optimistic message with real ID and remove optimistic flags
+      const message = state.messages.find((m) => m._tempId === action.payload.tempId);
+      if (message) {
+        // Update with real message data but keep it in the same position
+        message.id = action.payload.message.id;
+        message.created_at = action.payload.message.created_at;
+        // Remove optimistic flags
+        message._optimistic = false;
+        message._pending = false;
+        message._failed = false;
+        // Keep _tempId for now in case we need to reference it
+      }
+    },
+    markMessageAsFailed: (state, action: PayloadAction<string>) => {
+      // Mark message as failed
+      const message = state.messages.find((m) => m._tempId === action.payload);
+      if (message) {
+        message._failed = true;
+        message._pending = false;
+      }
+    },
+    removeOptimisticMessage: (state, action: PayloadAction<string>) => {
+      // Remove failed message (when user cancels retry)
+      state.messages = state.messages.filter((m) => m._tempId !== action.payload);
+    },
     updateMessageInState: (state, action: PayloadAction<{ messageId: string; content: string; editedAt: string }>) => {
       const message = state.messages.find((m) => m.id === action.payload.messageId);
       if (message) {
@@ -93,27 +131,84 @@ const channelsSlice = createSlice({
         message.deleted_at = action.payload.deletedAt;
       }
     },
-    addReactionToMessage: (state, action: PayloadAction<{ messageId: string; reaction: MessageReaction }>) => {
+    addReactionToMessage: (state, action: PayloadAction<{ messageId: string; reaction: MessageReaction; currentUserId?: string }>) => {
       const message = state.messages.find((m) => m.id === action.payload.messageId);
       if (message) {
         if (!message.reactions) {
           message.reactions = [];
         }
-        // Check if reaction already exists
-        const exists = message.reactions.find(
-          (r) => r.user_id === action.payload.reaction.user_id && r.emoji === action.payload.reaction.emoji
-        );
-        if (!exists) {
-          message.reactions.push(action.payload.reaction);
+        
+        // Check if reactions are in grouped format
+        const isGrouped = message.reactions.length > 0 && 'user_reacted' in message.reactions[0];
+        
+        if (isGrouped) {
+          // Handle grouped format
+          const groupedReactions = message.reactions as GroupedReaction[];
+          const existingReaction = groupedReactions.find((r) => r.emoji === action.payload.reaction.emoji);
+          
+          if (existingReaction) {
+            // Update existing grouped reaction
+            existingReaction.count += 1;
+            if (!existingReaction.users.includes(action.payload.reaction.user_id)) {
+              existingReaction.users.push(action.payload.reaction.user_id);
+            }
+            // Update user_reacted if this is the current user
+            if (action.payload.currentUserId && action.payload.reaction.user_id === action.payload.currentUserId) {
+              existingReaction.user_reacted = true;
+            }
+          } else {
+            // Add new grouped reaction
+            const isCurrentUser = action.payload.currentUserId === action.payload.reaction.user_id;
+            groupedReactions.push({
+              emoji: action.payload.reaction.emoji,
+              count: 1,
+              users: [action.payload.reaction.user_id],
+              user_reacted: isCurrentUser,
+            });
+          }
+        } else {
+          // Handle individual format (legacy)
+          const exists = (message.reactions as MessageReaction[]).find(
+            (r) => r.user_id === action.payload.reaction.user_id && r.emoji === action.payload.reaction.emoji
+          );
+          if (!exists) {
+            (message.reactions as MessageReaction[]).push(action.payload.reaction);
+          }
         }
       }
     },
-    removeReactionFromMessage: (state, action: PayloadAction<{ messageId: string; userId: string; emoji: string }>) => {
+    removeReactionFromMessage: (state, action: PayloadAction<{ messageId: string; userId: string; emoji: string; currentUserId?: string }>) => {
       const message = state.messages.find((m) => m.id === action.payload.messageId);
       if (message && message.reactions) {
-        message.reactions = message.reactions.filter(
-          (r) => !(r.user_id === action.payload.userId && r.emoji === action.payload.emoji)
-        );
+        // Check if reactions are in grouped format
+        const isGrouped = message.reactions.length > 0 && 'user_reacted' in message.reactions[0];
+        
+        if (isGrouped) {
+          // Handle grouped format
+          const groupedReactions = message.reactions as GroupedReaction[];
+          const reactionIndex = groupedReactions.findIndex((r) => r.emoji === action.payload.emoji);
+          
+          if (reactionIndex !== -1) {
+            const reaction = groupedReactions[reactionIndex];
+            reaction.count -= 1;
+            reaction.users = reaction.users.filter((id) => id !== action.payload.userId);
+            
+            // Update user_reacted if this is the current user
+            if (action.payload.currentUserId && action.payload.userId === action.payload.currentUserId) {
+              reaction.user_reacted = false;
+            }
+            
+            // Remove the reaction entirely if count reaches 0
+            if (reaction.count <= 0) {
+              groupedReactions.splice(reactionIndex, 1);
+            }
+          }
+        } else {
+          // Handle individual format (legacy)
+          message.reactions = (message.reactions as MessageReaction[]).filter(
+            (r) => !(r.user_id === action.payload.userId && r.emoji === action.payload.emoji)
+          );
+        }
       }
     },
     updateTopicInList: (state, action: PayloadAction<Topic>) => {
@@ -423,6 +518,10 @@ export const {
   setCurrentChannel,
   setCurrentTopic,
   addMessage,
+  addOptimisticMessage,
+  updateOptimisticMessage,
+  markMessageAsFailed,
+  removeOptimisticMessage,
   updateMessageInState,
   deleteMessageInState,
   addReactionToMessage,
