@@ -12,6 +12,8 @@ export const setStoreDispatch = (dispatch: AppDispatch, logoutCreator: () => Any
     logoutActionCreator = logoutCreator;
 };
 
+
+
 // Create axios instance with base configuration
 export const apiClient = axios.create({
     baseURL: BASE_URL,
