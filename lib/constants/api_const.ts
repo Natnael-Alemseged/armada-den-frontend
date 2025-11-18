@@ -7,7 +7,7 @@
 
 // Base URL for the API.
 // You can change this to your production URL later.
-export const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000/api";
+export const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "https://armada-den-frontend.vercel.app/api";
 
 // export const BASE_URL ='https://api.boingo.ai';
 

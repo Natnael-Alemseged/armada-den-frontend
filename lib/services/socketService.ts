@@ -38,7 +38,7 @@ class SocketService {
         return;
       }
 
-      const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'https://armada-den-frontend.vercel.app/api';
       const socketUrl = baseUrl.replace('/api', '');
 
       this.socket = io(socketUrl, {

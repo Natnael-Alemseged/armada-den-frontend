@@ -4,7 +4,7 @@
  */
 
 // Base URL for the API
-export const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8002/api";
+export const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "https://armada-den-frontend.vercel.app/api";
 
 // Define endpoints for your application
 export const ENDPOINTS = {
