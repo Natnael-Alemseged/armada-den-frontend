@@ -115,7 +115,7 @@ export function TopicsList({
 
                       {/* Message count next to title */}
                       <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-orange-500 text-white">
-                        {`${topic.message_count ?? 0} Message${(topic.message_count ?? 0) !== 1 ? 's' : ''}`}
+                        {`${topic.unread_count ?? 0} Message${(topic.unread_count ?? 0) !== 1 ? 's' : ''}`}
                       </span>
                     </div>
 
