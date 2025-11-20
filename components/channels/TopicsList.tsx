@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { Topic, Channel } from '@/lib/types';
-import { Hash, Plus, Lock, Search, Settings } from 'lucide-react';
+import { Hash, Plus, Lock, Search, Settings, Pencil } from 'lucide-react';
 import { ManageChannelModal } from './ManageChannelModal';
 import { ManageTopicModal } from './ManageTopicModal';
 
@@ -33,8 +33,8 @@ export function TopicsList({
 
   if (!channel) {
     return (
-      <div className="w-96 bg-[#0D0D0D] border-r border-[#1A1A1A] flex flex-col">
-        <div className="flex-1 flex items-center justify-center text-gray-600">
+      <div className="w-96 bg-white border-r border-gray-200 flex flex-col">
+        <div className="flex-1 flex items-center justify-center text-gray-500">
           <div className="text-center px-4">
             <Hash className="w-12 h-12 mx-auto mb-3 opacity-20" />
             <p className="text-sm">Select a channel to view topics</p>
@@ -45,20 +45,20 @@ export function TopicsList({
   }
 
   return (
-    <div className="w-96 bg-[#0D0D0D] border-r border-[#1A1A1A] flex flex-col">
+    <div className="w-96 bg-white border-r border-gray-200 flex flex-col">
       {/* Header */}
-      <div className="px-6 py-4 border-b border-[#1A1A1A]">
+      <div className="px-6 py-4 border-b border-gray-200">
         <div className="flex items-center justify-between">
-          <h2 className="text-white font-semibold text-lg">
+          <h2 className="text-gray-900 font-semibold text-lg">
             # {channel.name}
           </h2>
           {isAdmin && (
             <button
               onClick={() => setShowManageChannel(true)}
-              className="p-1 hover:bg-[#1A1A1A] rounded transition-colors text-gray-500 hover:text-gray-300"
+              className="p-1 hover:bg-gray-100 rounded transition-colors text-gray-500 hover:text-gray-700"
               title="Manage Channel"
             >
-              <Settings className="w-4 h-4" />
+              <Pencil className="w-4 h-4" />
             </button>
           )}
         </div>
@@ -73,90 +73,92 @@ export function TopicsList({
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search topics..."
-            className="w-full pl-9 pr-3 py-2 bg-[#1A1A1A] border-none rounded-lg text-sm text-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-[#1A73E8]"
+            className="w-full pl-9 pr-3 py-2 bg-gray-100 border-none rounded-lg text-sm text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-[#1A73E8]"
           />
         </div>
       </div>
 
       {/* Topics List */}
-      <div className="flex-1 overflow-y-auto px-4 py-2">
+      <div className="flex-1 overflow-y-auto">
         {filteredTopics.length === 0 ? (
-          <div className="p-4 text-center text-gray-600">
-            <p className="text-sm mb-3">{searchQuery ? 'No topics found' : 'No topics yet'}</p>
-            {isAdmin && onCreateTopic && !searchQuery && (
-              <button
-                onClick={onCreateTopic}
-                className="text-[#1A73E8] hover:underline text-sm"
-              >
-                Create your first topic
-              </button>
-            )}
+          <div className="p-8 text-center text-gray-500">
+            <p className="text-sm">
+              {searchQuery ? 'No topics found' : 'No topics yet'}
+            </p>
           </div>
         ) : (
-          <div className="space-y-2">
+          <div className="space-y-3 px-4 pt-2 pb-4">
             {filteredTopics.map((topic) => (
               <div
                 key={topic.id}
-                className={`relative rounded-xl transition-all group ${
-                  selectedTopicId === topic.id
-                    ? 'bg-[#454545]/80'
-                    : 'hover:bg-[#151515]/50'
-                }`}
+                className={`group relative rounded-xl transition-all ${selectedTopicId === topic.id
+                  ? 'bg-gray-100 shadow-sm'
+                  : 'bg-white hover:shadow-sm'
+                  }`}
               >
-                {/* Blue border indicator for selected topic */}
+                {/* Blue left curve */}
                 {selectedTopicId === topic.id && (
-                  <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#1A73E8] rounded-l-xl" />
+                  <div className="absolute left-0 top-0 h-full w-0.5 bg-blue-500 rounded-l-xl" />
                 )}
-                
+
+
                 <button
                   onClick={() => onTopicSelect(topic)}
-                  className="w-full flex items-start gap-3 px-4 py-3 text-left"
+                  className="w-full flex items-center justify-between px-5 py-4 text-left"
                 >
-                  {/* Unread indicator */}
-                  {topic.unread_count && topic.unread_count > 0 && (
-                    <div className="w-2 h-2 rounded-full bg-[#1A73E8] mt-2 flex-shrink-0" />
-                  )}
-                  
-                  <div className="flex-1 min-w-0">
-                    <h3 className={`text-base font-medium mb-1 ${
-                      selectedTopicId === topic.id ? 'text-white' : 'text-gray-200'
-                    }`}>
-                      {topic.name}
-                    </h3>
+                  <div className="flex-1 min-w-0 pr-4">
+                    <div className="flex items-center gap-2 mb-1">
+                      <h3 className="text-base font-medium text-black">
+                        {topic.name}
+                      </h3>
+
+
+                      {/* Message count next to title */}
+                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-orange-500 text-white">
+                        {`${topic.message_count ?? 0} Message${(topic.message_count ?? 0) !== 1 ? 's' : ''}`}
+                      </span>
+                    </div>
+
                     {topic.description && (
-                      <p className="text-sm text-gray-500 line-clamp-2">
+                      <p className="text-xs text-gray-500 line-clamp-2">
                         {topic.description}
                       </p>
                     )}
                   </div>
+
+                  {/* Pencil icon always visible */}
+                  {isAdmin && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setManagingTopic(topic);
+                      }}
+                      className="p-1.5 hover:bg-gray-200 rounded-lg transition"
+                      title="Manage Topic"
+                    >
+                      <Pencil className="w-4 h-4 text-gray-500" />
+                    </button>
+                  )}
                 </button>
-                
-                {isAdmin && (
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setManagingTopic(topic);
-                    }}
-                    className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 p-1 hover:bg-[#2A2A2A] rounded transition-all text-gray-500 hover:text-gray-300"
-                    title="Manage Topic"
-                  >
-                    <Settings className="w-3.5 h-3.5" />
-                  </button>
-                )}
+
               </div>
             ))}
           </div>
         )}
       </div>
-
       {/* Create Topic Button */}
       {isAdmin && onCreateTopic && filteredTopics.length > 0 && (
-        <div className="border-t border-[#1A1A1A] p-2">
+        <div className="border-t border-gray-200 p-2">
           <button
             onClick={onCreateTopic}
-            className="w-full flex items-center gap-2 px-3 py-2 text-gray-400 hover:bg-[#1A1A1A] rounded-md transition-colors"
+            className="w-full flex items-center gap-2 px-3 py-2 text-gray-500 hover:bg-gray-100 rounded-md transition-colors"
           >
-            <Plus className="w-4 h-4" />
+            {/* The container for the icon is now styled with blue background and white content */}
+            <div className="bg-blue-500 rounded p-1">
+              <Plus className="w-4 h-4 text-white" />
+            </div>
+
+            {/* The text remains grey as defined in the button's main class */}
             <span className="text-sm">Add Topic</span>
           </button>
         </div>

@@ -51,44 +51,47 @@ export function ManageChannelModal({ channel, onClose }: ManageChannelModalProps
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-[#1A1A1A] rounded-lg shadow-xl max-w-md w-full border border-[#2A2A2A]">
+    <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden">
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-[#2A2A2A]">
-          <h2 className="text-lg font-semibold text-white">Manage Channel</h2>
+        <div className="p-6 pb-0 flex items-start justify-between">
+          <div>
+            <h2 className="text-xl font-bold text-gray-900">Manage Channel</h2>
+            <p className="text-gray-500 text-sm mt-1">Update the channel details</p>
+          </div>
           <button
             onClick={onClose}
-            className="p-1 hover:bg-[#2A2A2A] rounded transition-colors text-gray-400 hover:text-white"
+            className="p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-400 hover:text-gray-600"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {showDeleteConfirm ? (
-          <div className="p-6">
-            <div className="mb-4">
-              <div className="w-12 h-12 rounded-full bg-red-500/20 flex items-center justify-center mx-auto mb-4">
-                <Trash2 className="w-6 h-6 text-red-500" />
+          <div className="p-8">
+            <div className="mb-6 text-center">
+              <div className="w-16 h-16 rounded-full bg-red-50 flex items-center justify-center mx-auto mb-4">
+                <Trash2 className="w-8 h-8 text-red-500" />
               </div>
-              <h3 className="text-lg font-semibold text-white text-center mb-2">
+              <h3 className="text-xl font-bold text-gray-900 mb-2">
                 Delete Channel?
               </h3>
-              <p className="text-sm text-gray-400 text-center">
-                Are you sure you want to delete <span className="font-semibold text-white">#{channel.name}</span>? 
+              <p className="text-gray-500">
+                Are you sure you want to delete <span className="font-semibold text-gray-900">#{channel.name}</span>?
                 This will delete all topics and messages in this channel. This action cannot be undone.
               </p>
             </div>
-            <div className="flex gap-2">
+            <div className="flex gap-3">
               <button
                 onClick={() => setShowDeleteConfirm(false)}
-                className="flex-1 px-4 py-2 bg-[#2A2A2A] text-white rounded-md hover:bg-[#3A3A3A] transition-colors"
+                className="flex-1 px-6 py-3 bg-gray-100 text-gray-700 font-medium rounded-xl hover:bg-gray-200 transition-colors"
                 disabled={loading}
               >
                 Cancel
               </button>
               <button
                 onClick={handleDelete}
-                className="flex-1 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
+                className="flex-1 px-6 py-3 bg-red-600 text-white font-medium rounded-xl hover:bg-red-700 transition-colors shadow-lg shadow-red-600/20"
                 disabled={loading}
               >
                 {loading ? 'Deleting...' : 'Delete Channel'}
@@ -96,60 +99,60 @@ export function ManageChannelModal({ channel, onClose }: ManageChannelModalProps
             </div>
           </div>
         ) : (
-          <form onSubmit={handleUpdate} className="p-6 space-y-4">
+          <form onSubmit={handleUpdate} className="p-6 space-y-6">
             {/* Name */}
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">
+              <label className="block text-sm font-semibold text-gray-900 mb-2">
                 Channel Name
               </label>
               <input
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="w-full px-3 py-2 bg-[#0D0D0D] border border-[#2A2A2A] rounded-md text-white placeholder-gray-500 focus:outline-none focus:border-[#1A73E8]"
-                placeholder="e.g., general, random, dev-team"
+                className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all font-medium"
+                placeholder="e.g., general"
                 required
               />
             </div>
 
             {/* Description */}
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">
-                Description (optional)
+              <label className="block text-sm font-semibold text-gray-900 mb-2">
+                Description
               </label>
               <textarea
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                className="w-full px-3 py-2 bg-[#0D0D0D] border border-[#2A2A2A] rounded-md text-white placeholder-gray-500 focus:outline-none focus:border-[#1A73E8] resize-none"
-                placeholder="What's this channel about?"
-                rows={3}
+                className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all resize-none min-h-[100px]"
+                placeholder="What this channel is about?"
               />
             </div>
 
             {/* Actions */}
-            <div className="flex gap-2 pt-2">
+            <div className="flex items-center gap-4 pt-4 mt-8">
               <button
                 type="button"
                 onClick={() => setShowDeleteConfirm(true)}
-                className="px-4 py-2 bg-red-600/20 text-red-400 rounded-md hover:bg-red-600/30 transition-colors flex items-center gap-2"
+                className="flex items-center gap-2 text-red-500 hover:text-red-600 font-medium px-2 py-2 rounded-lg hover:bg-red-50 transition-colors"
               >
                 <Trash2 className="w-4 h-4" />
                 Delete
               </button>
+
               <div className="flex-1" />
+
               <button
                 type="button"
                 onClick={onClose}
-                className="px-4 py-2 bg-[#2A2A2A] text-white rounded-md hover:bg-[#3A3A3A] transition-colors"
+                className="px-6 py-3 bg-gray-100 text-gray-700 font-medium rounded-full hover:bg-gray-200 transition-colors"
               >
                 Cancel
               </button>
               <button
                 type="submit"
-                className="px-4 py-2 bg-[#1A73E8] text-white rounded-md hover:bg-[#1557B0] transition-colors flex items-center gap-2"
+                className="px-8 py-3 bg-blue-600 text-white font-medium rounded-full hover:bg-blue-700 transition-all shadow-lg shadow-blue-600/20 flex items-center gap-2"
                 disabled={loading || !name.trim()}
               >
-                <Edit2 className="w-4 h-4" />
                 {loading ? 'Saving...' : 'Save Changes'}
               </button>
             </div>

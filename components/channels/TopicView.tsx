@@ -193,7 +193,7 @@ export function TopicView({ topic }: TopicViewProps) {
 
     const content = messageContent.trim();
     const tempId = `temp-${Date.now()}-${Math.random()}`;
-    
+
     // Create optimistic message
     const optimisticMessage: OptimisticMessage = {
       id: tempId,
@@ -230,7 +230,7 @@ export function TopicView({ topic }: TopicViewProps) {
           content: content,
         })
       ).unwrap();
-      
+
       // Replace optimistic message with real message from server
       dispatch(updateOptimisticMessage({ tempId, message: result }));
     } catch (error) {
@@ -243,7 +243,7 @@ export function TopicView({ topic }: TopicViewProps) {
   const handleRetryMessage = async (tempId: string, content: string) => {
     // Remove failed message
     dispatch(removeOptimisticMessage(tempId));
-    
+
     // Create new optimistic message
     const newTempId = `temp-${Date.now()}-${Math.random()}`;
     const optimisticMessage: OptimisticMessage = {
@@ -278,7 +278,7 @@ export function TopicView({ topic }: TopicViewProps) {
           content: content,
         })
       ).unwrap();
-      
+
       dispatch(updateOptimisticMessage({ tempId: newTempId, message: result }));
     } catch (error) {
       console.error('Failed to retry message:', error);
@@ -291,12 +291,12 @@ export function TopicView({ topic }: TopicViewProps) {
   };
 
   return (
-    <div className="flex-1 flex flex-col bg-[#0D0D0D]">
+    <div className="flex-1 flex flex-col bg-white">
       {/* Topic Header */}
-      <div className="h-12 border-b border-[#1A1A1A] flex items-center px-5">
+      <div className="h-12 border-b border-gray-200 flex items-center px-5">
         <Hash className="w-5 h-5 text-gray-500 mr-2" />
         <div className="flex-1">
-          <h2 className="text-base font-semibold text-white">
+          <h2 className="text-base font-semibold text-gray-900">
             {topic.name}
           </h2>
         </div>
@@ -316,14 +316,14 @@ export function TopicView({ topic }: TopicViewProps) {
             </div>
           </div>
         ) : (
-          <MessageList 
-            messages={messages} 
+          <MessageList
+            messages={messages}
             currentUserId={user?.id || ''}
             onRetryMessage={handleRetryMessage}
             onCancelMessage={handleCancelMessage}
           />
         )}
-        
+
         {/* AI Typing Indicator */}
         {aiTyping && (
           <div className="flex items-center gap-3 px-4 py-3 animate-fade-in">
@@ -340,12 +340,12 @@ export function TopicView({ topic }: TopicViewProps) {
             </div>
           </div>
         )}
-        
+
         <div ref={messagesEndRef} />
       </div>
 
       {/* Message Input */}
-      <div className="border-t  border-8 border-[#1A1A1A] px-5 py-3">
+      <div className="border-t border-gray-200 px-5 py-3">
         <form onSubmit={handleSendMessage}>
           <MentionInput
             value={messageContent}
@@ -357,7 +357,7 @@ export function TopicView({ topic }: TopicViewProps) {
             users={users}
           />
         </form>
-          <div className="flex items-center pb-2"></div>
+        <div className="flex items-center pb-2"></div>
       </div>
     </div>
   );

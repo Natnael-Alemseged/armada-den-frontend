@@ -19,7 +19,7 @@ export function ChatRoomView() {
   const { currentRoom, messages, sendingMessage, uploadingMedia, typingUsers } =
     useAppSelector((state) => state.realtimeChat);
   const { user } = useAppSelector((state) => state.auth);
-  
+
   const [input, setInput] = useState('');
   const [replyTo, setReplyTo] = useState<ChatRoomMessage | null>(null);
   const [isTyping, setIsTyping] = useState(false);
@@ -196,7 +196,7 @@ export function ChatRoomView() {
     if (!currentRoom) return '';
     const typingUserIds = typingUsers[currentRoom.id] || [];
     const typingUsersList = typingUserIds.filter((id: any) => id !== user?.id);
-    
+
     if (typingUsersList.length === 0) return '';
     if (typingUsersList.length === 1) return 'Someone is typing...';
     return `${typingUsersList.length} people are typing...`;
@@ -207,7 +207,7 @@ export function ChatRoomView() {
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
-      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-4">
+      <div className="bg-white border-b border-gray-200 p-4">
         <div className="flex items-center gap-3">
           {currentRoom.avatar_url ? (
             <img
@@ -221,11 +221,11 @@ export function ChatRoomView() {
             </div>
           )}
           <div>
-            <h2 className="font-semibold text-gray-900 dark:text-white">
+            <h2 className="font-semibold text-gray-900">
               {getRoomName()}
             </h2>
             {currentRoom.room_type === 'GROUP' && (
-              <p className="text-sm text-gray-500 dark:text-gray-400">
+              <p className="text-sm text-gray-500">
                 {currentRoom.members?.length || 0} members
               </p>
             )}
@@ -234,9 +234,9 @@ export function ChatRoomView() {
       </div>
 
       {/* Messages Area */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50 dark:bg-gray-900">
+      <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50">
         {messages.length === 0 ? (
-          <div className="flex items-center justify-center h-full text-gray-500 dark:text-gray-400">
+          <div className="flex items-center justify-center h-full text-gray-500">
             <p className="text-sm">No messages yet. Start the conversation!</p>
           </div>
         ) : (
@@ -257,8 +257,8 @@ export function ChatRoomView() {
 
       {/* Typing Indicator */}
       {getTypingText() && (
-        <div className="px-4 py-2 bg-gray-50 dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700">
-          <p className="text-sm text-gray-500 dark:text-gray-400 italic">
+        <div className="px-4 py-2 bg-gray-50 border-t border-gray-200">
+          <p className="text-sm text-gray-500 italic">
             {getTypingText()}
           </p>
         </div>
@@ -266,26 +266,26 @@ export function ChatRoomView() {
 
       {/* Reply Preview */}
       {replyTo && (
-        <div className="px-4 py-2 bg-blue-50 dark:bg-blue-900/20 border-t border-blue-200 dark:border-blue-800 flex items-center justify-between">
+        <div className="px-4 py-2 bg-blue-50 border-t border-blue-200 flex items-center justify-between">
           <div className="flex-1 min-w-0">
-            <p className="text-xs text-blue-600 dark:text-blue-400 font-semibold">
+            <p className="text-xs text-blue-600 font-semibold">
               Replying to {replyTo.sender?.email || 'Unknown'}
             </p>
-            <p className="text-sm text-gray-600 dark:text-gray-400 truncate">
+            <p className="text-sm text-gray-600 truncate">
               {replyTo.content}
             </p>
           </div>
           <button
             onClick={() => setReplyTo(null)}
-            className="ml-2 p-1 hover:bg-blue-100 dark:hover:bg-blue-900/40 rounded"
+            className="ml-2 p-1 hover:bg-blue-100 rounded"
           >
-            <span className="text-blue-600 dark:text-blue-400">✕</span>
+            <span className="text-blue-600">✕</span>
           </button>
         </div>
       )}
 
       {/* Input Area */}
-      <div className="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 p-4">
+      <div className="bg-white border-t border-gray-200 p-4">
         <form onSubmit={handleSubmit} className="flex items-center gap-2">
           <input
             type="file"
@@ -294,17 +294,17 @@ export function ChatRoomView() {
             className="hidden"
             accept="image/*,video/*,audio/*,.pdf,.doc,.docx"
           />
-          
+
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
             disabled={uploadingMedia}
-            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors disabled:opacity-50"
+            className="p-2 hover:bg-gray-100 rounded-lg transition-colors disabled:opacity-50"
           >
             {uploadingMedia ? (
-              <Loader2 className="w-5 h-5 animate-spin text-gray-600 dark:text-gray-400" />
+              <Loader2 className="w-5 h-5 animate-spin text-gray-600" />
             ) : (
-              <Paperclip className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+              <Paperclip className="w-5 h-5 text-gray-600" />
             )}
           </button>
 
@@ -314,7 +314,7 @@ export function ChatRoomView() {
             onChange={handleInputChange}
             placeholder="Type a message..."
             disabled={sendingMessage}
-            className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white disabled:opacity-50"
+            className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50"
           />
 
           <button
@@ -323,8 +323,8 @@ export function ChatRoomView() {
             className={cn(
               'p-2 rounded-lg transition-colors',
               input.trim()
-                ? 'bg-blue-600 hover:bg-blue-700 text-white'
-                : 'bg-gray-200 dark:bg-gray-700 text-gray-400 cursor-not-allowed'
+                ? 'bg-[#007aff] hover:bg-[#0051d5] text-white'
+                : 'bg-gray-200 text-gray-400 cursor-not-allowed'
             )}
           >
             {sendingMessage ? (

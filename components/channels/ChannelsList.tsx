@@ -39,22 +39,30 @@ export function ChannelsList({
   };
 
   return (
-    <div className="w-64 bg-[#0D0D0D] flex flex-col border-r border-[#1A1A1A]">
+    <div className="w-64 bg-[#F2F2F7] flex flex-col">
       {/* User Info */}
-      <div className="px-4 pt-4 pb-3 border-b border-[#1A1A1A] flex items-center gap-3">
+      <div className="px-4 pt-4 pb-3 flex items-center gap-3">
         <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center">
           <span className="text-sm font-semibold text-white">{getUserInitials()}</span>
         </div>
         <div className="flex-1 min-w-0">
-          <div className="text-sm font-semibold text-white truncate">
+          <div className="text-sm font-semibold text-gray-900 truncate">
             {user?.full_name || 'User'}
           </div>
-          <div className="text-xs text-gray-400 truncate">{user?.email}</div>
+          <div className="text-xs text-gray-500 truncate">{user?.email}</div>
         </div>
       </div>
 
       {/* Channels Header */}
-      <div className="text-[10px] text-gray-500 uppercase tracking-[0.2em] px-4 py-2">
+      <div
+        className="px-4 py-2"
+        style={{
+          color: '#3D3D3D',
+          fontFamily: '"General Sans Variable", system-ui, sans-serif',
+          fontSize: '14px',
+          fontWeight: 450,
+        }}
+      >
         Channels
       </div>
 
@@ -64,14 +72,13 @@ export function ChannelsList({
           <button
             key={channel.id}
             onClick={() => onChannelSelect(channel)}
-            className={`w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-              selectedChannelId === channel.id
-                ? 'bg-[#1A73E8] text-white'
-                : 'text-gray-300 hover:bg-[#1A1A1A] hover:text-white'
-            }`}
+            className={`w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors ${selectedChannelId === channel.id
+              ? 'bg-[#1A73E8] text-white'
+              : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
+              }`}
             title={channel.name}
           >
-            <span className="w-6 h-6 rounded bg-[#1A1A1A] flex items-center justify-center text-xs font-bold">
+            <span className="w-6 h-6 rounded bg-black flex items-center justify-center text-xs font-bold text-white">
               {channel.name.charAt(0).toUpperCase()}
             </span>
             <span className="truncate">{channel.name}</span>
@@ -82,11 +89,11 @@ export function ChannelsList({
         {isAdmin && onCreateChannel && (
           <button
             onClick={onCreateChannel}
-            className="w-full flex items-center gap-3 px-3 py-2 rounded-md text-gray-300 hover:bg-[#1A1A1A] hover:text-white transition-colors"
+            className="w-full flex items-center gap-3 px-3 py-2 rounded-md text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition-colors"
             title="Create Channel"
           >
-            <span className="w-6 h-6 rounded bg-[#1A1A1A] flex items-center justify-center">
-              <Plus className="w-4 h-4" />
+            <span className="w-6 h-6 rounded bg-black flex items-center justify-center">
+              <Plus className="w-4 h-4 text-white" />
             </span>
             <span className="truncate">Create Channel</span>
           </button>
@@ -94,19 +101,19 @@ export function ChannelsList({
       </div>
 
       {/* Bottom Section - Armada Den & Logout */}
-      <div className="mt-auto px-4 py-3 border-t border-[#1A1A1A] space-y-2">
+      <div className="mt-auto px-4 py-3 space-y-2">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-md bg-[#1A1A1A] flex items-center justify-center">
+          <div className="w-10 h-10 rounded-md bg-black flex items-center justify-center">
             <span className="text-lg font-bold text-white">A</span>
           </div>
           <div className="flex-1 min-w-0">
-            <div className="text-sm font-semibold text-white">Armada Den</div>
+            <div className="text-sm font-semibold text-gray-900">Armada Den</div>
             <div className="text-xs text-gray-500">workspace</div>
           </div>
         </div>
         <button
           onClick={handleLogout}
-          className="w-full flex items-center gap-3 px-3 py-2 rounded-md text-gray-300 hover:bg-[#1A1A1A] hover:text-red-400 transition-colors"
+          className="w-full flex items-center gap-3 px-3 py-2 rounded-md text-gray-600 hover:bg-gray-100 hover:text-red-600 transition-colors"
         >
           <LogOut className="w-5 h-5" />
           <span className="text-sm font-medium">Logout</span>

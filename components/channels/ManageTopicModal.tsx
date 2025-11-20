@@ -3,12 +3,12 @@
 import React, { useState, useEffect } from 'react';
 import { X, Trash2, Edit2, UserPlus, Loader2, Search, Users, UserMinus } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '@/lib/hooks';
-import { 
-  updateTopic, 
-  deleteTopic, 
-  addTopicMember, 
+import {
+  updateTopic,
+  deleteTopic,
+  addTopicMember,
   removeTopicMember,
-  fetchUsersForTopicAddition 
+  fetchUsersForTopicAddition
 } from '@/lib/features/channels/channelsThunk';
 import { Topic, UserForTopicAddition } from '@/lib/types';
 
@@ -48,9 +48,9 @@ export function ManageTopicModal({ topic, onClose }: ManageTopicModalProps) {
     setUsersLoading(true);
     try {
       const result = await dispatch(
-        fetchUsersForTopicAddition({ 
-          topicId: topic.id, 
-          search: searchQuery || undefined 
+        fetchUsersForTopicAddition({
+          topicId: topic.id,
+          search: searchQuery || undefined
         })
       ).unwrap();
       setUsers(result);
@@ -115,15 +115,15 @@ export function ManageTopicModal({ topic, onClose }: ManageTopicModalProps) {
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-[#1A1A1A] rounded-lg shadow-xl max-w-2xl w-full border border-[#2A2A2A] max-h-[90vh] overflow-hidden flex flex-col">
+      <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full border border-gray-200 max-h-[90vh] overflow-hidden flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-[#2A2A2A]">
-          <h2 className="text-lg font-semibold text-white">
+        <div className="flex items-center justify-between p-4 border-b border-gray-200">
+          <h2 className="text-lg font-semibold text-gray-900">
             {showAddMembers ? 'Manage Members' : showDeleteConfirm ? 'Delete Topic' : 'Manage Topic'}
           </h2>
           <button
             onClick={onClose}
-            className="p-1 hover:bg-[#2A2A2A] rounded transition-colors text-gray-400 hover:text-white"
+            className="p-1 hover:bg-gray-100 rounded transition-colors text-gray-500 hover:text-gray-700"
           >
             <X className="w-5 h-5" />
           </button>
@@ -135,18 +135,18 @@ export function ManageTopicModal({ topic, onClose }: ManageTopicModalProps) {
               <div className="w-12 h-12 rounded-full bg-red-500/20 flex items-center justify-center mx-auto mb-4">
                 <Trash2 className="w-6 h-6 text-red-500" />
               </div>
-              <h3 className="text-lg font-semibold text-white text-center mb-2">
+              <h3 className="text-lg font-semibold text-gray-900 text-center mb-2">
                 Delete Topic?
               </h3>
-              <p className="text-sm text-gray-400 text-center">
-                Are you sure you want to delete <span className="font-semibold text-white">#{topic.name}</span>? 
+              <p className="text-sm text-gray-600 text-center">
+                Are you sure you want to delete <span className="font-semibold text-gray-900">#{topic.name}</span>?
                 This will delete all messages in this topic. This action cannot be undone.
               </p>
             </div>
             <div className="flex gap-2">
               <button
                 onClick={() => setShowDeleteConfirm(false)}
-                className="flex-1 px-4 py-2 bg-[#2A2A2A] text-white rounded-md hover:bg-[#3A3A3A] transition-colors"
+                className="flex-1 px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors"
                 disabled={loading}
               >
                 Cancel
@@ -163,15 +163,15 @@ export function ManageTopicModal({ topic, onClose }: ManageTopicModalProps) {
         ) : showAddMembers ? (
           <div className="flex-1 overflow-hidden flex flex-col">
             {/* Search */}
-            <div className="p-4 border-b border-[#2A2A2A]">
+            <div className="p-4 border-b border-gray-200">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-500" />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
                 <input
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Search users by name or email..."
-                  className="w-full pl-10 pr-3 py-2 bg-[#0D0D0D] border border-[#2A2A2A] rounded-md text-white placeholder-gray-500 focus:outline-none focus:border-[#1A73E8]"
+                  className="w-full pl-10 pr-3 py-2 bg-gray-50 border border-gray-300 rounded-md text-gray-900 placeholder-gray-500 focus:outline-none focus:border-[#1A73E8]"
                 />
               </div>
             </div>
@@ -185,11 +185,11 @@ export function ManageTopicModal({ topic, onClose }: ManageTopicModalProps) {
               ) : (
                 <>
                   {/* Current Members */}
-                  <div className="flex-1 border-r border-[#2A2A2A] flex flex-col">
-                    <div className="px-4 py-3 border-b border-[#2A2A2A] bg-[#0D0D0D]">
+                  <div className="flex-1 border-r border-gray-200 flex flex-col">
+                    <div className="px-4 py-3 border-b border-gray-200 bg-gray-50">
                       <div className="flex items-center gap-2">
-                        <Users className="w-4 h-4 text-gray-400" />
-                        <h3 className="text-sm font-semibold text-white">
+                        <Users className="w-4 h-4 text-gray-600" />
+                        <h3 className="text-sm font-semibold text-gray-900">
                           Current Members ({users.filter(u => u.is_member).length})
                         </h3>
                       </div>
@@ -206,14 +206,14 @@ export function ManageTopicModal({ topic, onClose }: ManageTopicModalProps) {
                             return (
                               <div
                                 key={user.id}
-                                className="flex items-center justify-between p-3 bg-[#1A1A1A] rounded-md border border-[#2A2A2A]"
+                                className="flex items-center justify-between p-3 bg-white rounded-md border border-gray-200"
                               >
                                 <div className="flex items-center gap-3 flex-1 min-w-0">
                                   <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white text-sm font-semibold flex-shrink-0">
                                     {user.full_name?.[0]?.toUpperCase() || user.email[0].toUpperCase()}
                                   </div>
                                   <div className="flex-1 min-w-0">
-                                    <div className="text-sm font-medium text-white truncate flex items-center gap-2">
+                                    <div className="text-sm font-medium text-gray-900 truncate flex items-center gap-2">
                                       {user.full_name || user.email}
                                       {isCurrentUser && (
                                         <span className="text-xs text-gray-500">(You)</span>
@@ -243,10 +243,10 @@ export function ManageTopicModal({ topic, onClose }: ManageTopicModalProps) {
 
                   {/* Available to Add */}
                   <div className="flex-1 flex flex-col">
-                    <div className="px-4 py-3 border-b border-[#2A2A2A] bg-[#0D0D0D]">
+                    <div className="px-4 py-3 border-b border-gray-200 bg-gray-50">
                       <div className="flex items-center gap-2">
-                        <UserPlus className="w-4 h-4 text-gray-400" />
-                        <h3 className="text-sm font-semibold text-white">
+                        <UserPlus className="w-4 h-4 text-gray-600" />
+                        <h3 className="text-sm font-semibold text-gray-900">
                           Add Members ({users.filter(u => !u.is_member).length})
                         </h3>
                       </div>
@@ -261,14 +261,14 @@ export function ManageTopicModal({ topic, onClose }: ManageTopicModalProps) {
                           {users.filter(u => !u.is_member).map((user) => (
                             <div
                               key={user.id}
-                              className="flex items-center justify-between p-3 bg-[#1A1A1A] rounded-md border border-[#2A2A2A]"
+                              className="flex items-center justify-between p-3 bg-white rounded-md border border-gray-200"
                             >
                               <div className="flex items-center gap-3 flex-1 min-w-0">
                                 <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white text-sm font-semibold flex-shrink-0">
                                   {user.full_name?.[0]?.toUpperCase() || user.email[0].toUpperCase()}
                                 </div>
                                 <div className="flex-1 min-w-0">
-                                  <div className="text-sm font-medium text-white truncate">
+                                  <div className="text-sm font-medium text-gray-900 truncate">
                                     {user.full_name || user.email}
                                   </div>
                                   {user.full_name && (
@@ -294,10 +294,10 @@ export function ManageTopicModal({ topic, onClose }: ManageTopicModalProps) {
             </div>
 
             {/* Footer */}
-            <div className="p-4 border-t border-[#2A2A2A]">
+            <div className="p-4 border-t border-gray-200">
               <button
                 onClick={() => setShowAddMembers(false)}
-                className="w-full px-4 py-2 bg-[#2A2A2A] text-white rounded-md hover:bg-[#3A3A3A] transition-colors"
+                className="w-full px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors"
               >
                 Done
               </button>
@@ -307,14 +307,14 @@ export function ManageTopicModal({ topic, onClose }: ManageTopicModalProps) {
           <form onSubmit={handleUpdate} className="p-6 space-y-4">
             {/* Name */}
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
                 Topic Name
               </label>
               <input
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="w-full px-3 py-2 bg-[#0D0D0D] border border-[#2A2A2A] rounded-md text-white placeholder-gray-500 focus:outline-none focus:border-[#1A73E8]"
+                className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md text-gray-900 placeholder-gray-500 focus:outline-none focus:border-[#1A73E8]"
                 placeholder="e.g., general-chat, project-updates"
                 required
               />
@@ -322,13 +322,13 @@ export function ManageTopicModal({ topic, onClose }: ManageTopicModalProps) {
 
             {/* Description */}
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
                 Description (optional)
               </label>
               <textarea
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                className="w-full px-3 py-2 bg-[#0D0D0D] border border-[#2A2A2A] rounded-md text-white placeholder-gray-500 focus:outline-none focus:border-[#1A73E8] resize-none"
+                className="w-full px-3 py-2 bg-white border border-gray-300 rounded-md text-gray-900 placeholder-gray-500 focus:outline-none focus:border-[#1A73E8] resize-none"
                 placeholder="What's this topic about?"
                 rows={3}
               />
@@ -356,7 +356,7 @@ export function ManageTopicModal({ topic, onClose }: ManageTopicModalProps) {
               <button
                 type="button"
                 onClick={onClose}
-                className="px-4 py-2 bg-[#2A2A2A] text-white rounded-md hover:bg-[#3A3A3A] transition-colors"
+                className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition-colors"
               >
                 Cancel
               </button>

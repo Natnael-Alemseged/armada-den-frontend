@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, Loader2, Mail, Search, ExternalLink } from 'lucide-react';
+import { Send, Loader2, Mail, Search, ExternalLink, ArrowUp } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '@/lib/hooks';
 import { connectGmail } from '@/lib/features/gmail/gmailThunk';
 
@@ -43,14 +43,14 @@ export function MentionInput({
   const dispatch = useAppDispatch();
   const { connected: gmailConnected } = useAppSelector((state) => state.gmail);
   const { connected: searchConnected } = useAppSelector((state) => state.search);
-  
+
   const [showMentions, setShowMentions] = useState(false);
   const [mentionSearch, setMentionSearch] = useState('');
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [cursorPosition, setCursorPosition] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
   const mentionsRef = useRef<HTMLDivElement>(null);
-  
+
   // Define AI agents
   const aiAgents: AIAgent[] = [
     {
@@ -81,13 +81,13 @@ export function MentionInput({
       user.full_name?.toLowerCase().includes(searchLower)
     );
   }).slice(0, 5); // Limit to 5 results
-  
+
   const filteredAgents = aiAgents.filter((agent) => {
     const searchLower = mentionSearch.toLowerCase();
-    return agent.name.toLowerCase().includes(searchLower) || 
-           agent.displayName.toLowerCase().includes(searchLower);
+    return agent.name.toLowerCase().includes(searchLower) ||
+      agent.displayName.toLowerCase().includes(searchLower);
   });
-  
+
   type MentionOption = { type: 'agent'; agent: AIAgent } | { type: 'user'; user: User };
   const mentionOptions: MentionOption[] = [
     ...filteredAgents.map((agent) => ({ type: 'agent' as const, agent })),
@@ -151,7 +151,7 @@ export function MentionInput({
     const newValue = `${beforeMention}@${displayName} ${afterMention}`;
     onChange(newValue);
     setShowMentions(false);
-    
+
     // Set cursor position after the mention
     setTimeout(() => {
       const newPosition = lastAtIndex + displayName.length + 2;
@@ -159,7 +159,7 @@ export function MentionInput({
       inputRef.current?.focus();
     }, 0);
   };
-  
+
   const selectAgent = (agent: AIAgent) => {
     const lastAtIndex = value.lastIndexOf('@', cursorPosition);
     const beforeMention = value.substring(0, lastAtIndex);
@@ -167,7 +167,7 @@ export function MentionInput({
     const newValue = `${beforeMention}@${agent.displayName} ${afterMention}`;
     onChange(newValue);
     setShowMentions(false);
-    
+
     // Set cursor position after the mention
     setTimeout(() => {
       const newPosition = lastAtIndex + agent.displayName.length + 2;
@@ -175,7 +175,7 @@ export function MentionInput({
       inputRef.current?.focus();
     }, 0);
   };
-  
+
   const handleConnectGmail = async () => {
     try {
       const result = await dispatch(connectGmail({
@@ -221,19 +221,20 @@ export function MentionInput({
         onClick={handleClick}
         onKeyUp={handleClick}
         placeholder={placeholder}
-        className="w-full pl-4 pr-12 py-2.5 bg-black border-2  border-[#3A3A3A] rounded-2xl text-sm text-white placeholder-gray-500 focus:outline-none focus:border-[#1A73E8]"
+        className="w-full pl-4 pr-14 py-3 bg-[#F5F5F5] border border-gray-300 rounded-xl text-sm text-gray-900 placeholder-gray-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
         disabled={disabled}
       />
       <button
         type="button"
         onClick={onSubmit}
         disabled={!value.trim() || sending}
-        className="absolute right-2 top-1/2 transform -translate-y-1/2 p-1.5 bg-[#1A73E8] text-white rounded-md hover:bg-[#1557B0] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+        className="absolute right-2 top-1/2 transform -translate-y-1/2 p-2 bg-blue-500 text-white rounded-full hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
       >
         {sending ? (
           <Loader2 className="w-4 h-4 animate-spin" />
         ) : (
-          <Send className="w-4 h-4" />
+          <ArrowUp className="w-4 h-4" />
+          // <Send className="w-4 h-4" />
         )}
       </button>
 
@@ -241,34 +242,32 @@ export function MentionInput({
       {showMentions && mentionOptions.length > 0 && (
         <div
           ref={mentionsRef}
-          className="absolute bottom-full left-0 right-0 mb-2 bg-[#1A1A1A] border border-[#2A2A2A] rounded-lg shadow-lg overflow-hidden z-50"
+          className="absolute bottom-full left-0 right-0 mb-2 bg-white border border-gray-200 rounded-lg shadow-lg overflow-hidden z-50"
         >
           {mentionOptions.map((option, index) => {
             if (option.type === 'agent') {
               const agent = option.agent;
               const Icon = agent.icon;
               const isDisabled = agent.requiresConnection && !agent.connected;
-              
+
               return (
                 <div
                   key={agent.id}
-                  className={`w-full px-3 py-2 ${
-                    index === selectedIndex
-                      ? 'bg-[#1A73E8]/10 border-l-2 border-[#1A73E8]'
-                      : ''
-                  } ${isDisabled ? 'opacity-60' : ''}`}
+                  className={`w-full px-3 py-2 ${index === selectedIndex
+                    ? 'bg-blue-50 border-l-2 border-blue-500'
+                    : ''
+                    } ${isDisabled ? 'opacity-60' : ''}`}
                 >
                   <div className="flex items-center gap-3">
-                    <div className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 ${
-                      isDisabled ? 'bg-gray-700' : 'bg-gradient-to-br from-blue-500 to-purple-500'
-                    }`}>
+                    <div className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 ${isDisabled ? 'bg-gray-300' : 'bg-gradient-to-br from-blue-500 to-purple-500'
+                      }`}>
                       <Icon className="w-3.5 h-3.5 text-white" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="text-sm font-medium text-white truncate">
+                      <div className="text-sm font-medium text-gray-900 truncate">
                         {agent.displayName}
                       </div>
-                      <div className="text-xs text-gray-400 truncate">
+                      <div className="text-xs text-gray-500 truncate">
                         {agent.description}
                       </div>
                     </div>
@@ -279,7 +278,7 @@ export function MentionInput({
                           e.stopPropagation();
                           handleConnectGmail();
                         }}
-                        className="flex items-center gap-1 px-2 py-1 bg-[#1A73E8] text-white text-xs rounded hover:bg-[#1557B0] transition-colors"
+                        className="flex items-center gap-1 px-2 py-1 bg-blue-500 text-white text-xs rounded hover:bg-blue-600 transition-colors"
                       >
                         <ExternalLink className="w-3 h-3" />
                         Connect
@@ -288,7 +287,7 @@ export function MentionInput({
                       <button
                         type="button"
                         onClick={() => selectAgent(agent)}
-                        className="px-2 py-1 text-xs text-gray-400 hover:text-white transition-colors"
+                        className="px-2 py-1 text-xs text-gray-500 hover:text-gray-900 transition-colors"
                       >
                         Mention
                       </button>
@@ -297,7 +296,7 @@ export function MentionInput({
                 </div>
               );
             }
-            
+
             // Render user
             if (option.type === 'user') {
               const user = option.user;
@@ -306,11 +305,10 @@ export function MentionInput({
                   key={user.id}
                   type="button"
                   onClick={() => selectUser(user)}
-                  className={`w-full px-3 py-2 text-left flex items-center gap-3 transition-colors ${
-                    index === selectedIndex
-                      ? 'bg-[#1A73E8] text-white'
-                      : 'hover:bg-[#2A2A2A] text-gray-300'
-                  }`}
+                  className={`w-full px-3 py-2 text-left flex items-center gap-3 transition-colors ${index === selectedIndex
+                    ? 'bg-blue-500 text-white'
+                    : 'hover:bg-gray-100 text-gray-700'
+                    }`}
                 >
                   <div className="w-6 h-6 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white text-xs font-semibold flex-shrink-0">
                     {user.full_name?.[0]?.toUpperCase() || user.email[0].toUpperCase()}
@@ -326,7 +324,7 @@ export function MentionInput({
                 </button>
               );
             }
-            
+
             return null;
           })}
         </div>

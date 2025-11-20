@@ -92,7 +92,7 @@ export function MessageList({ messages, currentUserId, onRetryMessage, onCancelM
 
     // Check if reactions are in grouped format
     const isGroupedFormat = message.reactions.length > 0 && 'user_reacted' in message.reactions[0];
-    
+
     let userHasReacted = false;
     if (isGroupedFormat) {
       // Backend grouped format
@@ -142,7 +142,7 @@ export function MessageList({ messages, currentUserId, onRetryMessage, onCancelM
               key={message.id}
               className="flex justify-center text-gray-500 italic text-xs"
             >
-              <div className="bg-[#1A1A1A] px-3 py-1 rounded-full">Message deleted</div>
+              <div className="bg-gray-100 px-3 py-1 rounded-full">Message deleted</div>
             </div>
           );
         }
@@ -169,7 +169,7 @@ export function MessageList({ messages, currentUserId, onRetryMessage, onCancelM
             <div className={`flex flex-col max-w-[70%] ${isOwnMessage ? 'items-end' : 'items-start'}`}>
               {/* Header */}
               <div className={`flex items-baseline gap-2 mb-1 px-1 ${isOwnMessage ? 'flex-row-reverse' : 'flex-row'}`}>
-                <span className="font-medium text-white text-xs">
+                <span className="font-medium text-gray-900 text-xs">
                   {message.sender_full_name || message.sender_email || 'Unknown User'}
                 </span>
                 <span className="text-[10px] text-gray-500">
@@ -199,7 +199,7 @@ export function MessageList({ messages, currentUserId, onRetryMessage, onCancelM
                     <textarea
                       value={editContent}
                       onChange={(e) => setEditContent(e.target.value)}
-                      className="w-full px-3 py-2 border border-[#2A2A2A] rounded-lg focus:outline-none focus:border-[#1A73E8] bg-[#1A1A1A] text-white resize-none text-sm"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-[#1A73E8] bg-white text-gray-900 resize-none text-sm"
                       rows={3}
                       autoFocus
                     />
@@ -212,7 +212,7 @@ export function MessageList({ messages, currentUserId, onRetryMessage, onCancelM
                       </button>
                       <button
                         onClick={() => setEditingMessageId(null)}
-                        className="px-3 py-1 bg-[#2A2A2A] text-gray-300 text-xs rounded-md hover:bg-[#3A3A3A]"
+                        className="px-3 py-1 bg-gray-200 text-gray-700 text-xs rounded-md hover:bg-gray-300"
                       >
                         Cancel
                       </button>
@@ -220,11 +220,10 @@ export function MessageList({ messages, currentUserId, onRetryMessage, onCancelM
                   </div>
                 ) : (
                   <>
-                    <div className={`px-3 py-2 rounded-2xl ${
-                      isOwnMessage 
-                        ? isFailed ? 'bg-red-500/20 border border-red-500/50 text-red-200' : 'bg-[#1A73E8] text-white'
-                        : 'bg-[#1A1A1A] text-gray-200'
-                    }`}>
+                    <div className={`px-3 py-2 rounded-2xl ${isOwnMessage
+                        ? isFailed ? 'bg-red-500/20 border border-red-500/50 text-red-800' : 'bg-[#007aff] text-white'
+                        : 'bg-gray-100 text-gray-900'
+                      }`}>
                       <p className="text-sm whitespace-pre-wrap break-words leading-relaxed">
                         {message.content}
                       </p>
@@ -242,7 +241,7 @@ export function MessageList({ messages, currentUserId, onRetryMessage, onCancelM
                         </button>
                         <button
                           onClick={() => onCancelMessage(message._tempId!)}
-                          className="flex items-center gap-1 px-2 py-1 bg-[#2A2A2A] text-gray-300 text-xs rounded-md hover:bg-[#3A3A3A] transition-colors"
+                          className="flex items-center gap-1 px-2 py-1 bg-gray-200 text-gray-700 text-xs rounded-md hover:bg-gray-300 transition-colors"
                         >
                           <X className="w-3 h-3" />
                           Cancel
@@ -259,11 +258,10 @@ export function MessageList({ messages, currentUserId, onRetryMessage, onCancelM
                             <button
                               key={reaction.emoji}
                               onClick={() => handleToggleReaction(message.id, reaction.emoji)}
-                              className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-xs transition-colors ${
-                                reaction.user_reacted
-                                  ? 'bg-[#1A73E8]/20 border border-[#1A73E8] text-[#1A73E8]'
-                                  : 'bg-[#0D0D0D] border border-[#2A2A2A] hover:border-[#3A3A3A] text-gray-400'
-                              }`}
+                              className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-xs transition-colors ${reaction.user_reacted
+                                ? 'bg-[#1A73E8]/20 border border-[#1A73E8] text-[#1A73E8]'
+                                : 'bg-gray-50 border border-gray-200 hover:border-gray-300 text-gray-600'
+                                }`}
                               title={`${reaction.count} reaction${reaction.count > 1 ? 's' : ''}`}
                             >
                               <span>{reaction.emoji}</span>
@@ -286,11 +284,10 @@ export function MessageList({ messages, currentUserId, onRetryMessage, onCancelM
                               <button
                                 key={emoji}
                                 onClick={() => handleToggleReaction(message.id, emoji)}
-                                className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-xs transition-colors ${
-                                  userReacted
-                                    ? 'bg-[#1A73E8]/20 border border-[#1A73E8] text-[#1A73E8]'
-                                    : 'bg-[#0D0D0D] border border-[#2A2A2A] hover:border-[#3A3A3A] text-gray-400'
-                                }`}
+                                className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-xs transition-colors ${userReacted
+                                  ? 'bg-[#1A73E8]/20 border border-[#1A73E8] text-[#1A73E8]'
+                                  : 'bg-gray-50 border border-gray-200 hover:border-gray-300 text-gray-600'
+                                  }`}
                                 title={`${reactions.length} reaction${reactions.length > 1 ? 's' : ''}`}
                               >
                                 <span>{emoji}</span>
@@ -306,21 +303,19 @@ export function MessageList({ messages, currentUserId, onRetryMessage, onCancelM
 
                     {/* Action Buttons */}
                     {!isEditing && isHovered && !isFailed && !isPending && (
-                      <div className={`absolute top-0 flex gap-0.5 bg-[#0D0D0D] border border-[#2A2A2A] rounded-lg shadow-lg p-0.5 opacity-0 group-hover/message:opacity-100 transition-opacity ${
-                        isOwnMessage ? 'right-full mr-2' : 'left-full ml-2'
-                      }`}>
+                      <div className={`absolute top-0 flex gap-0.5 bg-white border border-gray-200 rounded-lg shadow-lg p-0.5 opacity-0 group-hover/message:opacity-100 transition-opacity ${isOwnMessage ? 'right-full mr-2' : 'left-full ml-2'
+                        }`}>
                         <div className="relative">
                           <button
                             onClick={() => setShowEmojiPicker(showEmojiPicker === message.id ? null : message.id)}
-                            className="p-1.5 hover:bg-[#2A2A2A] rounded transition-colors"
+                            className="p-1.5 hover:bg-gray-100 rounded transition-colors"
                             title="Add reaction"
                           >
                             <Smile className="w-3.5 h-3.5 text-gray-400" />
                           </button>
                           {showEmojiPicker === message.id && (
-                            <div ref={emojiPickerRef} className={`absolute top-full mt-2 z-50 ${
-                              isOwnMessage ? 'right-0' : 'left-0'
-                            }`}>
+                            <div ref={emojiPickerRef} className={`absolute top-full mt-2 z-50 ${isOwnMessage ? 'right-0' : 'left-0'
+                              }`}>
                               <EmojiPicker
                                 onEmojiClick={(emojiData) => handleEmojiSelect(message.id, emojiData)}
                                 autoFocusSearch={false}
@@ -332,14 +327,14 @@ export function MessageList({ messages, currentUserId, onRetryMessage, onCancelM
                           <>
                             <button
                               onClick={() => handleEdit(message)}
-                              className="p-1.5 hover:bg-[#2A2A2A] rounded transition-colors"
+                              className="p-1.5 hover:bg-gray-100 rounded transition-colors"
                               title="Edit message"
                             >
                               <Edit2 className="w-3.5 h-3.5 text-gray-400" />
                             </button>
                             <button
                               onClick={() => setMessageToDelete(message)}
-                              className="p-1.5 hover:bg-[#2A2A2A] rounded transition-colors"
+                              className="p-1.5 hover:bg-gray-100 rounded transition-colors"
                               title="Delete message"
                             >
                               <Trash2 className="w-3.5 h-3.5 text-red-400" />

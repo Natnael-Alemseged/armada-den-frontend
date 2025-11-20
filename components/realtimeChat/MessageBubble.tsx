@@ -116,19 +116,19 @@ export function MessageBubble({ message, isOwn, onReply, onRetry }: MessageBubbl
             href={message.media_url}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-2 p-3 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+            className="flex items-center gap-2 p-3 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
           >
             <div className="flex-1">
               <p className="font-medium text-sm">
                 {message.media_filename || 'File'}
               </p>
               {message.media_size && (
-                <p className="text-xs text-gray-500 dark:text-gray-400">
+                <p className="text-xs text-gray-500">
                   {(message.media_size / 1024).toFixed(2)} KB
                 </p>
               )}
             </div>
-            <span className="text-blue-600 dark:text-blue-400">↓</span>
+            <span className="text-blue-600">↓</span>
           </a>
         );
       default:
@@ -144,7 +144,7 @@ export function MessageBubble({ message, isOwn, onReply, onRetry }: MessageBubbl
           isOwn ? 'justify-end' : 'justify-start'
         )}
       >
-        <div className="max-w-[70%] px-4 py-2 rounded-lg bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400 italic text-sm">
+        <div className="max-w-[70%] px-4 py-2 rounded-lg bg-gray-200 text-gray-500 italic text-sm">
           This message was deleted
         </div>
       </div>
@@ -165,7 +165,7 @@ export function MessageBubble({ message, isOwn, onReply, onRetry }: MessageBubbl
         <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
           <button
             onClick={onReply}
-            className="p-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded"
+            className="p-1 hover:bg-gray-200 rounded"
             title="Reply"
           >
             <Reply className="w-4 h-4 text-gray-600 dark:text-gray-400" />
@@ -209,8 +209,8 @@ export function MessageBubble({ message, isOwn, onReply, onRetry }: MessageBubbl
         className={cn(
           'max-w-[70%] rounded-2xl px-4 py-2 shadow-sm',
           isOwn
-            ? 'bg-blue-600 text-white'
-            : 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white border border-gray-200 dark:border-gray-700'
+            ? 'bg-[#007aff] text-white'
+            : 'bg-white text-gray-900 border border-gray-200'
         )}
       >
         {/* Reply Preview */}
@@ -220,13 +220,13 @@ export function MessageBubble({ message, isOwn, onReply, onRetry }: MessageBubbl
               'mb-2 p-2 rounded-lg border-l-4 text-sm',
               isOwn
                 ? 'bg-blue-700 border-blue-400'
-                : 'bg-gray-100 dark:bg-gray-700 border-gray-400 dark:border-gray-500'
+                : 'bg-gray-100 border-gray-400'
             )}
           >
-            <p className={cn('font-semibold text-xs', isOwn ? 'text-blue-200' : 'text-gray-600 dark:text-gray-400')}>
+            <p className={cn('font-semibold text-xs', isOwn ? 'text-blue-200' : 'text-gray-600')}>
               {message.reply_to.sender?.email || 'Unknown'}
             </p>
-            <p className={cn('truncate', isOwn ? 'text-blue-100' : 'text-gray-700 dark:text-gray-300')}>
+            <p className={cn('truncate', isOwn ? 'text-blue-100' : 'text-gray-700')}>
               {message.reply_to.content}
             </p>
           </div>
@@ -234,7 +234,7 @@ export function MessageBubble({ message, isOwn, onReply, onRetry }: MessageBubbl
 
         {/* Forwarded Badge */}
         {message.forwarded_from_id && (
-          <div className={cn('flex items-center gap-1 mb-1 text-xs', isOwn ? 'text-blue-200' : 'text-gray-500 dark:text-gray-400')}>
+          <div className={cn('flex items-center gap-1 mb-1 text-xs', isOwn ? 'text-blue-200' : 'text-gray-500')}>
             <Forward className="w-3 h-3" />
             <span>Forwarded</span>
           </div>
@@ -254,7 +254,7 @@ export function MessageBubble({ message, isOwn, onReply, onRetry }: MessageBubbl
                 if (e.key === 'Enter') handleEdit();
                 if (e.key === 'Escape') setIsEditing(false);
               }}
-              className="w-full px-2 py-1 bg-white dark:bg-gray-700 text-gray-900 dark:text-white border border-gray-300 dark:border-gray-600 rounded"
+              className="w-full px-2 py-1 bg-white text-gray-900 border border-gray-300 rounded"
               autoFocus
             />
             <div className="flex gap-2">
@@ -280,7 +280,7 @@ export function MessageBubble({ message, isOwn, onReply, onRetry }: MessageBubbl
         )}
 
         {/* Message Footer */}
-        <div className={cn('flex items-center gap-2 mt-1 text-xs', isOwn ? 'text-blue-100' : 'text-gray-500 dark:text-gray-400')}>
+        <div className={cn('flex items-center gap-2 mt-1 text-xs', isOwn ? 'text-blue-100' : 'text-gray-500')}>
           <span>{formatTime(message.created_at)}</span>
           {message.is_edited && <span>(edited)</span>}
           {isOwn && (
@@ -337,7 +337,7 @@ export function MessageBubble({ message, isOwn, onReply, onRetry }: MessageBubbl
             <Reply className="w-4 h-4 text-gray-600 dark:text-gray-400" />
           </button>
           <button
-            className="p-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded"
+            className="p-1 hover:bg-gray-200 rounded"
             title="More"
           >
             <MoreVertical className="w-4 h-4 text-gray-600 dark:text-gray-400" />

@@ -52,14 +52,14 @@ export function ChannelsSidebar({
 
   return (
     <>
-      <div className="w-64 bg-[#3F0E40] text-white flex flex-col">
+      <div className="w-50 bg-white text-[#1a1a1a] flex flex-col border-r border-[#e0e0e0]">
         {/* Header */}
-        <div className="p-4 border-b border-[#522653]">
+        <div className="p-4 border-b border-[#e0e0e0]">
           <div className="flex items-center justify-between">
-            <h1 className="text-xl font-bold">Armada Den</h1>
+            <h1 className="text-l font-bold">Armada Den</h1>
             <button
               onClick={handleLogout}
-              className="p-1.5 hover:bg-[#522653] rounded transition-colors"
+              className="p-1.5 hover:bg-[#e8e8e8] rounded transition-colors"
               title="Logout"
             >
               <LogOut className="w-4 h-4" />
@@ -72,11 +72,11 @@ export function ChannelsSidebar({
           <div className="p-2">
             {/* Channels Header */}
             <div className="flex items-center justify-between px-2 py-1 mb-1">
-              <span className="text-sm font-semibold text-gray-300">Channels</span>
+              <span className="text-sm font-semibold text-gray-600">Channels</span>
               {isAdmin && (
                 <button
                   onClick={() => setShowCreateChannel(true)}
-                  className="p-1 hover:bg-[#522653] rounded transition-colors"
+                  className="p-1 hover:bg-[#e8e8e8] rounded transition-colors"
                   title="Create Channel"
                 >
                   <Plus className="w-4 h-4" />
@@ -97,9 +97,8 @@ export function ChannelsSidebar({
                       toggleChannel(channel.id);
                       onChannelSelect(channel);
                     }}
-                    className={`group w-full flex items-center gap-2 px-2 py-1.5 rounded hover:bg-[#522653] transition-colors ${
-                      currentChannel?.id === channel.id ? 'bg-[#1164A3]' : ''
-                    }`}
+                    className={`group w-full flex items-center gap-2 px-2 py-1.5 rounded hover:bg-[#e8e8e8] transition-colors ${currentChannel?.id === channel.id ? 'bg-[#007aff] text-white' : ''
+                      }`}
                   >
                     {isExpanded ? (
                       <ChevronDown className="w-4 h-4 flex-shrink-0" />
@@ -117,7 +116,7 @@ export function ChannelsSidebar({
                           setShowCreateTopic(true);
                           onChannelSelect(channel);
                         }}
-                        className="p-1 hover:bg-[#350d36] rounded transition-colors group-hover:opacity-100 opacity-70"
+                        className="p-1 hover:bg-gray-200 rounded transition-colors group-hover:opacity-100 opacity-70"
                         title="Create Topic"
                       >
                         <Plus className="w-3 h-3" />
@@ -132,9 +131,8 @@ export function ChannelsSidebar({
                         <button
                           key={topic.id}
                           onClick={() => onTopicSelect(topic)}
-                          className={`w-full flex items-center gap-2 px-2 py-1.5 rounded hover:bg-[#522653] transition-colors ${
-                            currentTopic?.id === topic.id ? 'bg-[#1164A3]' : ''
-                          }`}
+                          className={`w-full flex items-center gap-2 px-2 py-1.5 rounded hover:bg-[#e8e8e8] transition-colors ${currentTopic?.id === topic.id ? 'bg-[#007aff] text-white' : ''
+                            }`}
                         >
                           <Hash className="w-4 h-4 flex-shrink-0 text-gray-400" />
                           <span className="text-sm truncate flex-1 text-left">{topic.name}</span>

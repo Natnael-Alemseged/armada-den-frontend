@@ -27,7 +27,7 @@ export function ChannelsLayout() {
     // Fetch channels and user's topics on mount
     dispatch(fetchChannels());
     dispatch(fetchUserTopics());
-    
+
     // Check Gmail and Search connection status
     dispatch(getGmailStatus());
     // dispatch(getSearchStatus());
@@ -63,7 +63,7 @@ export function ChannelsLayout() {
   }
 
   return (
-    <div className="flex h-screen bg-[#0D0D0D]">
+    <div className="flex h-screen bg-white">
       {/* Column 1: Channels */}
       <ChannelsList
         channels={channels}
@@ -87,9 +87,9 @@ export function ChannelsLayout() {
       {currentTopic ? (
         <TopicView topic={currentTopic} />
       ) : (
-        <div className="flex-1 flex flex-col items-center justify-center text-gray-600 bg-[#0D0D0D]">
+        <div className="flex-1 flex flex-col items-center justify-center text-gray-600 bg-white">
           <Hash className="w-16 h-16 mb-4 opacity-20" />
-          <h2 className="text-xl font-semibold mb-2 text-gray-400">Welcome to Armada Den</h2>
+          <h2 className="text-xl font-semibold mb-2 text-gray-800">Welcome to Armada Den</h2>
           <p className="text-center max-w-md text-sm">
             {!currentChannel
               ? 'Select a channel to get started'
