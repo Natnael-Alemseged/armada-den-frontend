@@ -88,37 +88,7 @@ export function CreateChannelModal({ onClose }: CreateChannelModalProps) {
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-6">
-            {/* Icon */}
-            <div>
-              <label className="block text-sm font-semibold text-gray-900 mb-2">
-                Icon (emoji)
-              </label>
-              <input
-                type="text"
-                value={icon}
-                onChange={(e) => setIcon(e.target.value)}
-                placeholder="💻"
-                className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all font-medium text-center"
-                maxLength={2}
-              />
-            </div>
 
-            {/* Color */}
-            <div>
-              <label className="block text-sm font-semibold text-gray-900 mb-2">
-                Color
-              </label>
-              <div className="relative">
-                <input
-                  type="color"
-                  value={color}
-                  onChange={(e) => setColor(e.target.value)}
-                  className="w-full h-[50px] p-1 bg-white border border-gray-200 rounded-xl cursor-pointer"
-                />
-              </div>
-            </div>
-          </div>
 
           {error && (
             <div className="text-sm text-red-600 bg-red-50 px-4 py-2 rounded-lg">

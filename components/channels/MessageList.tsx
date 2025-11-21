@@ -24,6 +24,8 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 
+import { MessageContent } from './MessageContent';
+
 interface MessageListProps {
   messages: OptimisticMessage[];
   currentUserId: string;
@@ -221,12 +223,13 @@ export function MessageList({ messages, currentUserId, onRetryMessage, onCancelM
                 ) : (
                   <>
                     <div className={`px-3 py-2 rounded-2xl ${isOwnMessage
-                        ? isFailed ? 'bg-red-500/20 border border-red-500/50 text-red-800' : 'bg-[#007aff] text-white'
-                        : 'bg-gray-100 text-gray-900'
+                      ? isFailed ? 'bg-red-500/20 border border-red-500/50 text-red-800' : 'bg-[#007aff] text-white'
+                      : 'bg-gray-100 text-gray-900'
                       }`}>
-                      <p className="text-sm whitespace-pre-wrap break-words leading-relaxed">
-                        {message.content}
-                      </p>
+                      <MessageContent
+                        content={message.content}
+                        className={isOwnMessage && !isFailed ? 'text-white' : 'text-gray-900'}
+                      />
                     </div>
 
                     {/* Failed Message Actions */}
