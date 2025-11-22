@@ -13,7 +13,7 @@ import realtimeChatReducer from './features/realTimeChat/realtimeChatSlice';
 import channelsReducer from './features/channels/channelsSlice';
 
 // 1️⃣ Combine reducers
-const rootReducer = combineReducers({
+const appReducer = combineReducers({
     auth: authReducer,
     gmail: gmailReducer,
     search: searchReducer,
@@ -21,6 +21,18 @@ const rootReducer = combineReducers({
     realtimeChat: realtimeChatReducer,
     channels: channelsReducer,
 });
+
+const rootReducer = (state: any, action: any) => {
+    if (action.type === logout.type || action.type === 'auth/logoutUser/fulfilled' || action.type === 'auth/logoutUser/rejected') {
+        // Clear state on logout
+        // We keep the persist key to ensure rehydration works correctly if needed, 
+        // but effectively we want to wipe everything.
+        // However, redux-persist might need some special handling if we want to keep the storage sync.
+        // Setting state to undefined forces reducers to return their initial state.
+        state = undefined;
+    }
+    return appReducer(state, action);
+};
 
 // 2️⃣ Persist config
 const persistConfig = {

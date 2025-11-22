@@ -10,6 +10,7 @@ import {
   fetchTopic,
   createTopic,
   updateTopic,
+  deleteTopic,
   addTopicMember,
   removeTopicMember,
   fetchTopicMessages,
@@ -137,19 +138,19 @@ const channelsSlice = createSlice({
         if (!message.reactions) {
           message.reactions = [];
         }
-        
+
         // Check if reactions are in grouped format
         const isGrouped = message.reactions.length > 0 && 'user_reacted' in message.reactions[0];
-        
+
         if (isGrouped) {
           // Handle grouped format
           const groupedReactions = message.reactions as GroupedReaction[];
           const existingReaction = groupedReactions.find((r) => r.emoji === action.payload.reaction.emoji);
-          
+
           if (existingReaction) {
             // Update existing grouped reaction
-            existingReaction.count += 1;
             if (!existingReaction.users.includes(action.payload.reaction.user_id)) {
+              existingReaction.count += 1;
               existingReaction.users.push(action.payload.reaction.user_id);
             }
             // Update user_reacted if this is the current user
@@ -182,22 +183,25 @@ const channelsSlice = createSlice({
       if (message && message.reactions) {
         // Check if reactions are in grouped format
         const isGrouped = message.reactions.length > 0 && 'user_reacted' in message.reactions[0];
-        
+
         if (isGrouped) {
           // Handle grouped format
           const groupedReactions = message.reactions as GroupedReaction[];
           const reactionIndex = groupedReactions.findIndex((r) => r.emoji === action.payload.emoji);
-          
+
           if (reactionIndex !== -1) {
             const reaction = groupedReactions[reactionIndex];
-            reaction.count -= 1;
-            reaction.users = reaction.users.filter((id) => id !== action.payload.userId);
-            
+
+            if (reaction.users.includes(action.payload.userId)) {
+              reaction.count -= 1;
+              reaction.users = reaction.users.filter((id) => id !== action.payload.userId);
+            }
+
             // Update user_reacted if this is the current user
             if (action.payload.currentUserId && action.payload.userId === action.payload.currentUserId) {
               reaction.user_reacted = false;
             }
-            
+
             // Remove the reaction entirely if count reaches 0
             if (reaction.count <= 0) {
               groupedReactions.splice(reactionIndex, 1);
@@ -390,6 +394,24 @@ const channelsSlice = createSlice({
         state.error = action.payload || 'Failed to update topic';
       });
 
+    // Delete Topic
+    builder
+      .addCase(deleteTopic.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(deleteTopic.fulfilled, (state, action) => {
+        state.loading = false;
+        state.topics = state.topics.filter((t) => t.id !== action.payload);
+        if (state.currentTopic?.id === action.payload) {
+          state.currentTopic = null;
+        }
+      })
+      .addCase(deleteTopic.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload || 'Failed to delete topic';
+      });
+
     // Add Topic Member
     builder
       .addCase(addTopicMember.pending, (state) => {
@@ -489,26 +511,179 @@ const channelsSlice = createSlice({
 
     // Add Reaction
     builder
-      .addCase(addReaction.pending, (state) => {
+      .addCase(addReaction.pending, (state, action) => {
         state.messagesError = null;
+        const { messageId, emoji, currentUserId } = action.meta.arg;
+
+        if (!currentUserId) return;
+
+        const message = state.messages.find((m) => m.id === messageId);
+        if (message) {
+          if (!message.reactions) {
+            message.reactions = [];
+          }
+
+          // Check if reactions are in grouped format
+          const isGrouped = message.reactions.length > 0 && 'user_reacted' in message.reactions[0];
+
+          if (isGrouped) {
+            // Handle grouped format
+            const groupedReactions = message.reactions as GroupedReaction[];
+            const existingReaction = groupedReactions.find((r) => r.emoji === emoji);
+
+            if (existingReaction) {
+              // Update existing grouped reaction
+              existingReaction.count += 1;
+              if (!existingReaction.users.includes(currentUserId)) {
+                existingReaction.users.push(currentUserId);
+              }
+              existingReaction.user_reacted = true;
+            } else {
+              // Add new grouped reaction
+              groupedReactions.push({
+                emoji: emoji,
+                count: 1,
+                users: [currentUserId],
+                user_reacted: true,
+              });
+            }
+          } else {
+            // Handle individual format (legacy)
+            const exists = (message.reactions as MessageReaction[]).find(
+              (r) => r.user_id === currentUserId && r.emoji === emoji
+            );
+            if (!exists) {
+              (message.reactions as MessageReaction[]).push({
+                id: `temp-${Date.now()}`,
+                message_id: messageId,
+                user_id: currentUserId,
+                emoji: emoji,
+                created_at: new Date().toISOString(),
+              });
+            }
+          }
+        }
       })
       .addCase(addReaction.fulfilled, (state) => {
-        // Reaction will be added via Socket.IO event
+        // Reaction will be confirmed via Socket.IO event
       })
       .addCase(addReaction.rejected, (state, action) => {
         state.messagesError = action.payload || 'Failed to add reaction';
+        // Revert optimistic update
+        const { messageId, emoji, currentUserId } = action.meta.arg;
+
+        if (!currentUserId) return;
+
+        const message = state.messages.find((m) => m.id === messageId);
+        if (message && message.reactions) {
+          const isGrouped = message.reactions.length > 0 && 'user_reacted' in message.reactions[0];
+
+          if (isGrouped) {
+            const groupedReactions = message.reactions as GroupedReaction[];
+            const reactionIndex = groupedReactions.findIndex((r) => r.emoji === emoji);
+
+            if (reactionIndex !== -1) {
+              const reaction = groupedReactions[reactionIndex];
+              reaction.count -= 1;
+              reaction.users = reaction.users.filter((id) => id !== currentUserId);
+              reaction.user_reacted = false;
+
+              if (reaction.count <= 0) {
+                groupedReactions.splice(reactionIndex, 1);
+              }
+            }
+          } else {
+            message.reactions = (message.reactions as MessageReaction[]).filter(
+              (r) => !(r.user_id === currentUserId && r.emoji === emoji)
+            );
+          }
+        }
       });
 
     // Remove Reaction
     builder
-      .addCase(removeReaction.pending, (state) => {
+      .addCase(removeReaction.pending, (state, action) => {
         state.messagesError = null;
+        const { messageId, emoji, currentUserId } = action.meta.arg;
+
+        if (!currentUserId) return;
+
+        const message = state.messages.find((m) => m.id === messageId);
+        if (message && message.reactions) {
+          const isGrouped = message.reactions.length > 0 && 'user_reacted' in message.reactions[0];
+
+          if (isGrouped) {
+            const groupedReactions = message.reactions as GroupedReaction[];
+            const reactionIndex = groupedReactions.findIndex((r) => r.emoji === emoji);
+
+            if (reactionIndex !== -1) {
+              const reaction = groupedReactions[reactionIndex];
+              reaction.count -= 1;
+              reaction.users = reaction.users.filter((id) => id !== currentUserId);
+              reaction.user_reacted = false;
+
+              if (reaction.count <= 0) {
+                groupedReactions.splice(reactionIndex, 1);
+              }
+            }
+          } else {
+            message.reactions = (message.reactions as MessageReaction[]).filter(
+              (r) => !(r.user_id === currentUserId && r.emoji === emoji)
+            );
+          }
+        }
       })
       .addCase(removeReaction.fulfilled, (state) => {
-        // Reaction will be removed via Socket.IO event
+        // Reaction removal will be confirmed via Socket.IO event
       })
       .addCase(removeReaction.rejected, (state, action) => {
         state.messagesError = action.payload || 'Failed to remove reaction';
+        // Revert optimistic update (Add it back)
+        const { messageId, emoji, currentUserId } = action.meta.arg;
+
+        if (!currentUserId) return;
+
+        const message = state.messages.find((m) => m.id === messageId);
+        if (message) {
+          if (!message.reactions) {
+            message.reactions = [];
+          }
+
+          const isGrouped = message.reactions.length > 0 && 'user_reacted' in message.reactions[0];
+
+          if (isGrouped) {
+            const groupedReactions = message.reactions as GroupedReaction[];
+            const existingReaction = groupedReactions.find((r) => r.emoji === emoji);
+
+            if (existingReaction) {
+              existingReaction.count += 1;
+              if (!existingReaction.users.includes(currentUserId)) {
+                existingReaction.users.push(currentUserId);
+              }
+              existingReaction.user_reacted = true;
+            } else {
+              groupedReactions.push({
+                emoji: emoji,
+                count: 1,
+                users: [currentUserId],
+                user_reacted: true,
+              });
+            }
+          } else {
+            const exists = (message.reactions as MessageReaction[]).find(
+              (r) => r.user_id === currentUserId && r.emoji === emoji
+            );
+            if (!exists) {
+              (message.reactions as MessageReaction[]).push({
+                id: `temp-revert-${Date.now()}`,
+                message_id: messageId,
+                user_id: currentUserId,
+                emoji: emoji,
+                created_at: new Date().toISOString(),
+              });
+            }
+          }
+        }
       });
   },
 });

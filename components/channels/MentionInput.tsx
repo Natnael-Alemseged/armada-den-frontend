@@ -48,8 +48,16 @@ export function MentionInput({
   const [mentionSearch, setMentionSearch] = useState('');
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [cursorPosition, setCursorPosition] = useState(0);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
   const mentionsRef = useRef<HTMLDivElement>(null);
+
+  // Auto-resize textarea
+  useEffect(() => {
+    if (inputRef.current) {
+      inputRef.current.style.height = 'auto';
+      inputRef.current.style.height = `${inputRef.current.scrollHeight}px`;
+    }
+  }, [value]);
 
   // Define AI agents
   const aiAgents: AIAgent[] = [
@@ -110,7 +118,7 @@ export function MentionInput({
     setShowMentions(false);
   }, [value, cursorPosition]);
 
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (showMentions && mentionOptions.length > 0) {
       if (e.key === 'ArrowDown') {
         e.preventDefault();
@@ -201,7 +209,7 @@ export function MentionInput({
     }
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     onChange(e.target.value);
     setCursorPosition(e.target.selectionStart || 0);
   };
@@ -212,17 +220,18 @@ export function MentionInput({
 
   return (
     <div className="relative">
-      <input
+      <textarea
         ref={inputRef}
-        type="text"
         value={value}
         onChange={handleChange}
         onKeyDown={handleKeyDown}
         onClick={handleClick}
         onKeyUp={handleClick}
         placeholder={placeholder}
-        className="w-full pl-4 pr-14 py-3 bg-[#F5F5F5] border border-gray-300 rounded-xl text-sm text-gray-900 placeholder-gray-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+        rows={1}
+        className="w-full pl-4 pr-14 py-3 bg-[#F5F5F5] border border-gray-300 rounded-xl text-sm text-gray-900 placeholder-gray-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 resize-none overflow-hidden min-h-[46px] max-h-[200px]"
         disabled={disabled}
+        style={{ height: 'auto' }}
       />
       <button
         type="button"

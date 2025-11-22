@@ -13,6 +13,7 @@ import {
   addReaction,
   removeReaction,
 } from '@/lib/features/channels/channelsThunk';
+import { updateMessageInState } from '@/lib/features/channels/channelsSlice';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -50,6 +51,23 @@ export function MessageList({ messages, currentUserId, onRetryMessage, onCancelM
 
   const handleSaveEdit = async (messageId: string) => {
     if (!editContent.trim()) return;
+
+    const originalMessage = messages.find((m) => m.id === messageId);
+    if (!originalMessage) return;
+
+    const originalContent = originalMessage.content;
+    const originalEditedAt = originalMessage.edited_at;
+
+    // Optimistic update
+    dispatch(
+      updateMessageInState({
+        messageId,
+        content: editContent.trim(),
+        editedAt: new Date().toISOString(),
+      })
+    );
+    setEditingMessageId(null);
+
     try {
       await dispatch(
         updateTopicMessage({
@@ -57,9 +75,17 @@ export function MessageList({ messages, currentUserId, onRetryMessage, onCancelM
           data: { content: editContent.trim() },
         })
       ).unwrap();
-      setEditingMessageId(null);
     } catch (error) {
       console.error('Failed to update message:', error);
+      // Revert optimistic update
+      dispatch(
+        updateMessageInState({
+          messageId,
+          content: originalContent,
+          editedAt: originalEditedAt || new Date().toISOString(), // Fallback if null, though it shouldn't matter much for revert
+        })
+      );
+      // Ideally show a toast here
     }
   };
 
@@ -90,31 +116,49 @@ export function MessageList({ messages, currentUserId, onRetryMessage, onCancelM
 
   const handleToggleReaction = async (messageId: string, emoji: string) => {
     const message = messages.find((m) => m.id === messageId);
-    if (!message || !message.reactions) return;
+    if (!message) return;
+
+    // Initialize reactions if undefined
+    const reactions = message.reactions || [];
 
     // Check if reactions are in grouped format
-    const isGroupedFormat = message.reactions.length > 0 && 'user_reacted' in message.reactions[0];
+    const isGroupedFormat = reactions.length > 0 && 'user_reacted' in reactions[0];
 
-    let userHasReacted = false;
+    let existingReactionEmoji: string | null = null;
+
     if (isGroupedFormat) {
       // Backend grouped format
-      const groupedReactions = message.reactions as GroupedReaction[];
-      const reaction = groupedReactions.find((r) => r.emoji === emoji);
-      userHasReacted = reaction?.user_reacted || false;
+      const groupedReactions = reactions as GroupedReaction[];
+      // Find ANY reaction where the user is included in the users array
+      const userReaction = groupedReactions.find((r) =>
+        r.users.includes(currentUserId)
+      );
+      if (userReaction) {
+        existingReactionEmoji = userReaction.emoji;
+      }
     } else {
       // Legacy individual format
-      userHasReacted = message.reactions.some(
-        (r: any) => r.user_id === currentUserId && r.emoji === emoji
+      const userReaction = (reactions as any[]).find(
+        (r: any) => r.user_id === currentUserId
       );
+      if (userReaction) {
+        existingReactionEmoji = userReaction.emoji;
+      }
     }
 
     try {
-      if (userHasReacted) {
-        // Remove reaction
-        await dispatch(removeReaction({ messageId, emoji })).unwrap();
+      if (existingReactionEmoji) {
+        if (existingReactionEmoji === emoji) {
+          // User clicked the same emoji -> Remove it
+          await dispatch(removeReaction({ messageId, emoji, currentUserId })).unwrap();
+        } else {
+          // User clicked a different emoji -> Remove old, Add new (Update)
+          await dispatch(removeReaction({ messageId, emoji: existingReactionEmoji, currentUserId })).unwrap();
+          await dispatch(addReaction({ messageId, emoji, currentUserId })).unwrap();
+        }
       } else {
-        // Add reaction
-        await dispatch(addReaction({ messageId, emoji })).unwrap();
+        // No existing reaction -> Add new
+        await dispatch(addReaction({ messageId, emoji, currentUserId })).unwrap();
       }
     } catch (error) {
       console.error('Failed to toggle reaction:', error);
@@ -201,6 +245,12 @@ export function MessageList({ messages, currentUserId, onRetryMessage, onCancelM
                     <textarea
                       value={editContent}
                       onChange={(e) => setEditContent(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && !e.shiftKey) {
+                          e.preventDefault();
+                          handleSaveEdit(message.id);
+                        }
+                      }}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-[#1A73E8] bg-white text-gray-900 resize-none text-sm"
                       rows={3}
                       autoFocus
@@ -370,7 +420,11 @@ export function MessageList({ messages, currentUserId, onRetryMessage, onCancelM
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete} disabled={isDeleting}>
+            <AlertDialogAction
+              onClick={handleDelete}
+              disabled={isDeleting}
+              className="bg-red-500 hover:bg-red-600 focus:ring-red-500"
+            >
               {isDeleting ? 'Deleting...' : 'Delete'}
             </AlertDialogAction>
           </AlertDialogFooter>

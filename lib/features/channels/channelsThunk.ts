@@ -313,9 +313,10 @@ export const deleteTopicMessage = createAsyncThunk<
 );
 
 // Reaction Thunks
+// Reaction Thunks
 export const addReaction = createAsyncThunk<
   void,
-  { messageId: string; emoji: string },
+  { messageId: string; emoji: string; currentUserId?: string },
   { rejectValue: string }
 >(
   'channels/addReaction',
@@ -333,7 +334,7 @@ export const addReaction = createAsyncThunk<
 
 export const removeReaction = createAsyncThunk<
   void,
-  { messageId: string; emoji: string },
+  { messageId: string; emoji: string; currentUserId?: string },
   { rejectValue: string }
 >(
   'channels/removeReaction',
