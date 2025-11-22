@@ -12,7 +12,7 @@ import { TopicView } from './TopicView';
 import { CreateChannelModal } from './CreateChannelModal';
 import { CreateTopicModal } from './CreateTopicModal';
 import { Channel, Topic, TopicMessage } from '@/lib/types';
-import { Hash, Loader2 } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 
 export function ChannelsLayout() {
   const dispatch = useAppDispatch();
@@ -56,8 +56,13 @@ export function ChannelsLayout() {
 
   if (loading && channels.length === 0) {
     return (
-      <div className="flex items-center justify-center h-screen bg-gray-50 dark:bg-gray-900">
-        <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+      <div className="flex items-center justify-center h-screen bg-gray-50">
+        <div className="relative p-5 rounded-3xl border-2 border-white bg-white/30 backdrop-blur-md shadow-lg">
+          <div className="relative w-10 h-10">
+            <div className="absolute inset-0 rounded-full border-[4px] border-gray-200"></div>
+            <div className="absolute inset-0 rounded-full border-[4px] border-transparent border-t-blue-500 border-l-blue-400 animate-spin"></div>
+          </div>
+        </div>
       </div>
     );
   }
@@ -73,22 +78,32 @@ export function ChannelsLayout() {
         isAdmin={user?.is_superuser}
       />
 
-      {/* Column 2: Topics */}
-      <TopicsList
-        channel={currentChannel}
-        topics={getTopicsForChannel()}
-        selectedTopicId={currentTopic?.id || null}
-        onTopicSelect={handleTopicSelect}
-        onCreateTopic={() => setShowCreateTopic(true)}
-        isAdmin={user?.is_superuser}
-      />
+      {/* Column 2: Topics - Only show when channel is selected */}
+      {currentChannel && (
+        <TopicsList
+          channel={currentChannel}
+          topics={getTopicsForChannel()}
+          selectedTopicId={currentTopic?.id || null}
+          onTopicSelect={handleTopicSelect}
+          onCreateTopic={() => setShowCreateTopic(true)}
+          isAdmin={user?.is_superuser}
+        />
+      )}
 
-      {/* Column 3: Messages/Chat */}
+      {/* Column 3: Messages/Chat or Welcome Screen */}
       {currentTopic ? (
         <TopicView topic={currentTopic} />
       ) : (
         <div className="flex-1 flex flex-col items-center justify-center text-gray-600 bg-white">
-          <Hash className="w-16 h-16 mb-4 opacity-20" />
+          <video
+            autoPlay
+            loop
+            muted
+            playsInline
+            className="w-32 h-32 mb-4 object-contain"
+          >
+            <source src="/logo.mp4" type="video/mp4" />
+          </video>
           <h2 className="text-xl font-semibold mb-2 text-gray-800">Welcome to Armada Den</h2>
           <p className="text-center max-w-md text-sm">
             {!currentChannel
