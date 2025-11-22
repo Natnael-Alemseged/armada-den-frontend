@@ -45,8 +45,8 @@ function UserCard({ user, isMember, isCurrentUser, onAction, isProcessing }: Use
           onClick={() => onAction(user.id)}
           disabled={isProcessing}
           className={`p-2 rounded-full transition-colors ${isMember
-              ? 'text-gray-400 hover:text-red-500 hover:bg-red-50'
-              : 'text-gray-400 hover:text-blue-500 hover:bg-blue-50'
+            ? 'text-gray-400 hover:text-red-500 hover:bg-red-50'
+            : 'text-gray-400 hover:text-blue-500 hover:bg-blue-50'
             } disabled:opacity-50 disabled:cursor-not-allowed`}
           title={isMember ? 'Remove member' : 'Add member'}
         >
@@ -246,8 +246,8 @@ export function ManageTopicModal({ topic, onClose }: ManageTopicModalProps) {
             <button
               onClick={() => setActiveTab('general')}
               className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-colors ${activeTab === 'general'
-                  ? 'bg-white border border-gray-200 shadow-sm text-gray-900'
-                  : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'
+                ? 'bg-white border border-gray-200 shadow-sm text-gray-900'
+                : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'
                 }`}
             >
               <Settings className="w-5 h-5" />
@@ -256,8 +256,8 @@ export function ManageTopicModal({ topic, onClose }: ManageTopicModalProps) {
             <button
               onClick={() => setActiveTab('members')}
               className={`flex items-center justify-between px-4 py-3 rounded-xl text-sm font-medium transition-colors ${activeTab === 'members'
-                  ? 'bg-white border border-gray-200 shadow-sm text-gray-900'
-                  : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'
+                ? 'bg-white border border-gray-200 shadow-sm text-gray-900'
+                : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'
                 }`}
             >
               <div className="flex items-center gap-3">
@@ -271,7 +271,7 @@ export function ManageTopicModal({ topic, onClose }: ManageTopicModalProps) {
           </div>
 
           {/* Content */}
-          <div className="flex-1 overflow-y-auto p-8 bg-white">
+          <div className="flex-1 overflow-y-auto p-8 bg-white custom-scrollbar">
             {activeTab === 'general' ? (
               <div className="max-w-2xl space-y-8">
                 <div>
