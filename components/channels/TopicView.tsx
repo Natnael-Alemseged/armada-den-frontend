@@ -20,10 +20,11 @@ import {
   OptimisticMessage,
 } from '@/lib/features/channels/channelsSlice';
 import { Topic } from '@/lib/types';
-import { Hash, Loader2 } from 'lucide-react';
+import { Hash, Loader2, Settings } from 'lucide-react';
 import { MessageList } from './MessageList';
 import { MentionInput } from './MentionInput';
 import { socketService } from '@/lib/services/socketService';
+import { ManageTopicModal } from './ManageTopicModal';
 
 interface TopicViewProps {
   topic: Topic;
@@ -38,6 +39,7 @@ export function TopicView({ topic }: TopicViewProps) {
   const [sending, setSending] = useState(false);
   const [aiTyping, setAiTyping] = useState(false);
   const [aiTypingName, setAiTypingName] = useState('AI');
+  const [showManageModal, setShowManageModal] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const prevMessageCountRef = useRef(messages.length);
 
@@ -300,13 +302,25 @@ export function TopicView({ topic }: TopicViewProps) {
             {topic.name}
           </h2>
         </div>
+        <button
+          onClick={() => setShowManageModal(true)}
+          className="flex items-center gap-2 px-4 py-2 bg-[#8E8E93] text-white rounded-full text-sm font-medium hover:bg-[#7a7a7f] transition-colors"
+        >
+          <Settings className="w-4 h-4" />
+          Topic Settings
+        </button>
       </div>
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto px-5 py-4 custom-scrollbar">
         {messagesLoading && messages.length === 0 ? (
-          <div className="flex items-center justify-center h-full">
-            <Loader2 className="w-8 h-8 animate-spin text-[#1A73E8]" />
+          <div className="flex items-center justify-center h-full bg-gray-50">
+            <div className="relative p-5 rounded-3xl border-2 border-white bg-white/30 backdrop-blur-md shadow-lg">
+              <div className="relative w-10 h-10">
+                <div className="absolute inset-0 rounded-full border-[4px] border-gray-200"></div>
+                <div className="absolute inset-0 rounded-full border-[4px] border-transparent border-t-blue-500 border-l-blue-400 animate-spin"></div>
+              </div>
+            </div>
           </div>
         ) : messages.length === 0 ? (
           <div className="flex items-center justify-center h-full text-gray-600">
@@ -359,6 +373,14 @@ export function TopicView({ topic }: TopicViewProps) {
         </form>
         <div className="flex items-center pb-2"></div>
       </div>
+
+      {/* Manage Topic Modal */}
+      {showManageModal && (
+        <ManageTopicModal
+          topic={topic}
+          onClose={() => setShowManageModal(false)}
+        />
+      )}
     </div>
   );
 }

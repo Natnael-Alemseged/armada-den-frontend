@@ -144,14 +144,24 @@ export function ChannelsList({
             key={channel.id}
             onClick={() => onChannelSelect(channel)}
             className={`w-full flex items-center gap-3 px-2 py-2 rounded-md text-sm font-medium transition-colors ${selectedChannelId === channel.id
-                ? 'bg-[#1A73E8] text-white'
-                : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
+              ? 'bg-[#1A73E8] text-white'
+              : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
               }`}
             title={channel.name}
           >
-            <span className="w-6 h-6 rounded bg-black flex items-center justify-center text-xs font-bold text-white flex-shrink-0">
-              {channel.name.charAt(0).toUpperCase()}
-            </span>
+            {channel.name.includes('HireArmada') ? (
+              <span className="w-6 h-6 rounded bg-black flex items-center justify-center flex-shrink-0 overflow-hidden p-0.5">
+                <img
+                  src="/logo_black.png"
+                  alt="HireArmada"
+                  className="w-full h-full object-contain invert"
+                />
+              </span>
+            ) : (
+              <span className="w-6 h-6 rounded bg-black flex items-center justify-center text-xs font-bold text-white flex-shrink-0">
+                {channel.name.charAt(0).toUpperCase()}
+              </span>
+            )}
             <span
               className={`truncate transition-all duration-300 ${isExpanded ? 'opacity-100 w-auto' : 'opacity-0 w-0'
                 }`}
@@ -198,4 +208,4 @@ export function ChannelsList({
       </div>
     </div>
   );
-}
+} 

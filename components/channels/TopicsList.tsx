@@ -126,19 +126,7 @@ export function TopicsList({
                     )}
                   </div>
 
-                  {/* Pencil icon always visible */}
-                  {isAdmin && (
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setManagingTopic(topic);
-                      }}
-                      className="p-1.5 hover:bg-gray-200 rounded-lg transition"
-                      title="Manage Topic"
-                    >
-                      <Pencil className="w-4 h-4 text-gray-500" />
-                    </button>
-                  )}
+
                 </button>
 
               </div>
