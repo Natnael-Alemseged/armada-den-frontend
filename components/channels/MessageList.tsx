@@ -6,6 +6,7 @@ import { OptimisticMessage } from '@/lib/features/channels/channelsSlice';
 import { formatDistanceToNow } from 'date-fns';
 import { MoreVertical, Reply, Smile, Edit2, Trash2, AlertCircle, RefreshCw, X, Clock } from 'lucide-react';
 import { useAppDispatch } from '@/lib/hooks';
+import { useOnlineStatus } from '@/lib/hooks/useOnlineStatus';
 import EmojiPicker, { EmojiClickData } from 'emoji-picker-react';
 import {
   updateTopicMessage,
@@ -26,6 +27,7 @@ import {
 } from '@/components/ui/alert-dialog';
 
 import { MessageContent } from './MessageContent';
+import { OnlineIndicator } from '@/components/ui/OnlineIndicator';
 
 interface MessageListProps {
   messages: OptimisticMessage[];
@@ -36,6 +38,7 @@ interface MessageListProps {
 
 export function MessageList({ messages, currentUserId, onRetryMessage, onCancelMessage }: MessageListProps) {
   const dispatch = useAppDispatch();
+  const { isUserOnline } = useOnlineStatus();
   const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
   const [editContent, setEditContent] = useState('');
   const [hoveredMessageId, setHoveredMessageId] = useState<string | null>(null);
@@ -205,10 +208,19 @@ export function MessageList({ messages, currentUserId, onRetryMessage, onCancelM
             onMouseLeave={() => setHoveredMessageId(null)}
           >
             {/* Avatar */}
-            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white font-semibold text-xs flex-shrink-0">
-              {message.sender_full_name?.[0]?.toUpperCase() ||
-                message.sender_email?.[0]?.toUpperCase() ||
-                'U'}
+            <div className="relative flex-shrink-0">
+              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white font-semibold text-xs">
+                {message.sender_full_name?.[0]?.toUpperCase() ||
+                  message.sender_email?.[0]?.toUpperCase() ||
+                  'U'}
+              </div>
+              {/* Online indicator */}
+              <div className="absolute bottom-0 right-0">
+                <OnlineIndicator 
+                  isOnline={isUserOnline(message.sender_id)} 
+                  size="sm"
+                />
+              </div>
             </div>
 
             {/* Message Content */}

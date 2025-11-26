@@ -11,6 +11,7 @@ import { TopicsList } from './TopicsList';
 import { TopicView } from './TopicView';
 import { CreateChannelModal } from './CreateChannelModal';
 import { CreateTopicModal } from './CreateTopicModal';
+import { NotificationPrompt } from '@/components/ui/NotificationPrompt';
 import { Channel, Topic, TopicMessage } from '@/lib/types';
 import { Loader2 } from 'lucide-react';
 
@@ -19,9 +20,10 @@ export function ChannelsLayout() {
   const { channels, topics, currentChannel, currentTopic, loading } = useAppSelector(
     (state) => state.channels
   );
-  const { user } = useAppSelector((state) => state.auth);
+  const { user, token } = useAppSelector((state) => state.auth);
   const [showCreateChannel, setShowCreateChannel] = useState(false);
   const [showCreateTopic, setShowCreateTopic] = useState(false);
+  const [showNotificationPrompt, setShowNotificationPrompt] = useState(true);
 
   useEffect(() => {
     // Fetch channels and user's topics on mount
@@ -68,9 +70,19 @@ export function ChannelsLayout() {
   }
 
   return (
-    <div className="flex h-screen bg-white">
-      {/* Column 1: Channels */}
-      <ChannelsList
+    <div className="flex flex-col h-screen bg-white">
+      {/* Notification Prompt Banner */}
+      {showNotificationPrompt && (
+        <NotificationPrompt 
+          token={token || undefined}
+          onDismiss={() => setShowNotificationPrompt(false)}
+        />
+      )}
+      
+      {/* Main Content */}
+      <div className="flex flex-1 overflow-hidden">
+        {/* Column 1: Channels */}
+        <ChannelsList
         channels={channels}
         selectedChannelId={currentChannel?.id || null}
         onChannelSelect={handleChannelSelect}
@@ -123,6 +135,7 @@ export function ChannelsLayout() {
           onClose={() => setShowCreateTopic(false)}
         />
       )}
+      </div>
     </div>
   );
 }

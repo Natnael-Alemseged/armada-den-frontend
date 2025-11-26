@@ -94,4 +94,14 @@ export const ENDPOINTS = {
     
     TOPICS_MESSAGE_REACTION_ADD: (messageId: string) => `/channels/topics/messages/${messageId}/reactions`,
     TOPICS_MESSAGE_REACTION_REMOVE: (messageId: string, emoji: string) => `/channels/topics/messages/${messageId}/reactions/${encodeURIComponent(emoji)}`,
+    
+    // Notifications & Push
+    NOTIFICATIONS_VAPID_KEY: '/notifications/vapid-public-key',
+    NOTIFICATIONS_SUBSCRIBE: '/notifications/subscribe',
+    NOTIFICATIONS_UNSUBSCRIBE: (subscriptionId: string) => `/notifications/unsubscribe/${subscriptionId}`,
+    NOTIFICATIONS_UNSUBSCRIBE_BY_ENDPOINT: '/notifications/unsubscribe-by-endpoint',
+    NOTIFICATIONS_SUBSCRIPTIONS: '/notifications/subscriptions',
+    
+    // Unread Counts
+    TOPICS_UNREAD_COUNTS: '/channels/topics/unread-counts',
 };

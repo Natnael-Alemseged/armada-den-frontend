@@ -46,6 +46,11 @@ export function TopicView({ topic }: TopicViewProps) {
   useEffect(() => {
     if (topic) {
       dispatch(fetchTopicMessages({ topicId: topic.id }));
+      
+      // Mark topic as read when viewing it
+      if (socketService.isConnected()) {
+        socketService.markTopicAsRead(topic.id);
+      }
     }
   }, [topic, dispatch]);
 

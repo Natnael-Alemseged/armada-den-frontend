@@ -7,6 +7,8 @@ import { Provider } from 'react-redux';
 import { PersistGate } from 'redux-persist/integration/react';
 import { store, persistor } from "@/lib/store";
 import { ToastProvider } from "@/components/ui/Toast";
+import { NotificationProvider } from "@/components/providers/NotificationProvider";
+import { GlobalNotificationToast } from "@/components/ui/GlobalNotificationToast";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -41,7 +43,10 @@ export default function RootLayout({
         <Provider store={store}>
           <PersistGate loading={null} persistor={persistor}>
             <ToastProvider>
-              {children}
+              <NotificationProvider>
+                {children}
+                <GlobalNotificationToast />
+              </NotificationProvider>
             </ToastProvider>
           </PersistGate>
         </Provider>

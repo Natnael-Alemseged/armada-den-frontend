@@ -800,3 +800,44 @@ export interface SocketReactionRemovedEvent {
     user_id: string;
     emoji: string;
 }
+
+// New Socket Events for Global Notifications & Online Status
+export interface SocketUserStatusChangeEvent {
+    user_id: string;
+    is_online: boolean;
+    last_seen_at: string;
+}
+
+export interface SocketGlobalMessageAlertEvent {
+    room_id: string;
+    topic_id: string | null;
+    sender_id: string;
+    message_preview: string;
+}
+
+// Push Notification Types
+export interface PushSubscription {
+    id: string;
+    endpoint: string;
+    created_at: string;
+}
+
+export interface PushSubscriptionRequest {
+    endpoint: string;
+    p256dh: string;
+    auth: string;
+}
+
+export interface VapidPublicKeyResponse {
+    public_key: string;
+}
+
+export interface UnreadCountsResponse {
+    [topicId: string]: number;
+}
+
+// Extended User type with online status
+export interface UserWithStatus extends User {
+    is_online?: boolean;
+    last_seen_at?: string;
+}

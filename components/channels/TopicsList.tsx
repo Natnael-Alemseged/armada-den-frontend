@@ -5,6 +5,7 @@ import { Topic, Channel } from '@/lib/types';
 import { Hash, Plus, Lock, Search, Settings, Pencil } from 'lucide-react';
 import { ManageChannelModal } from './ManageChannelModal';
 import { ManageTopicModal } from './ManageTopicModal';
+import { useNotificationContext } from '@/components/providers/NotificationProvider';
 
 interface TopicsListProps {
   channel: Channel | null;
@@ -26,6 +27,16 @@ export function TopicsList({
   const [searchQuery, setSearchQuery] = useState('');
   const [showManageChannel, setShowManageChannel] = useState(false);
   const [managingTopic, setManagingTopic] = useState<Topic | null>(null);
+  
+  // Get real-time unread counts
+  let getUnreadCount = (topicId: string) => 0;
+  try {
+    const { getUnreadCount: contextGetUnreadCount } = useNotificationContext();
+    getUnreadCount = contextGetUnreadCount;
+  } catch (error) {
+    // Context not available, use topic.unread_count as fallback
+    console.warn('NotificationContext not available in TopicsList');
+  }
 
   const filteredTopics = topics.filter((topic) =>
     topic.name.toLowerCase().includes(searchQuery.toLowerCase())
@@ -113,10 +124,15 @@ export function TopicsList({
                       </h3>
 
 
-                      {/* Message count next to title */}
-                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-orange-500 text-white">
-                        {`${topic.unread_count ?? 0}`}
-                      </span>
+                      {/* Message count next to title - Real-time updates */}
+                      {(() => {
+                        const unreadCount = getUnreadCount(topic.id) || topic.unread_count || 0;
+                        return unreadCount > 0 ? (
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-orange-500 text-white">
+                            {unreadCount}
+                          </span>
+                        ) : null;
+                      })()}
                     </div>
 
                     {topic.description && (

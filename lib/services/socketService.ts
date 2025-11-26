@@ -20,6 +20,8 @@ import {
   SocketMemberAddedEvent,
   SocketMemberRemovedEvent,
   SocketErrorEvent,
+  SocketUserStatusChangeEvent,
+  SocketGlobalMessageAlertEvent,
 } from '@/lib/types';
 
 class SocketService {
@@ -437,6 +439,42 @@ class SocketService {
 
   offAiError(callback?: (data: any) => void): void {
     this.socket?.off('ai_error', callback);
+  }
+
+  /**
+   * New Event Listeners for Global Notifications & Online Status
+   */
+
+  // Listen for user status changes (online/offline)
+  onUserStatusChange(callback: (data: SocketUserStatusChangeEvent) => void): void {
+    this.socket?.on('user_status_change', callback);
+  }
+
+  offUserStatusChange(callback?: (data: SocketUserStatusChangeEvent) => void): void {
+    this.socket?.off('user_status_change', callback);
+  }
+
+  // Listen for global message alerts (all topics/channels)
+  onGlobalMessageAlert(callback: (data: SocketGlobalMessageAlertEvent) => void): void {
+    this.socket?.on('global_message_alert', callback);
+  }
+
+  offGlobalMessageAlert(callback?: (data: SocketGlobalMessageAlertEvent) => void): void {
+    this.socket?.off('global_message_alert', callback);
+  }
+
+  /**
+   * Mark messages as read for a topic
+   */
+  markTopicAsRead(topicId: string, messageIds: string[] = []): void {
+    if (!this.socket) {
+      throw new Error('Socket not connected');
+    }
+    this.socket.emit('mark_as_read', {
+      room_id: topicId,
+      topic_id: topicId,
+      message_ids: messageIds,
+    });
   }
 }
 

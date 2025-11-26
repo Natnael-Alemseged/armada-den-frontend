@@ -2,9 +2,10 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { Channel } from '@/lib/types';
-import { Plus, LogOut, ChevronDown, Settings } from 'lucide-react';
+import { Plus, LogOut, ChevronDown, Settings, Bell, BellOff } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '@/lib/hooks';
 import { logoutUser } from '@/lib/slices/authThunk';
+import { notificationService } from '@/lib/services/notificationService';
 
 interface ChannelsListProps {
   channels: Channel[];
@@ -22,13 +23,49 @@ export function ChannelsList({
   isAdmin,
 }: ChannelsListProps) {
   const dispatch = useAppDispatch();
-  const { user } = useAppSelector((state) => state.auth);
+  const { user, token } = useAppSelector((state) => state.auth);
   const [isExpanded, setIsExpanded] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
+  const [isNotificationEnabled, setIsNotificationEnabled] = useState(false);
+  const [isTogglingNotification, setIsTogglingNotification] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Check notification status on mount
+  useEffect(() => {
+    const checkNotificationStatus = async () => {
+      const isSubscribed = await notificationService.isSubscribed();
+      setIsNotificationEnabled(isSubscribed);
+    };
+    checkNotificationStatus();
+  }, []);
 
   const handleLogout = () => {
     dispatch(logoutUser());
+  };
+
+  const handleToggleNotifications = async () => {
+    if (!token) return;
+    
+    setIsTogglingNotification(true);
+    try {
+      if (isNotificationEnabled) {
+        // Unsubscribe
+        const success = await notificationService.unsubscribeFromPush();
+        if (success) {
+          setIsNotificationEnabled(false);
+        }
+      } else {
+        // Subscribe
+        const subscription = await notificationService.subscribeToPush(token);
+        if (subscription) {
+          setIsNotificationEnabled(true);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to toggle notifications:', error);
+    } finally {
+      setIsTogglingNotification(false);
+    }
   };
 
   const getUserInitials = () => {
@@ -99,6 +136,29 @@ export function ChannelsList({
             ref={dropdownRef}
             className="absolute top-full left-3 right-3 mt-1 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50"
           >
+            <button
+              onClick={() => {
+                handleToggleNotifications();
+              }}
+              disabled={isTogglingNotification}
+              className={`w-full flex items-center gap-3 px-3 py-2 text-sm transition-colors ${
+                isNotificationEnabled
+                  ? 'text-green-600 hover:bg-green-50'
+                  : 'text-gray-700 hover:bg-gray-100'
+              } ${isTogglingNotification ? 'opacity-50 cursor-not-allowed' : ''}`}
+            >
+              {isNotificationEnabled ? (
+                <>
+                  <Bell className="w-4 h-4" />
+                  <span>Notifications On</span>
+                </>
+              ) : (
+                <>
+                  <BellOff className="w-4 h-4" />
+                  <span>Enable Notifications</span>
+                </>
+              )}
+            </button>
             <button
               onClick={() => {
                 setShowDropdown(false);
