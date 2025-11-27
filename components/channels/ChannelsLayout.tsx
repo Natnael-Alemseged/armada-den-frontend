@@ -11,6 +11,7 @@ import { TopicsList } from './TopicsList';
 import { TopicView } from './TopicView';
 import { CreateChannelModal } from './CreateChannelModal';
 import { CreateTopicModal } from './CreateTopicModal';
+import { SettingsModal } from './SettingsModal';
 import { NotificationPrompt } from '@/components/ui/NotificationPrompt';
 import { Channel, Topic, TopicMessage } from '@/lib/types';
 import { Loader2 } from 'lucide-react';
@@ -23,6 +24,7 @@ export function ChannelsLayout() {
   const { user, token } = useAppSelector((state) => state.auth);
   const [showCreateChannel, setShowCreateChannel] = useState(false);
   const [showCreateTopic, setShowCreateTopic] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
   const [showNotificationPrompt, setShowNotificationPrompt] = useState(true);
 
   useEffect(() => {
@@ -73,68 +75,72 @@ export function ChannelsLayout() {
     <div className="flex flex-col h-screen bg-white">
       {/* Notification Prompt Banner */}
       {showNotificationPrompt && (
-        <NotificationPrompt 
+        <NotificationPrompt
           token={token || undefined}
           onDismiss={() => setShowNotificationPrompt(false)}
         />
       )}
-      
+
       {/* Main Content */}
       <div className="flex flex-1 overflow-hidden">
         {/* Column 1: Channels */}
         <ChannelsList
-        channels={channels}
-        selectedChannelId={currentChannel?.id || null}
-        onChannelSelect={handleChannelSelect}
-        onCreateChannel={() => setShowCreateChannel(true)}
-        isAdmin={user?.is_superuser}
-      />
-
-      {/* Column 2: Topics - Only show when channel is selected */}
-      {currentChannel && (
-        <TopicsList
-          channel={currentChannel}
-          topics={getTopicsForChannel()}
-          selectedTopicId={currentTopic?.id || null}
-          onTopicSelect={handleTopicSelect}
-          onCreateTopic={() => setShowCreateTopic(true)}
+          channels={channels}
+          selectedChannelId={currentChannel?.id || null}
+          onChannelSelect={handleChannelSelect}
+          onCreateChannel={() => setShowCreateChannel(true)}
           isAdmin={user?.is_superuser}
+          onOpenSettings={() => setShowSettings(true)}
         />
-      )}
 
-      {/* Column 3: Messages/Chat or Welcome Screen */}
-      {currentTopic ? (
-        <TopicView topic={currentTopic} />
-      ) : (
-        <div className="flex-1 flex flex-col items-center justify-center text-gray-600 bg-white">
-          <video
-            autoPlay
-            loop
-            muted
-            playsInline
-            className="w-32 h-32 mb-4 object-contain"
-          >
-            <source src="/logo.mp4" type="video/mp4" />
-          </video>
-          <h2 className="text-xl font-semibold mb-2 text-gray-800">Welcome to Armada Den</h2>
-          <p className="text-center max-w-md text-sm">
-            {!currentChannel
-              ? 'Select a channel to get started'
-              : 'Select a topic to start chatting with your team'}
-          </p>
-        </div>
-      )}
+        {/* Column 2: Topics - Only show when channel is selected */}
+        {currentChannel && (
+          <TopicsList
+            channel={currentChannel}
+            topics={getTopicsForChannel()}
+            selectedTopicId={currentTopic?.id || null}
+            onTopicSelect={handleTopicSelect}
+            onCreateTopic={() => setShowCreateTopic(true)}
+            isAdmin={user?.is_superuser}
+          />
+        )}
 
-      {/* Modals */}
-      {showCreateChannel && (
-        <CreateChannelModal onClose={() => setShowCreateChannel(false)} />
-      )}
-      {showCreateTopic && currentChannel && (
-        <CreateTopicModal
-          channelId={currentChannel.id}
-          onClose={() => setShowCreateTopic(false)}
-        />
-      )}
+        {/* Column 3: Messages/Chat or Welcome Screen */}
+        {currentTopic ? (
+          <TopicView topic={currentTopic} />
+        ) : (
+          <div className="flex-1 flex flex-col items-center justify-center text-gray-600 bg-white">
+            <video
+              autoPlay
+              loop
+              muted
+              playsInline
+              className="w-32 h-32 mb-4 object-contain"
+            >
+              <source src="/logo.mp4" type="video/mp4" />
+            </video>
+            <h2 className="text-xl font-semibold mb-2 text-gray-800">Welcome to Armada Den</h2>
+            <p className="text-center max-w-md text-sm">
+              {!currentChannel
+                ? 'Select a channel to get started'
+                : 'Select a topic to start chatting with your team'}
+            </p>
+          </div>
+        )}
+
+        {/* Modals */}
+        {showCreateChannel && (
+          <CreateChannelModal onClose={() => setShowCreateChannel(false)} />
+        )}
+        {showCreateTopic && currentChannel && (
+          <CreateTopicModal
+            channelId={currentChannel.id}
+            onClose={() => setShowCreateTopic(false)}
+          />
+        )}
+        {showSettings && (
+          <SettingsModal onClose={() => setShowSettings(false)} />
+        )}
       </div>
     </div>
   );

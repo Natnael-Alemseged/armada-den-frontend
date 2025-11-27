@@ -13,6 +13,7 @@ interface ChannelsListProps {
   onChannelSelect: (channel: Channel) => void;
   onCreateChannel?: () => void;
   isAdmin?: boolean;
+  onOpenSettings?: () => void;
 }
 
 export function ChannelsList({
@@ -21,6 +22,7 @@ export function ChannelsList({
   onChannelSelect,
   onCreateChannel,
   isAdmin,
+  onOpenSettings,
 }: ChannelsListProps) {
   const dispatch = useAppDispatch();
   const { user, token } = useAppSelector((state) => state.auth);
@@ -45,7 +47,7 @@ export function ChannelsList({
 
   const handleToggleNotifications = async () => {
     if (!token) return;
-    
+
     setIsTogglingNotification(true);
     try {
       if (isNotificationEnabled) {
@@ -141,11 +143,10 @@ export function ChannelsList({
                 handleToggleNotifications();
               }}
               disabled={isTogglingNotification}
-              className={`w-full flex items-center gap-3 px-3 py-2 text-sm transition-colors ${
-                isNotificationEnabled
+              className={`w-full flex items-center gap-3 px-3 py-2 text-sm transition-colors ${isNotificationEnabled
                   ? 'text-green-600 hover:bg-green-50'
                   : 'text-gray-700 hover:bg-gray-100'
-              } ${isTogglingNotification ? 'opacity-50 cursor-not-allowed' : ''}`}
+                } ${isTogglingNotification ? 'opacity-50 cursor-not-allowed' : ''}`}
             >
               {isNotificationEnabled ? (
                 <>
@@ -162,7 +163,7 @@ export function ChannelsList({
             <button
               onClick={() => {
                 setShowDropdown(false);
-                // Add settings navigation here when ready
+                onOpenSettings?.();
               }}
               className="w-full flex items-center gap-3 px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
             >

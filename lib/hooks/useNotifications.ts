@@ -84,7 +84,7 @@ export const useNotifications = (token?: string) => {
   const markTopicAsRead = useCallback((topicId: string) => {
     try {
       socketService.markTopicAsRead(topicId);
-      
+
       // Update local state immediately
       setUnreadCounts((prev) => ({
         ...prev,
@@ -180,17 +180,20 @@ export const useNotifications = (token?: string) => {
 
     const handleGlobalAlert = (data: SocketGlobalMessageAlertEvent) => {
       console.log('[useNotifications] 🔔 Global message alert received:', data);
-      
+
       // Increment unread count for the topic
       if (data.topic_id) {
         setUnreadCounts((prev) => {
-          const newCount = (prev[data.topic_id!] || 0) + 1;
-          console.log(`[useNotifications] Incrementing unread count for topic ${data.topic_id}: ${newCount}`);
+          const currentCount = prev[data.topic_id!] || 0;
+          const newCount = currentCount + 1;
+          console.log(`[useNotifications] Incrementing unread count for topic ${data.topic_id}: ${currentCount} -> ${newCount}`);
           return {
             ...prev,
             [data.topic_id!]: newCount,
           };
         });
+      } else {
+        console.warn('[useNotifications] Global alert received without topic_id', data);
       }
 
       // Show in-app notification if browser notifications are not available
@@ -215,20 +218,33 @@ export const useNotifications = (token?: string) => {
     if (!socketService.isConnected()) return;
 
     const handleNewMessage = (data: any) => {
-      // Increment unread count if message is not in the active topic
-      const topicId = data.topic_id || data.room_id;
+      console.log('[useNotifications] 📨 New message event received:', data);
+
+      // Extract topic ID from various possible fields
+      const topicId = data.topic_id || data.room_id || (data.message && data.message.topic_id);
+
       if (topicId) {
-        setUnreadCounts((prev) => ({
-          ...prev,
-          [topicId]: (prev[topicId] || 0) + 1,
-        }));
+        setUnreadCounts((prev) => {
+          const currentCount = prev[topicId] || 0;
+          const newCount = currentCount + 1;
+          console.log(`[useNotifications] Updating unread count for topic ${topicId}: ${currentCount} -> ${newCount}`);
+          return {
+            ...prev,
+            [topicId]: newCount,
+          };
+        });
+      } else {
+        console.warn('[useNotifications] New message received but could not determine topic_id:', data);
       }
     };
 
     socketService.onNewTopicMessage(handleNewMessage);
+    // Also listen for standard new_message event just in case
+    socketService.onNewMessage(handleNewMessage);
 
     return () => {
       socketService.offNewTopicMessage(handleNewMessage);
+      socketService.offNewMessage(handleNewMessage);
     };
   }, []);
 
@@ -236,16 +252,16 @@ export const useNotifications = (token?: string) => {
     // Push notification state
     isSubscribed,
     isLoading,
-    
+
     // Online status
     onlineUsers,
     isUserOnline,
-    
+
     // Unread counts
     unreadCounts,
     getUnreadCount,
     getTotalUnreadCount,
-    
+
     // Actions
     subscribeToPush,
     unsubscribeFromPush,
