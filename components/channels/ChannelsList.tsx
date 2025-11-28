@@ -50,16 +50,19 @@ export function ChannelsList({
 
     setIsTogglingNotification(true);
     try {
+      // Import thunks dynamically
+      const { subscribeToNotifications, unsubscribeFromNotifications } = await import('@/lib/features/notifications/notificationSlice');
+
       if (isNotificationEnabled) {
         // Unsubscribe
-        const success = await notificationService.unsubscribeFromPush();
-        if (success) {
+        const resultAction = await dispatch(unsubscribeFromNotifications());
+        if (unsubscribeFromNotifications.fulfilled.match(resultAction)) {
           setIsNotificationEnabled(false);
         }
       } else {
         // Subscribe
-        const subscription = await notificationService.subscribeToPush(token);
-        if (subscription) {
+        const resultAction = await dispatch(subscribeToNotifications());
+        if (subscribeToNotifications.fulfilled.match(resultAction)) {
           setIsNotificationEnabled(true);
         }
       }
@@ -144,8 +147,8 @@ export function ChannelsList({
               }}
               disabled={isTogglingNotification}
               className={`w-full flex items-center gap-3 px-3 py-2 text-sm transition-colors ${isNotificationEnabled
-                  ? 'text-green-600 hover:bg-green-50'
-                  : 'text-gray-700 hover:bg-gray-100'
+                ? 'text-green-600 hover:bg-green-50'
+                : 'text-gray-700 hover:bg-gray-100'
                 } ${isTogglingNotification ? 'opacity-50 cursor-not-allowed' : ''}`}
             >
               {isNotificationEnabled ? (

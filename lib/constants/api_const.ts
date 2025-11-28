@@ -39,6 +39,9 @@ export const ENDPOINTS = {
     // Notification
     NOTIFICATION_GET: '/notification/get',
     NOTIFICATION: '/notification',
+    SUBSCRIBE_NOTIFICATION: '/notifications/subscribe',
+    UNSUBSCRIBE_NOTIFICATION: '/notifications/unsubscribe',
+    UNSUBSCRIBE_NOTIFICATION_BY_ENDPOINT: '/notifications/unsubscribe-by-endpoint',
 
     // Search
     SEARCH_PROPERTIES: '/listings/algolia-search',

@@ -9,6 +9,7 @@ import { store, persistor } from "@/lib/store";
 import { ToastProvider } from "@/components/ui/Toast";
 import { NotificationProvider } from "@/components/providers/NotificationProvider";
 import { GlobalNotificationToast } from "@/components/ui/GlobalNotificationToast";
+import { ServiceWorkerProvider } from "@/components/providers/ServiceWorkerProvider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -43,10 +44,12 @@ export default function RootLayout({
         <Provider store={store}>
           <PersistGate loading={null} persistor={persistor}>
             <ToastProvider>
-              <NotificationProvider>
-                {children}
-                <GlobalNotificationToast />
-              </NotificationProvider>
+              <ServiceWorkerProvider>
+                <NotificationProvider>
+                  {children}
+                  <GlobalNotificationToast />
+                </NotificationProvider>
+              </ServiceWorkerProvider>
             </ToastProvider>
           </PersistGate>
         </Provider>

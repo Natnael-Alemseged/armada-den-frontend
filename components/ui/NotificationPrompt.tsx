@@ -1,7 +1,9 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { notificationService } from '@/lib/services/notificationService';
+import { useDispatch } from 'react-redux';
+import { AppDispatch } from '@/lib/store';
+import { subscribeToNotifications } from '@/lib/features/notifications/notificationSlice';
 import { Bell, X } from 'lucide-react';
 
 interface NotificationPromptProps {
@@ -32,7 +34,7 @@ export const NotificationPrompt: React.FC<NotificationPromptProps> = ({ token, o
 
       // Check current permission status
       const permission = Notification.permission;
-      
+
       // Only show prompt if permission is still default (not asked yet)
       if (permission === 'default') {
         // Small delay to not overwhelm user immediately on login
@@ -50,13 +52,15 @@ export const NotificationPrompt: React.FC<NotificationPromptProps> = ({ token, o
     }
   }, [token]);
 
+  const dispatch = useDispatch<AppDispatch>();
+
   const handleEnable = async () => {
     if (!token) return;
 
     setIsLoading(true);
     try {
-      const subscription = await notificationService.subscribeToPush(token);
-      if (subscription) {
+      const resultAction = await dispatch(subscribeToNotifications());
+      if (subscribeToNotifications.fulfilled.match(resultAction)) {
         // Success - mark as decided and hide
         localStorage.setItem('notification_prompt_dismissed', 'true');
         setIsVisible(false);

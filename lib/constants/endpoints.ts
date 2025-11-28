@@ -91,6 +91,7 @@ export const ENDPOINTS = {
     TOPICS_MESSAGE_GET: (messageId: string) => `/channels/topics/messages/${messageId}`,
     TOPICS_MESSAGE_UPDATE: (messageId: string) => `/channels/topics/messages/${messageId}`,
     TOPICS_MESSAGE_DELETE: (messageId: string) => `/channels/topics/messages/${messageId}`,
+    TOPICS_UPLOAD: (topicId: string) => `/channels/topics/${topicId}/upload`,
     
     TOPICS_MESSAGE_REACTION_ADD: (messageId: string) => `/channels/topics/messages/${messageId}/reactions`,
     TOPICS_MESSAGE_REACTION_REMOVE: (messageId: string, emoji: string) => `/channels/topics/messages/${messageId}/reactions/${encodeURIComponent(emoji)}`,

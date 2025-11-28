@@ -27,6 +27,7 @@ import {
 } from '@/components/ui/alert-dialog';
 
 import { MessageContent } from './MessageContent';
+import { MessageAttachments } from './MessageAttachments';
 import { OnlineIndicator } from '@/components/ui/OnlineIndicator';
 
 interface MessageListProps {
@@ -215,12 +216,11 @@ export function MessageList({ messages, currentUserId, onRetryMessage, onCancelM
                   'U'}
               </div>
               {/* Online indicator */}
-              <div className="absolute bottom-0 right-0">
-                <OnlineIndicator 
-                  isOnline={isUserOnline(message.sender_id)} 
-                  size="sm"
-                />
-              </div>
+              <OnlineIndicator 
+                isOnline={isUserOnline(message.sender_id)} 
+                size="sm"
+                className="absolute -bottom-0.5 -right-0.5 shadow-md"
+              />
             </div>
 
             {/* Message Content */}
@@ -293,6 +293,11 @@ export function MessageList({ messages, currentUserId, onRetryMessage, onCancelM
                         className={isOwnMessage && !isFailed ? 'text-white' : 'text-gray-900'}
                       />
                     </div>
+                    
+                    {/* Message Attachments */}
+                    {message.attachments && message.attachments.length > 0 && (
+                      <MessageAttachments attachments={message.attachments} />
+                    )}
 
                     {/* Failed Message Actions */}
                     {isFailed && isOwnMessage && onRetryMessage && onCancelMessage && message._tempId && (
