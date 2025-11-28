@@ -45,8 +45,12 @@ export const useNotifications = (token?: string) => {
 
     setIsLoading(true);
     try {
-      const subscription = await notificationService.subscribeToPush(token);
-      if (subscription) {
+      // Import the thunk dynamically to avoid circular dependencies
+      const { subscribeToNotifications } = await import('@/lib/features/notifications/notificationSlice');
+      const { store } = await import('@/lib/store');
+
+      const resultAction = await store.dispatch(subscribeToNotifications());
+      if (subscribeToNotifications.fulfilled.match(resultAction)) {
         setIsSubscribed(true);
         return true;
       }
@@ -65,11 +69,16 @@ export const useNotifications = (token?: string) => {
   const unsubscribeFromPush = useCallback(async () => {
     setIsLoading(true);
     try {
-      const success = await notificationService.unsubscribeFromPush();
-      if (success) {
+      // Import the thunk dynamically to avoid circular dependencies
+      const { unsubscribeFromNotifications } = await import('@/lib/features/notifications/notificationSlice');
+      const { store } = await import('@/lib/store');
+
+      const resultAction = await store.dispatch(unsubscribeFromNotifications());
+      if (unsubscribeFromNotifications.fulfilled.match(resultAction)) {
         setIsSubscribed(false);
+        return true;
       }
-      return success;
+      return false;
     } catch (error) {
       console.error('Failed to unsubscribe from push notifications:', error);
       return false;
@@ -197,7 +206,7 @@ export const useNotifications = (token?: string) => {
       }
 
       // Show in-app notification if browser notifications are not available
-      if (!notificationService.hasPermission()) {
+      if (typeof window !== 'undefined' && Notification.permission !== 'granted') {
         console.log(`[useNotifications] No notification permission. Message: ${data.message_preview}`);
       } else {
         console.log('[useNotifications] Notification permission granted, push notification should be sent by backend');
@@ -246,6 +255,44 @@ export const useNotifications = (token?: string) => {
       socketService.offNewTopicMessage(handleNewMessage);
       socketService.offNewMessage(handleNewMessage);
     };
+  }, []);
+
+  // Listen for foreground Firebase messages
+  useEffect(() => {
+    if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
+      import('@/lib/firebase').then(({ messaging }) => {
+        if (messaging) {
+          import('firebase/messaging').then(({ onMessage }) => {
+            onMessage(messaging, (payload) => {
+              console.log('[useNotifications] 📬 FCM foreground message received:', payload);
+              
+              // Show toast notification for foreground messages
+              if (payload.notification) {
+                import('@/components/Toast').then(({ toastBar, ToastType }) => {
+                  const title = payload.notification?.title || 'New Message';
+                  const body = payload.notification?.body || '';
+                  toastBar(`${title}: ${body}`, ToastType.INFO);
+                });
+              }
+
+              // Update unread counts if topic_id is in the payload data
+              if (payload.data?.topic_id) {
+                const topicId = payload.data.topic_id;
+                setUnreadCounts((prev) => {
+                  const currentCount = prev[topicId] || 0;
+                  const newCount = currentCount + 1;
+                  console.log(`[useNotifications] FCM: Incrementing unread count for topic ${topicId}: ${currentCount} -> ${newCount}`);
+                  return {
+                    ...prev,
+                    [topicId]: newCount,
+                  };
+                });
+              }
+            });
+          });
+        }
+      });
+    }
   }, []);
 
   return {

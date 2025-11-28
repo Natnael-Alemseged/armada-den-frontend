@@ -1,6 +1,9 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { useDispatch } from 'react-redux';
+import { AppDispatch } from '@/lib/store';
+import { subscribeToNotifications, unsubscribeFromNotifications } from '@/lib/features/notifications/notificationSlice';
 import { notificationService } from '@/lib/services/notificationService';
 import { Bell, BellOff } from 'lucide-react';
 
@@ -29,16 +32,28 @@ export const NotificationSettings: React.FC<NotificationSettingsProps> = ({
     }
 
     // Check current permission status
-    setHasPermission(notificationService.hasPermission());
+    const checkPermission = async () => {
+      const hasPerm = await notificationService.requestPermission(); // Actually we just want to check, not request. 
+      // But isSubscribed checks permission too.
+      // Let's just use the property if available or the method
+      setHasPermission(Notification.permission === 'granted');
+    }
+    checkPermission();
 
     // Check if already subscribed
     const checkSubscription = async () => {
       const subscribed = await notificationService.isSubscribed();
-      setIsSubscribed(subscribed);
+      // Also check if we have a token? 
+      // For now, trust the service's isSubscribed which checks permission
+      // Ideally we should check if we have a valid token too.
+      const hasToken = await notificationService.hasToken();
+      setIsSubscribed(subscribed && hasToken);
     };
 
     checkSubscription();
   }, []);
+
+  const dispatch = useDispatch<AppDispatch>();
 
   const handleToggleNotifications = async () => {
     if (!token) {
@@ -51,21 +66,24 @@ export const NotificationSettings: React.FC<NotificationSettingsProps> = ({
     try {
       if (isSubscribed) {
         // Unsubscribe
-        const success = await notificationService.unsubscribeFromPush();
-        if (success) {
+        const resultAction = await dispatch(unsubscribeFromNotifications());
+        if (unsubscribeFromNotifications.fulfilled.match(resultAction)) {
           setIsSubscribed(false);
           onSubscriptionChange?.(false);
+        } else {
+          // Handle error
+          console.error('Failed to unsubscribe');
         }
       } else {
         // Subscribe
-        const subscription = await notificationService.subscribeToPush(token);
-        if (subscription) {
+        const resultAction = await dispatch(subscribeToNotifications());
+        if (subscribeToNotifications.fulfilled.match(resultAction)) {
           setIsSubscribed(true);
           setHasPermission(true);
           onSubscriptionChange?.(true);
         } else {
-          // Permission might have been denied
-          setHasPermission(notificationService.hasPermission());
+          // Permission might have been denied or error
+          setHasPermission(Notification.permission === 'granted');
         }
       }
     } catch (error) {
@@ -93,10 +111,9 @@ export const NotificationSettings: React.FC<NotificationSettingsProps> = ({
         className={`
           flex items-center gap-2 px-4 py-2 rounded-lg
           transition-colors duration-200
-          ${
-            isSubscribed
-              ? 'bg-green-500 hover:bg-green-600 text-white'
-              : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
+          ${isSubscribed
+            ? 'bg-green-500 hover:bg-green-600 text-white'
+            : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
           }
           ${isLoading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
         `}

@@ -606,6 +606,15 @@ export interface TopicMember {
     user?: User;
 }
 
+export interface Attachment {
+    id: string;
+    url: string;
+    filename: string;
+    size: number;
+    mime_type: string;
+    created_at: string;
+}
+
 export interface TopicMessage {
     id: string;
     topic_id: string;
@@ -622,6 +631,7 @@ export interface TopicMessage {
     sender_full_name: string | null;
     mention_count: number;
     reaction_count: number;
+    attachments: Attachment[]; // Multiple file attachments
     // Optional nested objects
     sender?: User;
     reply_to?: TopicMessage;
@@ -700,6 +710,7 @@ export interface CreateTopicMessageRequest {
     content: string;
     reply_to_id?: string;
     mentioned_user_ids?: string[];
+    attachments?: Attachment[]; // Multiple file attachments
 }
 
 export interface UpdateTopicMessageRequest {
