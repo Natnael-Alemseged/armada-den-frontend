@@ -239,6 +239,24 @@ export const fetchUsersForTopicAddition = createAsyncThunk<
   }
 );
 
+export const fetchTopicMembers = createAsyncThunk<
+  { topicId: string; members: UserForTopicAddition[] },
+  string,
+  { rejectValue: string }
+>(
+  'channels/fetchTopicMembers',
+  async (topicId, { rejectWithValue }) => {
+    try {
+      const res = await ApiService.get(ENDPOINTS.TOPICS_USERS_FOR_ADDITION(topicId));
+      // Filter only members
+      const members = res.data.filter((user: UserForTopicAddition) => user.is_member);
+      return { topicId, members };
+    } catch (err: any) {
+      return rejectWithValue(err.response?.data?.detail || 'Failed to fetch topic members');
+    }
+  }
+);
+
 // Message Thunks
 export const fetchTopicMessages = createAsyncThunk<
   { messages: TopicMessage[]; page: number; has_more: boolean },
