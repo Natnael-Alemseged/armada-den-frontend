@@ -44,6 +44,7 @@ export function InlineMentionInput({
 }: InlineMentionInputProps) {
   const dispatch = useAppDispatch();
   const { connected: gmailConnected } = useAppSelector((state) => state.gmail);
+  const currentUserId = useAppSelector((state) => state.auth.user?.id);
 
   const [showMentions, setShowMentions] = useState(false);
   const [mentionSearch, setMentionSearch] = useState('');
@@ -57,7 +58,9 @@ export function InlineMentionInput({
   const aiAgents: AIAgent[] = [];
 
   // Filter users and AI agents based on mention search
-  const filteredUsers = users.filter((user) => {
+  const mentionableUsers = users.filter((user) => user.id !== currentUserId);
+
+  const filteredUsers = mentionableUsers.filter((user) => {
     const searchLower = mentionSearch.toLowerCase();
     return (
       user.email.toLowerCase().includes(searchLower) ||
