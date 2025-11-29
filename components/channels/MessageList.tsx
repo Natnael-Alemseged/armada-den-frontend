@@ -284,20 +284,32 @@ export function MessageList({ messages, currentUserId, onRetryMessage, onCancelM
                   </div>
                 ) : (
                   <>
-                    <div className={`px-3 py-2 rounded-2xl ${isOwnMessage
-                      ? isFailed ? 'bg-red-500/20 border border-red-500/50 text-red-800' : 'bg-[#007aff] text-white'
-                      : 'bg-gray-100 text-gray-900'
+                    {/* WhatsApp-style card: attachments and content together */}
+                    <div className={`rounded-2xl overflow-hidden ${isOwnMessage
+                      ? isFailed ? 'bg-red-500/20 border border-red-500/50' : 'bg-[#007aff]'
+                      : 'bg-gray-100'
                       }`}>
-                      <MessageContent
-                        content={message.content}
-                        className={isOwnMessage && !isFailed ? 'text-white' : 'text-gray-900'}
-                      />
+                      {/* Message Attachments at the top */}
+                      {message.attachments && message.attachments.length > 0 && (
+                        <div className="w-full">
+                          <MessageAttachments 
+                            attachments={message.attachments} 
+                            isOwnMessage={isOwnMessage}
+                            isFailed={isFailed}
+                          />
+                        </div>
+                      )}
+                      
+                      {/* Message Content below attachments */}
+                      {message.content && (
+                        <div className="px-3 py-2">
+                          <MessageContent
+                            content={message.content}
+                            className={isOwnMessage && !isFailed ? 'text-white' : 'text-gray-900'}
+                          />
+                        </div>
+                      )}
                     </div>
-                    
-                    {/* Message Attachments */}
-                    {message.attachments && message.attachments.length > 0 && (
-                      <MessageAttachments attachments={message.attachments} />
-                    )}
 
                     {/* Failed Message Actions */}
                     {isFailed && isOwnMessage && onRetryMessage && onCancelMessage && message._tempId && (

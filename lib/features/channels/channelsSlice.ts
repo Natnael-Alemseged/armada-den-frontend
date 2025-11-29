@@ -13,6 +13,7 @@ import {
   deleteTopic,
   addTopicMember,
   removeTopicMember,
+  fetchTopicMembers,
   fetchTopicMessages,
   createTopicMessage,
   updateTopicMessage,
@@ -26,6 +27,7 @@ import {
   TopicMessage,
   MessageReaction,
   GroupedReaction,
+  UserForTopicAddition,
 } from '@/lib/types';
 
 export interface OptimisticMessage extends TopicMessage {
@@ -47,6 +49,7 @@ export interface ChannelsState {
   messagesError: string | null;
   hasMoreMessages: boolean;
   currentPage: number;
+  topicMembersCache: Record<string, UserForTopicAddition[]>;
 }
 
 const initialState: ChannelsState = {
@@ -61,6 +64,7 @@ const initialState: ChannelsState = {
   messagesError: null,
   hasMoreMessages: false,
   currentPage: 1,
+  topicMembersCache: {},
 };
 
 const channelsSlice = createSlice({
@@ -418,8 +422,13 @@ const channelsSlice = createSlice({
         state.loading = true;
         state.error = null;
       })
-      .addCase(addTopicMember.fulfilled, (state) => {
+      .addCase(addTopicMember.fulfilled, (state, action) => {
         state.loading = false;
+        // Invalidate cache for this topic so it gets refetched
+        const topicId = action.meta.arg.topicId;
+        if (state.topicMembersCache[topicId]) {
+          delete state.topicMembersCache[topicId];
+        }
       })
       .addCase(addTopicMember.rejected, (state, action) => {
         state.loading = false;
@@ -432,12 +441,30 @@ const channelsSlice = createSlice({
         state.loading = true;
         state.error = null;
       })
-      .addCase(removeTopicMember.fulfilled, (state) => {
+      .addCase(removeTopicMember.fulfilled, (state, action) => {
         state.loading = false;
+        // Invalidate cache for this topic so it gets refetched
+        const topicId = action.meta.arg.topicId;
+        if (state.topicMembersCache[topicId]) {
+          delete state.topicMembersCache[topicId];
+        }
       })
       .addCase(removeTopicMember.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload || 'Failed to remove member';
+      });
+
+    // Fetch Topic Members
+    builder
+      .addCase(fetchTopicMembers.pending, (state) => {
+        state.error = null;
+      })
+      .addCase(fetchTopicMembers.fulfilled, (state, action) => {
+        // Cache the members for this topic
+        state.topicMembersCache[action.payload.topicId] = action.payload.members;
+      })
+      .addCase(fetchTopicMembers.rejected, (state, action) => {
+        state.error = action.payload || 'Failed to fetch topic members';
       });
 
     // Fetch Topic Messages

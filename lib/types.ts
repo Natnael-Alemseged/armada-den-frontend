@@ -612,7 +612,6 @@ export interface Attachment {
     filename: string;
     size: number;
     mime_type: string;
-    created_at: string;
 }
 
 export interface TopicMessage {

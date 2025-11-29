@@ -5,6 +5,7 @@ import { useAppDispatch, useAppSelector } from '@/lib/hooks';
 import {
   fetchTopicMessages,
   createTopicMessage,
+  fetchTopicMembers,
 } from '@/lib/features/channels/channelsThunk';
 import { fetchUsers } from '@/lib/features/realTimeChat/realtimeChatThunk';
 import {
@@ -24,7 +25,7 @@ import { Hash, Loader2, Settings, Paperclip, X } from 'lucide-react';
 import EmojiPicker, { EmojiClickData } from 'emoji-picker-react';
 import { uploadFilesToTopic, formatBytes, getFileIcon } from '@/lib/util/fileUpload';
 import { MessageList } from './MessageList';
-import { MentionInput } from './MentionInput';
+import { InlineMentionInput } from './InlineMentionInput';
 import { socketService } from '@/lib/services/socketService';
 import { ManageTopicModal } from './ManageTopicModal';
 
@@ -34,7 +35,7 @@ interface TopicViewProps {
 
 export function TopicView({ topic }: TopicViewProps) {
   const dispatch = useAppDispatch();
-  const { messages, messagesLoading } = useAppSelector((state) => state.channels);
+  const { messages, messagesLoading, topicMembersCache } = useAppSelector((state) => state.channels);
   const { user, token } = useAppSelector((state) => state.auth);
   const { users } = useAppSelector((state) => state.realtimeChat);
   const [messageContent, setMessageContent] = useState('');
@@ -44,6 +45,8 @@ export function TopicView({ topic }: TopicViewProps) {
   const [showManageModal, setShowManageModal] = useState(false);
   const [attachments, setAttachments] = useState<Omit<Attachment, 'id' | 'created_at'>[]>([]);
   const [uploading, setUploading] = useState(false);
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [filePreviews, setFilePreviews] = useState<{ file: File; preview: string }[]>([]);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -57,19 +60,27 @@ export function TopicView({ topic }: TopicViewProps) {
     if (topic) {
       dispatch(fetchTopicMessages({ topicId: topic.id }));
       
+      // Fetch topic members if not cached
+      if (!topicMembersCache[topic.id]) {
+        dispatch(fetchTopicMembers(topic.id));
+      }
+      
       // Mark topic as read when viewing it
       if (socketService.isConnected()) {
         socketService.markTopicAsRead(topic.id);
       }
     }
-  }, [topic, dispatch]);
+  }, [topic, dispatch, topicMembersCache]);
 
-  useEffect(() => {
-    // Fetch users for mentions
-    if (users.length === 0) {
-      dispatch(fetchUsers({ page: 1, pageSize: 100 }));
-    }
-  }, [users.length, dispatch]);
+  // Get topic members from cache or empty array
+  const topicMembers = topic ? (topicMembersCache[topic.id] || []) : [];
+  
+  // Convert UserForTopicAddition to the format expected by InlineMentionInput
+  const topicMembersForMention = topicMembers.map((member: { id: string; email: string; full_name?: string }) => ({
+    id: member.id,
+    email: member.email,
+    full_name: member.full_name,
+  }));
 
   // Socket.IO integration
   useEffect(() => {
@@ -206,52 +217,64 @@ export function TopicView({ topic }: TopicViewProps) {
 
   const handleSendMessage = async (e?: React.FormEvent) => {
     e?.preventDefault();
-    if (!messageContent.trim() || !user) return;
+    if ((!messageContent.trim() && selectedFiles.length === 0) || !user) return;
 
-    const content = messageContent.trim();
+    const content = messageContent.trim() || '';
     const tempId = `temp-${Date.now()}-${Math.random()}`;
 
-    // Create optimistic message
-    const optimisticMessage: OptimisticMessage = {
-      id: tempId,
-      topic_id: topic.id,
-      sender_id: user.id,
-      content: content,
-      reply_to_id: null,
-      is_edited: false,
-      edited_at: null,
-      is_deleted: false,
-      deleted_at: null,
-      created_at: new Date().toISOString(),
-      sender_email: user.email,
-      sender_full_name: user.full_name || null,
-      mention_count: 0,
-      reaction_count: 0,
-      reactions: [],
-      attachments: attachments.map(att => ({
-        ...att,
-        id: `temp-${Date.now()}`,
-        created_at: new Date().toISOString()
-      })),
-      _optimistic: true,
-      _pending: true,
-      _failed: false,
-      _tempId: tempId,
-    };
+    setSending(true);
 
-    // Add optimistic message immediately
-    dispatch(addOptimisticMessage(optimisticMessage));
-    setMessageContent('');
-    setAttachments([]);
-    setSending(false);
-
-    // Send to server in background
     try {
+      // Upload files first if any
+      let uploadedAttachments: Omit<Attachment, 'id' | 'created_at'>[] = [];
+      if (selectedFiles.length > 0) {
+        setUploading(true);
+        uploadedAttachments = await uploadFilesToTopic(topic.id, selectedFiles);
+        setUploading(false);
+      }
+
+      // Create optimistic message
+      const optimisticMessage: OptimisticMessage = {
+        id: tempId,
+        topic_id: topic.id,
+        sender_id: user.id,
+        content: content,
+        reply_to_id: null,
+        is_edited: false,
+        edited_at: null,
+        is_deleted: false,
+        deleted_at: null,
+        created_at: new Date().toISOString(),
+        sender_email: user.email,
+        sender_full_name: user.full_name || null,
+        mention_count: 0,
+        reaction_count: 0,
+        reactions: [],
+        attachments: uploadedAttachments.map(att => ({
+          ...att,
+          id: `temp-${Date.now()}`,
+          created_at: new Date().toISOString()
+        })),
+        _optimistic: true,
+        _pending: true,
+        _failed: false,
+        _tempId: tempId,
+      };
+
+      // Add optimistic message immediately
+      dispatch(addOptimisticMessage(optimisticMessage));
+      setMessageContent('');
+      setSelectedFiles([]);
+      setFilePreviews([]);
+      setAttachments([]);
+      setSending(false);
+
+      // Send to server in background
       const result = await dispatch(
         createTopicMessage({
           topic_id: topic.id,
           content: content,
-          attachments: attachments.length > 0 ? attachments.map(att => ({
+          attachments: uploadedAttachments.length > 0 ? uploadedAttachments.map(att => ({
             ...att,
             id: `temp-${Date.now()}`,
             created_at: new Date().toISOString()
@@ -263,6 +286,8 @@ export function TopicView({ topic }: TopicViewProps) {
       dispatch(updateOptimisticMessage({ tempId, message: result }));
     } catch (error) {
       console.error('Failed to send message:', error);
+      setSending(false);
+      setUploading(false);
       // Mark message as failed
       dispatch(markMessageAsFailed(tempId));
     }
@@ -336,28 +361,36 @@ export function TopicView({ topic }: TopicViewProps) {
     dispatch(removeOptimisticMessage(tempId));
   };
 
-  const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
     if (!files || files.length === 0) return;
 
-    setUploading(true);
-    try {
-      const uploaded = await uploadFilesToTopic(topic.id, Array.from(files));
-      setAttachments(prev => [...prev, ...uploaded]);
-    } catch (error) {
-      console.error('File upload failed:', error);
-      alert('Failed to upload files. Please try again.');
-    } finally {
-      setUploading(false);
-      // Reset file input
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
+    const fileArray = Array.from(files);
+    setSelectedFiles(prev => [...prev, ...fileArray]);
+
+    // Create previews for images
+    fileArray.forEach(file => {
+      if (file.type.startsWith('image/')) {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          setFilePreviews(prev => [...prev, { file, preview: reader.result as string }]);
+        };
+        reader.readAsDataURL(file);
+      } else {
+        // For non-images, just add the file without preview
+        setFilePreviews(prev => [...prev, { file, preview: '' }]);
       }
+    });
+
+    // Reset file input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
     }
   };
 
   const handleRemoveAttachment = (index: number) => {
-    setAttachments(prev => prev.filter((_, i) => i !== index));
+    setSelectedFiles(prev => prev.filter((_, i) => i !== index));
+    setFilePreviews(prev => prev.filter((_, i) => i !== index));
   };
 
   const insertEmojiAtCaret = (emoji: string) => {
@@ -463,11 +496,11 @@ export function TopicView({ topic }: TopicViewProps) {
 
       {/* Message Input */}
       <div className="border-t border-gray-200 px-5 py-3">
-        {/* Attachments Preview - Compact Thumbnails */}
-        {attachments.length > 0 && (
+        {/* File Previews - Compact Thumbnails */}
+        {filePreviews.length > 0 && (
           <div className="mb-2 flex flex-wrap gap-2">
-            {attachments.map((attachment, index) => {
-              const isImageFile = attachment.mime_type.startsWith('image/');
+            {filePreviews.map((item, index) => {
+              const isImageFile = item.file.type.startsWith('image/');
               return (
                 <div
                   key={index}
@@ -476,8 +509,8 @@ export function TopicView({ topic }: TopicViewProps) {
                   {isImageFile ? (
                     <div className="relative w-16 h-16 rounded-lg overflow-hidden border border-gray-200">
                       <img
-                        src={attachment.url}
-                        alt={attachment.filename}
+                        src={item.preview}
+                        alt={item.file.name}
                         className="w-full h-full object-cover"
                       />
                       <button
@@ -490,9 +523,9 @@ export function TopicView({ topic }: TopicViewProps) {
                     </div>
                   ) : (
                     <div className="relative w-16 h-16 rounded-lg overflow-hidden border border-gray-200 bg-gray-50 flex flex-col items-center justify-center">
-                      <span className="text-2xl">{getFileIcon(attachment.mime_type)}</span>
+                      <span className="text-2xl">{getFileIcon(item.file.type)}</span>
                       <span className="text-[8px] text-gray-500 mt-0.5 truncate max-w-full px-1">
-                        {attachment.filename.split('.').pop()?.toUpperCase()}
+                        {item.file.name.split('.').pop()?.toUpperCase()}
                       </span>
                       <button
                         type="button"
@@ -563,42 +596,28 @@ export function TopicView({ topic }: TopicViewProps) {
             </button>
           </div>
 
-          {/* Text Input */}
-          <form onSubmit={handleSendMessage} className="flex-1">
-            <textarea
-              ref={textareaRef}
-              value={messageContent}
-              onChange={(e) => {
-                setMessageContent(e.target.value);
-                handleCaretUpdate();
-              }}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                  e.preventDefault();
-                  handleSendMessage(e);
-                }
-              }}
-              onClick={handleCaretUpdate}
-              onKeyUp={handleCaretUpdate}
-              onSelect={handleCaretUpdate}
-              placeholder="Type a message...(paste images with Ctrl + V)"
-              rows={1}
-              disabled={sending || uploading}
-              className="w-full bg-transparent border-none outline-none resize-none text-sm text-gray-900 placeholder-gray-400 max-h-[100px]"
-              style={{ height: 'auto' }}
-              onInput={(e) => {
-                const target = e.target as HTMLTextAreaElement;
-                target.style.height = 'auto';
-                target.style.height = `${Math.min(target.scrollHeight, 100)}px`;
-              }}
-            />
-          </form>
+          {/* Text Input with Mentions */}
+          <InlineMentionInput
+            value={messageContent}
+            onChange={setMessageContent}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                handleSendMessage(e);
+              }
+            }}
+            placeholder={selectedFiles.length > 0 ? "Add a caption..." : "Type a message...(paste images with Ctrl + V)"}
+            disabled={sending || uploading}
+            users={topicMembersForMention}
+            textareaRef={textareaRef}
+            onCaretUpdate={handleCaretUpdate}
+          />
 
           {/* Send Button */}
           <button
             type="button"
             onClick={handleSendMessage}
-            disabled={(!messageContent.trim() && attachments.length === 0) || sending || uploading}
+            disabled={(!messageContent.trim() && selectedFiles.length === 0) || sending || uploading}
             className="flex-shrink-0 w-8 h-8 bg-gray-400 text-white rounded-full flex items-center justify-center hover:bg-gray-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             {sending ? (
