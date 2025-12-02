@@ -54,11 +54,11 @@ export function InlineMentionInput({
   const inputRef = textareaRef || internalRef;
   const mentionsRef = useRef<HTMLDivElement>(null);
 
-  // Define AI agents
-  const aiAgents: AIAgent[] = [];
+  // Identify EmailAI agent from users list
+  const emailAiUser = users.find(u => u.email === 'emailai@armada.bot');
 
   // Filter users and AI agents based on mention search
-  const mentionableUsers = users.filter((user) => user.id !== currentUserId);
+  const mentionableUsers = users.filter((user) => user.id !== currentUserId && user.email !== 'emailai@armada.bot');
 
   const filteredUsers = mentionableUsers.filter((user) => {
     const searchLower = mentionSearch.toLowerCase();
@@ -68,17 +68,30 @@ export function InlineMentionInput({
     );
   }).slice(0, 10);
 
-  const filteredAgents = aiAgents.filter((agent) => {
-    const searchLower = mentionSearch.toLowerCase();
-    return agent.name.toLowerCase().includes(searchLower) ||
-      agent.displayName.toLowerCase().includes(searchLower);
-  });
-
   type MentionOption = { type: 'agent'; agent: AIAgent } | { type: 'user'; user: User };
-  const mentionOptions: MentionOption[] = [
-    ...filteredAgents.map((agent) => ({ type: 'agent' as const, agent })),
-    ...filteredUsers.map((user) => ({ type: 'user' as const, user })),
-  ];
+  const mentionOptions: MentionOption[] = [];
+
+  // Add EmailAI if it matches search and exists
+  if (emailAiUser) {
+    const searchLower = mentionSearch.toLowerCase();
+    if ('emailai'.includes(searchLower) || 'email ai'.includes(searchLower)) {
+      mentionOptions.push({
+        type: 'agent',
+        agent: {
+          id: emailAiUser.id,
+          name: 'EmailAI',
+          displayName: 'EmailAI',
+          icon: Mail,
+          description: 'AI assistant for email management',
+          requiresConnection: true,
+          connected: gmailConnected,
+        }
+      });
+    }
+  }
+
+  // Add other users
+  mentionOptions.push(...filteredUsers.map((user) => ({ type: 'user' as const, user })));
 
   useEffect(() => {
     // Check if we should show mentions
