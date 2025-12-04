@@ -151,7 +151,7 @@ export function TopicsList({
         )}
       </div>
       {/* Create Topic Button */}
-      {isAdmin && onCreateTopic && filteredTopics.length > 0 && (
+      {isAdmin && onCreateTopic  && (
         <div className="border-t border-gray-200 p-2">
           <button
             onClick={onCreateTopic}
