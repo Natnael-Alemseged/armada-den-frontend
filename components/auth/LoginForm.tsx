@@ -52,7 +52,8 @@ export function LoginForm() {
   };
 
   return (
-    <div className="min-h-screen flex bg-white">
+    <div className="relative min-h-screen bg-white">
+      <div className="min-h-screen flex">
       {/* Left Panel - Branding */}
       <div className="hidden lg:flex lg:w-1/2 relative p-12 flex-col justify-between overflow-hidden 
   bg-gradient-to-t from-[#003B91] via-[#2A65A5] to-[#B3C9E6]">
@@ -192,6 +193,18 @@ export function LoginForm() {
           </div>
         </div>
       </div>
+      </div>
+
+      {authLoading && (
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className="relative p-5 rounded-3xl border-2 border-white bg-white/30 backdrop-blur-md shadow-lg">
+            <div className="relative w-10 h-10">
+              <div className="absolute inset-0 rounded-full border-[4px] border-gray-200"></div>
+              <div className="absolute inset-0 rounded-full border-[4px] border-transparent border-t-blue-500 border-l-blue-400 animate-spin"></div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
