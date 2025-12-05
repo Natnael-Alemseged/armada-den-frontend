@@ -13,7 +13,7 @@ import { formatBytes, getFileIcon } from '@/lib/util/fileUpload';
 import { socketService } from '@/lib/services/socketService';
 import { DMMessageList } from './DMMessageList';
 
-export function DMMessageThread() {
+export default function DMMessageThread() {
   const dispatch = useAppDispatch();
   const { currentConversation, messages, messagesLoading } = useAppSelector(
     (state) => state.directMessages
@@ -285,40 +285,51 @@ export function DMMessageThread() {
   }
 
   return (
-    <div className="flex-1 flex flex-col bg-white">
+    <div className="flex-1 flex flex-col bg-white min-w-0">
       {/* Header */}
-      <div className="p-4 border-b border-gray-200 bg-white flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="relative">
-            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-semibold">
-              {(currentConversation.user.full_name || currentConversation.user.email)[0].toUpperCase()}
-            </div>
-            {currentConversation.user.is_online && (
-              <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></div>
-            )}
+      <div className="h-14 border-b border-gray-200 flex items-center px-5 gap-3">
+        {/* Avatar */}
+        <div className="relative flex-shrink-0">
+          <div className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white font-semibold text-sm">
+            {(currentConversation.user.full_name || currentConversation.user.email)[0].toUpperCase()}
           </div>
-          <div>
-            <h3 className="font-semibold text-gray-900">
-              {currentConversation.user.full_name || currentConversation.user.email}
-            </h3>
-            <p className="text-xs text-gray-500">
-              {currentConversation.user.is_online ? 'Online' : 
-               currentConversation.user.last_seen_at ? `Last seen ${new Date(currentConversation.user.last_seen_at).toLocaleString()}` : 'Offline'}
-            </p>
-          </div>
+          {currentConversation.user.is_online && (
+            <div className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 border-2 border-white rounded-full"></div>
+          )}
+        </div>
+        
+        {/* Name and Status */}
+        <div className="flex-1 min-w-0">
+          <h2 className="text-base font-semibold text-gray-900 truncate">
+            {currentConversation.user.full_name || currentConversation.user.email}
+          </h2>
+          <p className="text-xs text-gray-500 truncate">
+            {currentConversation.user.is_online 
+              ? 'Online' 
+              : currentConversation.user.last_seen_at 
+                ? `Last seen ${new Date(currentConversation.user.last_seen_at).toLocaleString('en-US', { 
+                    month: 'short', 
+                    day: 'numeric', 
+                    hour: 'numeric', 
+                    minute: '2-digit' 
+                  })}` 
+                : 'Offline'}
+          </p>
         </div>
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto px-5 py-4 custom-scrollbar">
         {messagesLoading && messages.length === 0 ? (
           <div className="flex items-center justify-center h-full">
             <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
           </div>
         ) : messages.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full text-gray-500">
-            <MessageSquare className="w-12 h-12 mb-3 opacity-50" />
-            <p className="text-sm">No messages yet. Start the conversation!</p>
+          <div className="flex items-center justify-center h-full text-gray-600">
+            <div className="text-center">
+              <MessageSquare className="w-12 h-12 mx-auto mb-2 opacity-20" />
+              <p className="text-sm">No messages yet. Start the conversation!</p>
+            </div>
           </div>
         ) : (
           <DMMessageList 
@@ -419,65 +430,72 @@ export function DMMessageThread() {
       )}
 
       {/* Input Area */}
-      <div className="p-4 border-t border-gray-200 bg-white">
-        <div className="flex items-end gap-2">
-          {/* File Upload */}
-          <input
-            ref={fileInputRef}
-            type="file"
-            multiple
-            onChange={handleFileSelect}
-            className="hidden"
-          />
-          <button
-            onClick={() => fileInputRef.current?.click()}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-            title="Attach files"
-          >
-            <Paperclip className="w-5 h-5 text-gray-600" />
-          </button>
-
-          {/* Emoji Picker */}
-          <div className="relative">
+      <div className="border-t border-gray-200 px-5 py-3">
+        {/* Input Container */}
+        <div className="relative flex items-center gap-2 bg-[#F5F5F5] rounded-full px-4 py-2 border border-gray-200">
+          {/* Left Icons */}
+          <div className="flex items-center gap-2 relative">
+            {/* Emoji Button */}
             <button
+              type="button"
               ref={emojiButtonRef}
               onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              className="text-gray-500 hover:text-gray-700 transition-colors"
               title="Add emoji"
             >
-              <Smile className="w-5 h-5 text-gray-600" />
+              <Smile className="w-5 h-5" />
             </button>
+
             {showEmojiPicker && (
-              <div ref={emojiPickerRef} className="absolute bottom-12 left-0 z-50">
-                <EmojiPicker onEmojiClick={handleEmojiClick} />
+              <div
+                ref={emojiPickerRef}
+                className="absolute bottom-full mb-2 left-0 z-50 shadow-lg"
+              >
+                <EmojiPicker onEmojiClick={handleEmojiClick} autoFocusSearch={false} />
               </div>
             )}
+
+            {/* File Attachment Button */}
+            <input
+              ref={fileInputRef}
+              type="file"
+              multiple
+              onChange={handleFileSelect}
+              className="hidden"
+            />
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              className="text-gray-500 hover:text-gray-700 transition-colors"
+              title="Attach files"
+            >
+              <Paperclip className="w-5 h-5" />
+            </button>
           </div>
 
-          {/* Message Input */}
-          <div className="flex-1">
-            <textarea
-              ref={textareaRef}
-              value={messageContent}
-              onChange={handleTextareaChange}
-              onKeyDown={handleKeyPress}
-              placeholder="Type a message..."
-              className="w-full resize-none border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 max-h-32"
-              rows={1}
-            />
-          </div>
+          {/* Text Input */}
+          <textarea
+            ref={textareaRef}
+            value={messageContent}
+            onChange={handleTextareaChange}
+            onKeyDown={handleKeyPress}
+            placeholder="Type a message..."
+            disabled={sending}
+            className="flex-1 bg-transparent border-none outline-none resize-none text-sm text-gray-900 placeholder-gray-500 max-h-32"
+            rows={1}
+          />
 
           {/* Send Button */}
           <button
+            type="button"
             onClick={handleSendMessage}
             disabled={(!messageContent.trim() && attachments.length === 0) || sending}
-            className="p-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-            title="Send message"
+            className="flex-shrink-0 w-8 h-8 bg-gray-400 text-white rounded-full flex items-center justify-center hover:bg-gray-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             {sending ? (
-              <Loader2 className="w-5 h-5 animate-spin" />
+              <Loader2 className="w-4 h-4 animate-spin" />
             ) : (
-              <Send className="w-5 h-5" />
+              <Send className="w-4 h-4" />
             )}
           </button>
         </div>

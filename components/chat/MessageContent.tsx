@@ -14,7 +14,7 @@ export function MessageContent({ content, isUser }: MessageContentProps) {
   // For user messages, render as plain text
   if (isUser) {
     return (
-      <p className="text-sm whitespace-pre-wrap break-words">
+      <p className="text-sm whitespace-pre-wrap break-words overflow-hidden">
         {content}
       </p>
     );
@@ -22,7 +22,7 @@ export function MessageContent({ content, isUser }: MessageContentProps) {
 
   // For assistant messages, render with markdown support
   return (
-    <div className="text-sm max-w-none">
+    <div className="text-sm max-w-full overflow-hidden">
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
         components={{
@@ -49,7 +49,7 @@ export function MessageContent({ content, isUser }: MessageContentProps) {
             if (isInline) {
               return (
                 <code
-                  className="bg-gray-100 dark:bg-gray-700 px-1.5 py-0.5 rounded text-sm font-mono"
+                  className="bg-gray-100 dark:bg-gray-700 px-1.5 py-0.5 rounded text-sm font-mono break-all"
                   {...props}
                 >
                   {children}
@@ -60,7 +60,7 @@ export function MessageContent({ content, isUser }: MessageContentProps) {
             return (
               <code
                 className={cn(
-                  'block bg-gray-100 dark:bg-gray-700 p-3 rounded-lg overflow-x-auto font-mono text-sm',
+                  'block bg-gray-100 dark:bg-gray-700 p-3 rounded-lg overflow-x-auto font-mono text-sm max-w-full',
                   className
                 )}
                 {...props}
@@ -115,7 +115,7 @@ export function MessageContent({ content, isUser }: MessageContentProps) {
             </h4>
           ),
           table: ({ children }) => (
-            <div className="overflow-x-auto my-2">
+            <div className="overflow-x-auto my-2 max-w-full">
               <table className="min-w-full border-collapse border border-gray-300 dark:border-gray-600">
                 {children}
               </table>

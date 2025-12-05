@@ -3,7 +3,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { DirectMessage, DMEligibleUser, DMReaction } from '@/lib/types';
 import { formatDistanceToNow } from 'date-fns';
-import { MoreVertical, Reply, Smile, Edit2, Trash2, X } from 'lucide-react';
+import { MoreVertical, Reply, Smile, Edit2, Trash2, X, User } from 'lucide-react';
 import { useAppDispatch } from '@/lib/hooks';
 import EmojiPicker, { EmojiClickData } from 'emoji-picker-react';
 import {
@@ -118,7 +118,7 @@ export function DMMessageList({ messages, currentUserId, otherUser }: DMMessageL
   const commonEmojis = ['👍', '❤️', '😊', '😂', '🎉', '🔥', '👏', '✅'];
 
   return (
-    <div className="p-4 space-y-4">
+    <div className="space-y-3 px-4">
       {messages.map((message) => {
         const isOwnMessage = message.sender_id === currentUserId;
         const isEditing = editingMessageId === message.id;
@@ -127,160 +127,169 @@ export function DMMessageList({ messages, currentUserId, otherUser }: DMMessageL
         return (
           <div
             key={message.id}
-            className="flex flex-col"
+            className={`flex gap-2 group ${isOwnMessage ? 'flex-row-reverse' : 'flex-row'}`}
             onMouseEnter={() => setHoveredMessageId(message.id)}
             onMouseLeave={() => setHoveredMessageId(null)}
           >
-            <div className={`flex ${isOwnMessage ? 'justify-end' : 'justify-start'}`}>
-              <div className={`max-w-[70%] ${isOwnMessage ? 'items-end' : 'items-start'} flex flex-col group`}>
-                {/* Sender info for other user's messages */}
-                {!isOwnMessage && (
-                  <div className="flex items-center gap-2 mb-1 px-3">
-                    <div className="relative">
-                      <div className="w-6 h-6 rounded-full bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center text-white text-xs font-semibold">
-                        {(otherUser.full_name || otherUser.email)[0].toUpperCase()}
-                      </div>
-                      {otherUser.is_online && (
-                        <OnlineIndicator isOnline={true} className="absolute -bottom-0.5 -right-0.5" size="sm" />
+            {/* Avatar */}
+            <div className="relative flex-shrink-0">
+              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white font-semibold text-xs">
+                {isOwnMessage
+                  ? 'You'[0]
+                  : (otherUser.full_name || otherUser.email)[0].toUpperCase()}
+              </div>
+              {/* Online indicator */}
+              {!isOwnMessage && otherUser.is_online && (
+                <OnlineIndicator 
+                  isOnline={true} 
+                  size="sm"
+                  className="absolute -bottom-0.5 -right-0.5 shadow-md"
+                />
+              )}
+            </div>
+
+            {/* Message Content */}
+            <div className={`flex flex-col w-full max-w-[85%] sm:max-w-[75%] md:max-w-[70%] lg:max-w-[65%] xl:max-w-[60%] ${isOwnMessage ? 'items-end' : 'items-start'}`}>
+              {/* Header */}
+              <div className={`flex items-baseline gap-2 mb-1 px-1 ${isOwnMessage ? 'flex-row-reverse' : 'flex-row'}`}>
+                <span className="font-medium text-gray-900 text-xs">
+                  {isOwnMessage ? 'You' : (otherUser.full_name || otherUser.email)}
+                </span>
+                <span className="text-[10px] text-gray-500">
+                  {formatDistanceToNow(new Date(message.created_at), { addSuffix: true })}
+                </span>
+                {message.is_edited && (
+                  <span className="text-[10px] text-gray-600">(edited)</span>
+                )}
+              </div>
+
+              {/* Message Bubble */}
+              <div className="relative group/message">
+                {isEditing ? (
+                  <div className="space-y-2 min-w-[300px]">
+                    <textarea
+                      value={editContent}
+                      onChange={(e) => setEditContent(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && !e.shiftKey) {
+                          e.preventDefault();
+                          handleSaveEdit(message.id);
+                        }
+                      }}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-[#1A73E8] bg-white text-gray-900 resize-none text-sm"
+                      rows={3}
+                      autoFocus
+                    />
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => handleSaveEdit(message.id)}
+                        className="px-3 py-1 bg-[#1A73E8] text-white text-xs rounded-md hover:bg-[#1557B0]"
+                      >
+                        Save
+                      </button>
+                      <button
+                        onClick={handleCancelEdit}
+                        className="px-3 py-1 bg-gray-200 text-gray-700 text-xs rounded-md hover:bg-gray-300"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    {/* WhatsApp-style card: attachments and content together */}
+                    <div className={`rounded-2xl overflow-hidden max-w-full ${isOwnMessage ? 'bg-[#007aff]' : 'bg-gray-100'}`}>
+                      {/* Message Attachments at the top */}
+                      {message.attachments && message.attachments.length > 0 && (
+                        <div className="w-full">
+                          <MessageAttachments 
+                            attachments={message.attachments as any}
+                            isOwnMessage={isOwnMessage}
+                          />
+                        </div>
+                      )}
+                      
+                      {/* Message Content below attachments */}
+                      {message.content && (
+                        <div className="px-3 py-2">
+                          <MessageContent
+                            content={message.content}
+                            className={isOwnMessage ? 'text-white' : 'text-gray-900'}
+                          />
+                        </div>
                       )}
                     </div>
-                    <span className="text-xs text-gray-600 font-medium">
-                      {otherUser.full_name || otherUser.email}
-                    </span>
-                  </div>
-                )}
 
-                {/* Reply indicator */}
-                {message.reply_to_id && (
-                  <div className="text-xs text-gray-500 mb-1 px-3 flex items-center gap-1">
-                    <Reply className="w-3 h-3" />
-                    <span>Replying to a message</span>
-                  </div>
-                )}
-
-                {/* Message bubble */}
-                <div className="relative">
-                  <div
-                    className={`rounded-2xl px-4 py-2 ${
-                      isOwnMessage
-                        ? 'bg-blue-600 text-white'
-                        : 'bg-gray-100 text-gray-900'
-                    }`}
-                  >
-                    {isEditing ? (
-                      <div className="space-y-2">
-                        <textarea
-                          value={editContent}
-                          onChange={(e) => setEditContent(e.target.value)}
-                          className="w-full p-2 border rounded text-gray-900 text-sm resize-none"
-                          rows={3}
-                          autoFocus
-                        />
-                        <div className="flex gap-2">
-                          <button
-                            onClick={() => handleSaveEdit(message.id)}
-                            className="px-3 py-1 bg-blue-600 text-white rounded text-xs hover:bg-blue-700"
-                          >
-                            Save
-                          </button>
-                          <button
-                            onClick={handleCancelEdit}
-                            className="px-3 py-1 bg-gray-300 text-gray-700 rounded text-xs hover:bg-gray-400"
-                          >
-                            Cancel
-                          </button>
-                        </div>
+                    {/* Reactions */}
+                    {message.reactions && message.reactions.length > 0 && (
+                      <div className="flex flex-wrap gap-1 mt-1">
+                        {message.reactions.map((reaction: DMReaction) => {
+                          const userReacted = reaction.users.includes(currentUserId);
+                          return (
+                            <button
+                              key={reaction.emoji}
+                              onClick={() => handleReactionClick(message.id, reaction.emoji)}
+                              className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-xs transition-colors ${
+                                userReacted
+                                  ? 'bg-[#1A73E8]/20 border border-[#1A73E8] text-[#1A73E8]'
+                                  : 'bg-gray-50 border border-gray-200 hover:border-gray-300 text-gray-600'
+                              }`}
+                              title={`${reaction.count} reaction${reaction.count > 1 ? 's' : ''}`}
+                            >
+                              <span>{reaction.emoji}</span>
+                              <span className="text-[10px]">{reaction.count}</span>
+                            </button>
+                          );
+                        })}
                       </div>
-                    ) : (
-                      <>
-                        <MessageContent content={message.content} />
-                        {message.is_edited && (
-                          <span className={`text-xs ml-2 ${isOwnMessage ? 'text-blue-200' : 'text-gray-500'}`}>
-                            (edited)
-                          </span>
-                        )}
-                      </>
                     )}
-                  </div>
 
-                  {/* Message actions */}
-                  {!isEditing && isHovered && (
-                    <div className={`absolute top-0 ${isOwnMessage ? 'left-0 -ml-2' : 'right-0 -mr-2'} -mt-2`}>
-                      <div className="flex gap-1 bg-white rounded-lg shadow-lg border border-gray-200 p-1">
-                        <button
-                          onClick={() => setShowEmojiPicker(showEmojiPicker === message.id ? null : message.id)}
-                          className="p-1 hover:bg-gray-100 rounded transition-colors"
-                          title="React"
-                        >
-                          <Smile className="w-4 h-4 text-gray-600" />
-                        </button>
+                    {/* Action Buttons */}
+                    {!isEditing && isHovered && (
+                      <div className={`absolute top-0 flex gap-0.5 bg-white border border-gray-200 rounded-lg shadow-lg p-0.5 opacity-0 group-hover/message:opacity-100 transition-opacity ${
+                        isOwnMessage ? 'right-full mr-2' : 'left-full ml-2'
+                      }`}>
+                        <div className="relative">
+                          <button
+                            onClick={() => setShowEmojiPicker(showEmojiPicker === message.id ? null : message.id)}
+                            className="p-1.5 hover:bg-gray-100 rounded transition-colors"
+                            title="Add reaction"
+                          >
+                            <Smile className="w-3.5 h-3.5 text-gray-400" />
+                          </button>
+                          {showEmojiPicker === message.id && (
+                            <div ref={emojiPickerRef} className={`absolute top-full mt-2 z-50 ${
+                              isOwnMessage ? 'right-0' : 'left-0'
+                            }`}>
+                              <EmojiPicker
+                                onEmojiClick={(emojiData) => handleEmojiSelect(message.id, emojiData)}
+                                autoFocusSearch={false}
+                              />
+                            </div>
+                          )}
+                        </div>
                         {isOwnMessage && (
                           <>
                             <button
                               onClick={() => handleStartEdit(message)}
-                              className="p-1 hover:bg-gray-100 rounded transition-colors"
-                              title="Edit"
+                              className="p-1.5 hover:bg-gray-100 rounded transition-colors"
+                              title="Edit message"
                             >
-                              <Edit2 className="w-4 h-4 text-gray-600" />
+                              <Edit2 className="w-3.5 h-3.5 text-gray-400" />
                             </button>
                             <button
                               onClick={() => setMessageToDelete(message)}
-                              className="p-1 hover:bg-gray-100 rounded transition-colors"
-                              title="Delete"
+                              className="p-1.5 hover:bg-gray-100 rounded transition-colors"
+                              title="Delete message"
                             >
-                              <Trash2 className="w-4 h-4 text-red-600" />
+                              <Trash2 className="w-3.5 h-3.5 text-red-400" />
                             </button>
                           </>
                         )}
                       </div>
-                    </div>
-                  )}
-
-                  {/* Emoji Picker */}
-                  {showEmojiPicker === message.id && (
-                    <div ref={emojiPickerRef} className="absolute z-50 top-full mt-2">
-                      <EmojiPicker onEmojiClick={(emojiData) => handleEmojiSelect(message.id, emojiData)} />
-                    </div>
-                  )}
-                </div>
-
-                {/* Attachments */}
-                {message.attachments && message.attachments.length > 0 && (
-                  <div className="mt-2 px-3">
-                    <MessageAttachments attachments={message.attachments as any} />
-                  </div>
+                    )}
+                  </>
                 )}
-
-                {/* Reactions */}
-                {message.reactions && message.reactions.length > 0 && (
-                  <div className="flex flex-wrap gap-1 mt-1 px-3">
-                    {message.reactions.map((reaction: DMReaction) => {
-                      const userReacted = reaction.users.includes(currentUserId);
-                      return (
-                        <button
-                          key={reaction.emoji}
-                          onClick={() => handleReactionClick(message.id, reaction.emoji)}
-                          className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-xs transition-colors ${
-                            userReacted
-                              ? 'bg-blue-100 border border-blue-300'
-                              : 'bg-gray-100 border border-gray-300 hover:bg-gray-200'
-                          }`}
-                        >
-                          <span>{reaction.emoji}</span>
-                          <span className="text-gray-600">{reaction.count}</span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                )}
-
-                {/* Timestamp and read status */}
-                <div className={`text-xs text-gray-500 mt-1 px-3 flex items-center gap-2`}>
-                  <span>{formatDistanceToNow(new Date(message.created_at), { addSuffix: true })}</span>
-                  {isOwnMessage && message.is_read && (
-                    <span className="text-blue-600">✓✓ Read</span>
-                  )}
-                </div>
               </div>
             </div>
           </div>

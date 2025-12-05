@@ -224,7 +224,7 @@ export function MessageList({ messages, currentUserId, onRetryMessage, onCancelM
             </div>
 
             {/* Message Content */}
-            <div className={`flex flex-col max-w-[70%] ${isOwnMessage ? 'items-end' : 'items-start'}`}>
+            <div className={`flex flex-col w-full max-w-[85%] sm:max-w-[75%] md:max-w-[70%] lg:max-w-[65%] xl:max-w-[60%] ${isOwnMessage ? 'items-end' : 'items-start'}`}>
               {/* Header */}
               <div className={`flex items-baseline gap-2 mb-1 px-1 ${isOwnMessage ? 'flex-row-reverse' : 'flex-row'}`}>
                 <span className="font-medium text-gray-900 text-xs">
@@ -285,7 +285,7 @@ export function MessageList({ messages, currentUserId, onRetryMessage, onCancelM
                 ) : (
                   <>
                     {/* WhatsApp-style card: attachments and content together */}
-                    <div className={`rounded-2xl overflow-hidden ${isOwnMessage
+                    <div className={`rounded-2xl overflow-hidden max-w-full ${isOwnMessage
                       ? isFailed ? 'bg-red-500/20 border border-red-500/50' : 'bg-[#007aff]'
                       : 'bg-gray-100'
                       }`}>
