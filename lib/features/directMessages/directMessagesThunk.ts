@@ -91,7 +91,7 @@ export const editDM = createAsyncThunk<
 
 // Delete a message
 export const deleteDM = createAsyncThunk<
-    string,
+    { messageId: string; deletedAt: string },
     string,
     { rejectValue: string }
 >(
@@ -99,7 +99,10 @@ export const deleteDM = createAsyncThunk<
     async (messageId, { rejectWithValue }) => {
         try {
             await ApiService.delete(ENDPOINTS.DM_DELETE(messageId));
-            return messageId;
+            return {
+                messageId,
+                deletedAt: new Date().toISOString(),
+            };
         } catch (err: any) {
             return rejectWithValue(err.response?.data?.detail || 'Failed to delete message');
         }
@@ -126,7 +129,7 @@ export const markDMAsRead = createAsyncThunk<
 // Add reaction to a message
 export const addDMReaction = createAsyncThunk<
     { messageId: string; reactions: DMReaction[] },
-    { messageId: string; emoji: string },
+    { messageId: string; emoji: string; currentUserId?: string },
     { rejectValue: string }
 >(
     'directMessages/addReaction',
@@ -149,7 +152,7 @@ export const addDMReaction = createAsyncThunk<
 // Remove reaction from a message
 export const removeDMReaction = createAsyncThunk<
     { messageId: string; reactions: DMReaction[] },
-    { messageId: string; emoji: string },
+    { messageId: string; emoji: string; currentUserId?: string },
     { rejectValue: string }
 >(
     'directMessages/removeReaction',
