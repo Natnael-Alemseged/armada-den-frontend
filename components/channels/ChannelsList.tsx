@@ -174,27 +174,8 @@ export function ChannelsList({
       animate-in slide-in-from-top-2 duration-200
     "
                     >
-                        {/* Workspace Section */}
-                        <div className="px-4 pb-3">
-                            <div className="text-xs font-semibold text-gray-400 uppercase mb-2">
-                                Workspace
-                            </div>
-
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <div className="text-sm font-medium text-gray-900 truncate">
-                                        Armada Den
-                                    </div>
-                                    <div className="text-xs text-gray-500">Workspace</div>
-                                </div>
-
-                            </div>
-                        </div>
-
-                        <div className="border-t my-2"/>
-
                         {/* Profile Section */}
-                        <div className="px-4">
+                        <div className="px-4 pb-3">
                             <div className="text-xs font-semibold text-gray-400 uppercase mb-2">
                                 Profile
                             </div>
@@ -215,6 +196,8 @@ export function ChannelsList({
                                 </div>
                             </div>
                         </div>
+
+                        <div className="border-t my-2"/>
 
                         {/* Notification Toggle */}
                         <button

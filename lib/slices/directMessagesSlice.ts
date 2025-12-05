@@ -149,7 +149,7 @@ const directMessagesSlice = createSlice({
             }
         },
         addOptimisticMessage: (state, action: PayloadAction<DirectMessage>) => {
-            state.messages.unshift(action.payload);
+            state.messages.push(action.payload);
         },
         updateMessageInList: (state, action: PayloadAction<DirectMessage>) => {
             const index = state.messages.findIndex(m => m.id === action.payload.id);
@@ -202,7 +202,8 @@ const directMessagesSlice = createSlice({
             })
             .addCase(fetchDMMessages.fulfilled, (state, action) => {
                 state.messagesLoading = false;
-                state.messages = action.payload.messages;
+                // Reverse the messages array so oldest messages appear first (at top) and newest at bottom
+                state.messages = [...action.payload.messages].reverse();
                 state.messagesPage = action.payload.page;
                 state.messagesPageSize = action.payload.page_size;
                 state.messagesHasMore = action.payload.has_more;
@@ -220,7 +221,7 @@ const directMessagesSlice = createSlice({
             })
             .addCase(sendDM.fulfilled, (state, action) => {
                 state.sendingMessage = false;
-                state.messages.unshift(action.payload);
+                state.messages.push(action.payload);
                 state.messagesTotalCount += 1;
             })
             .addCase(sendDM.rejected, (state, action) => {
@@ -238,8 +239,14 @@ const directMessagesSlice = createSlice({
             
             // Delete message
             .addCase(deleteDM.fulfilled, (state, action) => {
-                state.messages = state.messages.filter(m => m.id !== action.payload);
-                state.messagesTotalCount = Math.max(0, state.messagesTotalCount - 1);
+                const message = state.messages.find(m => m.id === action.payload.messageId);
+                if (message) {
+                    message.is_deleted = true;
+                    message.deleted_at = action.payload.deletedAt;
+                    message.content = '';
+                    message.attachments = [];
+                    message.reactions = [];
+                }
             })
             
             // Mark as read
@@ -252,18 +259,132 @@ const directMessagesSlice = createSlice({
             })
             
             // Add reaction
+            .addCase(addDMReaction.pending, (state, action) => {
+                state.messagesError = null;
+                const { messageId, emoji } = action.meta.arg;
+                const currentUserId = action.meta.arg.currentUserId;
+
+                if (!currentUserId) return;
+
+                const message = state.messages.find((m) => m.id === messageId);
+                if (message) {
+                    if (!message.reactions) {
+                        message.reactions = [];
+                    }
+
+                    const existingReaction = message.reactions.find((r) => r.emoji === emoji);
+
+                    if (existingReaction) {
+                        // Update existing reaction
+                        existingReaction.count += 1;
+                        if (!existingReaction.users.includes(currentUserId)) {
+                            existingReaction.users.push(currentUserId);
+                        }
+                        existingReaction.user_reacted = true;
+                    } else {
+                        // Add new reaction
+                        message.reactions.push({
+                            emoji: emoji,
+                            count: 1,
+                            users: [currentUserId],
+                            user_reacted: true,
+                        });
+                    }
+                }
+            })
             .addCase(addDMReaction.fulfilled, (state, action) => {
+                // Reaction will be confirmed via Socket.IO event or API response
                 const message = state.messages.find(m => m.id === action.payload.messageId);
                 if (message) {
                     message.reactions = action.payload.reactions;
                 }
             })
+            .addCase(addDMReaction.rejected, (state, action) => {
+                state.messagesError = action.payload || 'Failed to add reaction';
+                // Revert optimistic update
+                const { messageId, emoji } = action.meta.arg;
+                const currentUserId = action.meta.arg.currentUserId;
+
+                if (!currentUserId) return;
+
+                const message = state.messages.find((m) => m.id === messageId);
+                if (message && message.reactions) {
+                    const reactionIndex = message.reactions.findIndex((r) => r.emoji === emoji);
+
+                    if (reactionIndex !== -1) {
+                        const reaction = message.reactions[reactionIndex];
+                        reaction.count -= 1;
+                        reaction.users = reaction.users.filter((id) => id !== currentUserId);
+                        reaction.user_reacted = false;
+
+                        if (reaction.count <= 0) {
+                            message.reactions.splice(reactionIndex, 1);
+                        }
+                    }
+                }
+            })
             
             // Remove reaction
+            .addCase(removeDMReaction.pending, (state, action) => {
+                state.messagesError = null;
+                const { messageId, emoji } = action.meta.arg;
+                const currentUserId = action.meta.arg.currentUserId;
+
+                if (!currentUserId) return;
+
+                const message = state.messages.find((m) => m.id === messageId);
+                if (message && message.reactions) {
+                    const reactionIndex = message.reactions.findIndex((r) => r.emoji === emoji);
+
+                    if (reactionIndex !== -1) {
+                        const reaction = message.reactions[reactionIndex];
+                        reaction.count -= 1;
+                        reaction.users = reaction.users.filter((id) => id !== currentUserId);
+                        reaction.user_reacted = false;
+
+                        if (reaction.count <= 0) {
+                            message.reactions.splice(reactionIndex, 1);
+                        }
+                    }
+                }
+            })
             .addCase(removeDMReaction.fulfilled, (state, action) => {
+                // Reaction removal will be confirmed via Socket.IO event or API response
                 const message = state.messages.find(m => m.id === action.payload.messageId);
                 if (message) {
                     message.reactions = action.payload.reactions;
+                }
+            })
+            .addCase(removeDMReaction.rejected, (state, action) => {
+                state.messagesError = action.payload || 'Failed to remove reaction';
+                // Revert optimistic update (Add it back)
+                const { messageId, emoji } = action.meta.arg;
+                const currentUserId = action.meta.arg.currentUserId;
+
+                if (!currentUserId) return;
+
+                const message = state.messages.find((m) => m.id === messageId);
+                if (message) {
+                    if (!message.reactions) {
+                        message.reactions = [];
+                    }
+
+                    const existingReaction = message.reactions.find((r) => r.emoji === emoji);
+
+                    if (existingReaction) {
+                        existingReaction.count += 1;
+                        if (!existingReaction.users.includes(currentUserId)) {
+                            existingReaction.users.push(currentUserId);
+                        }
+                        existingReaction.user_reacted = true;
+                    } else {
+                        message.reactions.push({
+                            emoji: emoji,
+                            count: 1,
+                            users: [currentUserId],
+                            user_reacted: true,
+                        });
+                    }
                 }
             })
             

@@ -90,29 +90,37 @@ export function DMMessageList({ messages, currentUserId, otherUser }: DMMessageL
     }
   };
 
-  const handleReactionClick = async (messageId: string, emoji: string) => {
-    const message = messages.find((m) => m.id === messageId);
-    if (!message) return;
-
-    // Check if current user already reacted with this emoji
-    const userReaction = message.reactions?.find(
-      (r) => r.emoji === emoji && r.users.includes(currentUserId)
+  const getExistingReaction = (message: DirectMessage) => {
+    return message.reactions?.find((reaction) =>
+      reaction.users.includes(currentUserId)
     );
+  };
 
+  const handleToggleReaction = async (message: DirectMessage, emoji: string) => {
     try {
-      if (userReaction) {
-        await dispatch(removeDMReaction({ messageId, emoji })).unwrap();
+      const existingReaction = getExistingReaction(message);
+
+      if (existingReaction) {
+        if (existingReaction.emoji === emoji) {
+          await dispatch(removeDMReaction({ messageId: message.id, emoji, currentUserId })).unwrap();
+        } else {
+          await dispatch(
+            removeDMReaction({ messageId: message.id, emoji: existingReaction.emoji, currentUserId })
+          ).unwrap();
+          await dispatch(addDMReaction({ messageId: message.id, emoji, currentUserId })).unwrap();
+        }
       } else {
-        await dispatch(addDMReaction({ messageId, emoji })).unwrap();
+        await dispatch(addDMReaction({ messageId: message.id, emoji, currentUserId })).unwrap();
       }
+
       setShowEmojiPicker(null);
     } catch (error) {
-      console.error('Failed to handle reaction:', error);
+      console.error('Failed to toggle reaction:', error);
     }
   };
 
-  const handleEmojiSelect = (messageId: string, emojiData: EmojiClickData) => {
-    handleReactionClick(messageId, emojiData.emoji);
+  const handleEmojiSelect = (message: DirectMessage, emojiData: EmojiClickData) => {
+    handleToggleReaction(message, emojiData.emoji);
   };
 
   const commonEmojis = ['👍', '❤️', '😊', '😂', '🎉', '🔥', '👏', '✅'];
@@ -123,6 +131,18 @@ export function DMMessageList({ messages, currentUserId, otherUser }: DMMessageL
         const isOwnMessage = message.sender_id === currentUserId;
         const isEditing = editingMessageId === message.id;
         const isHovered = hoveredMessageId === message.id;
+        const userReaction = getExistingReaction(message);
+
+        if (message.is_deleted) {
+          return (
+            <div
+              key={message.id}
+              className="flex justify-center text-gray-500 italic text-xs"
+            >
+              <div className="bg-gray-100 px-3 py-1 rounded-full">Message deleted</div>
+            </div>
+          );
+        }
 
         return (
           <div
@@ -228,7 +248,7 @@ export function DMMessageList({ messages, currentUserId, otherUser }: DMMessageL
                           return (
                             <button
                               key={reaction.emoji}
-                              onClick={() => handleReactionClick(message.id, reaction.emoji)}
+                              onClick={() => handleToggleReaction(message, reaction.emoji)}
                               className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-xs transition-colors ${
                                 userReacted
                                   ? 'bg-[#1A73E8]/20 border border-[#1A73E8] text-[#1A73E8]'
@@ -262,7 +282,7 @@ export function DMMessageList({ messages, currentUserId, otherUser }: DMMessageL
                               isOwnMessage ? 'right-0' : 'left-0'
                             }`}>
                               <EmojiPicker
-                                onEmojiClick={(emojiData) => handleEmojiSelect(message.id, emojiData)}
+                                onEmojiClick={(emojiData) => handleEmojiSelect(message, emojiData)}
                                 autoFocusSearch={false}
                               />
                             </div>
