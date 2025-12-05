@@ -5,16 +5,21 @@ import { useAppDispatch, useAppSelector } from '@/lib/hooks';
 import { fetchChannels, fetchUserTopics, fetchTopicsByChannel } from '@/lib/features/channels/channelsThunk';
 import { setCurrentChannel, setCurrentTopic } from '@/lib/features/channels/channelsSlice';
 import { getGmailStatus } from '@/lib/features/gmail/gmailThunk';
-import { getSearchStatus } from '@/lib/features/search/searchThunk';
+
 import { ChannelsList } from './ChannelsList';
 import { TopicsList } from './TopicsList';
 import { TopicView } from './TopicView';
 import { CreateChannelModal } from './CreateChannelModal';
 import { CreateTopicModal } from './CreateTopicModal';
 import { SettingsModal } from './SettingsModal';
+import DirectMessagesView from './DirectMessagesView';
+
+import { AgentsView } from './AgentsView';
+import { ChatRoomView } from '@/components/realtimeChat/ChatRoomView';
 import { NotificationPrompt } from '@/components/ui/NotificationPrompt';
-import { Channel, Topic, TopicMessage } from '@/lib/types';
-import { Loader2 } from 'lucide-react';
+import { Channel, Topic } from '@/lib/types';
+import { MessageSquarePlus } from 'lucide-react';
+
 
 export function ChannelsLayout() {
   const dispatch = useAppDispatch();
@@ -26,6 +31,10 @@ export function ChannelsLayout() {
   const [showCreateTopic, setShowCreateTopic] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showNotificationPrompt, setShowNotificationPrompt] = useState(true);
+  const [showDirectMessages, setShowDirectMessages] = useState(false);
+  const [showAgents, setShowAgents] = useState(false);
+  const { selectedUser } = useAppSelector((state) => state.directMessages);
+  const { currentRoom } = useAppSelector((state) => state.realtimeChat);
 
   useEffect(() => {
     // Fetch channels and user's topics on mount
@@ -46,6 +55,22 @@ export function ChannelsLayout() {
 
   const handleChannelSelect = (channel: Channel) => {
     dispatch(setCurrentChannel(channel));
+    dispatch(setCurrentTopic(null));
+    setShowDirectMessages(false);
+    setShowAgents(false);
+  };
+
+  const handleDirectMessagesClick = () => {
+    setShowDirectMessages(true);
+    setShowAgents(false);
+    dispatch(setCurrentChannel(null));
+    dispatch(setCurrentTopic(null));
+  };
+
+  const handleAgentsClick = () => {
+    setShowAgents(true);
+    setShowDirectMessages(false);
+    dispatch(setCurrentChannel(null));
     dispatch(setCurrentTopic(null));
   };
 
@@ -91,10 +116,18 @@ export function ChannelsLayout() {
           onCreateChannel={() => setShowCreateChannel(true)}
           isAdmin={user?.is_superuser}
           onOpenSettings={() => setShowSettings(true)}
+          onDirectMessagesClick={handleDirectMessagesClick}
+          onAgentsClick={handleAgentsClick}
+          agentsActive={showAgents}
+          directMessagesActive={showDirectMessages}
         />
 
-        {/* Column 2: Topics - Only show when channel is selected */}
-        {currentChannel && (
+        {/* Column 2: Topics or Direct Messages List */}
+        {showAgents ? (
+          null
+        ) : showDirectMessages ? (
+          null
+        ) : currentChannel ? (
           <TopicsList
             channel={currentChannel}
             topics={getTopicsForChannel()}
@@ -103,11 +136,15 @@ export function ChannelsLayout() {
             onCreateTopic={() => setShowCreateTopic(true)}
             isAdmin={user?.is_superuser}
           />
-        )}
+        ) : null}
 
         {/* Column 3: Messages/Chat or Welcome Screen */}
         {currentTopic ? (
           <TopicView topic={currentTopic} />
+        ) : showDirectMessages ? (
+          <DirectMessagesView />
+        ) : showAgents ? (
+          <AgentsView />
         ) : (
           <div className="flex-1 flex flex-col items-center justify-center text-gray-600 bg-white">
             <video

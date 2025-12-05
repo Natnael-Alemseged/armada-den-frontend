@@ -22,6 +22,14 @@ import {
   SocketErrorEvent,
   SocketUserStatusChangeEvent,
   SocketGlobalMessageAlertEvent,
+  SocketDMJoinData,
+  SocketDMTypingData,
+  SocketDMNewMessageEvent,
+  SocketDMMessageEditedEvent,
+  SocketDMMessageDeletedEvent,
+  SocketDMMessageReadEvent,
+  SocketDMReactionEvent,
+  SocketDMTypingEvent,
 } from '@/lib/types';
 
 class SocketService {
@@ -475,6 +483,101 @@ class SocketService {
       topic_id: topicId,
       message_ids: messageIds,
     });
+  }
+
+  /**
+   * Direct Messages Methods
+   */
+
+  // Join a DM conversation with a user
+  joinDM(userId: string): void {
+    if (!this.socket) {
+      throw new Error('Socket not connected');
+    }
+    this.socket.emit('dm:join', { user_id: userId } as SocketDMJoinData);
+  }
+
+  // Leave a DM conversation
+  leaveDM(userId: string): void {
+    if (!this.socket) {
+      throw new Error('Socket not connected');
+    }
+    this.socket.emit('dm:leave', { user_id: userId } as SocketDMJoinData);
+  }
+
+  // Send typing indicator for DM
+  sendDMTyping(userId: string, isTyping: boolean): void {
+    if (!this.socket) {
+      throw new Error('Socket not connected');
+    }
+    this.socket.emit('dm:typing', {
+      user_id: userId,
+      is_typing: isTyping,
+    } as SocketDMTypingData);
+  }
+
+  /**
+   * Direct Messages Event Listeners
+   */
+
+  onDMNewMessage(callback: (data: SocketDMNewMessageEvent) => void): void {
+    this.socket?.on('dm:new_message', callback);
+  }
+
+  onDMMessageEdited(callback: (data: SocketDMMessageEditedEvent) => void): void {
+    this.socket?.on('dm:message_edited', callback);
+  }
+
+  onDMMessageDeleted(callback: (data: SocketDMMessageDeletedEvent) => void): void {
+    this.socket?.on('dm:message_deleted', callback);
+  }
+
+  onDMMessageRead(callback: (data: SocketDMMessageReadEvent) => void): void {
+    this.socket?.on('dm:message_read', callback);
+  }
+
+  onDMReactionAdded(callback: (data: SocketDMReactionEvent) => void): void {
+    this.socket?.on('dm:reaction_added', callback);
+  }
+
+  onDMReactionRemoved(callback: (data: SocketDMReactionEvent) => void): void {
+    this.socket?.on('dm:reaction_removed', callback);
+  }
+
+  onDMTyping(callback: (data: SocketDMTypingEvent) => void): void {
+    this.socket?.on('dm:typing', callback);
+  }
+
+  /**
+   * Remove Direct Messages event listeners
+   */
+
+  offDMNewMessage(callback?: (data: SocketDMNewMessageEvent) => void): void {
+    this.socket?.off('dm:new_message', callback);
+  }
+
+  offDMMessageEdited(callback?: (data: SocketDMMessageEditedEvent) => void): void {
+    this.socket?.off('dm:message_edited', callback);
+  }
+
+  offDMMessageDeleted(callback?: (data: SocketDMMessageDeletedEvent) => void): void {
+    this.socket?.off('dm:message_deleted', callback);
+  }
+
+  offDMMessageRead(callback?: (data: SocketDMMessageReadEvent) => void): void {
+    this.socket?.off('dm:message_read', callback);
+  }
+
+  offDMReactionAdded(callback?: (data: SocketDMReactionEvent) => void): void {
+    this.socket?.off('dm:reaction_added', callback);
+  }
+
+  offDMReactionRemoved(callback?: (data: SocketDMReactionEvent) => void): void {
+    this.socket?.off('dm:reaction_removed', callback);
+  }
+
+  offDMTyping(callback?: (data: SocketDMTypingEvent) => void): void {
+    this.socket?.off('dm:typing', callback);
   }
 }
 

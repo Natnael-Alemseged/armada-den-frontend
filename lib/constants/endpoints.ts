@@ -105,4 +105,25 @@ export const ENDPOINTS = {
     
     // Unread Counts
     TOPICS_UNREAD_COUNTS: '/channels/topics/unread-counts',
+    
+    // Agents
+    AGENTS_LIST: '/agents',
+    AGENTS_CREATE: '/agents',
+    AGENTS_GET: (agentId: string) => `/agents/${agentId}`,
+    AGENTS_UPDATE: (agentId: string) => `/agents/${agentId}`,
+    AGENTS_DELETE: (agentId: string) => `/agents/${agentId}`,
+    
+    // Direct Messages
+    DM_SEND: '/direct-messages',
+    DM_CONVERSATIONS: '/direct-messages/conversations',
+    DM_MESSAGES_WITH_USER: (userId: string) => `/direct-messages/with/${userId}`,
+    DM_ELIGIBLE_USERS: '/direct-messages/users',
+    DM_EDIT: (messageId: string) => `/direct-messages/${messageId}`,
+    DM_DELETE: (messageId: string) => `/direct-messages/${messageId}`,
+    DM_MARK_READ: (messageId: string) => `/direct-messages/${messageId}/read`,
+    DM_ADD_REACTION: (messageId: string) => `/direct-messages/${messageId}/reactions`,
+    DM_REMOVE_REACTION: (messageId: string, emoji: string) => `/direct-messages/${messageId}/reactions/${encodeURIComponent(emoji)}`,
+    
+    // Legacy Direct Messages (reusing users endpoint with chat info)
+    DIRECT_MESSAGES_LIST: '/users/users',
 };

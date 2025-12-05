@@ -6,6 +6,8 @@ import { setAuthToken, apiClient, setStoreDispatch } from '@/lib/util/apiClient'
 import { logout } from './slices/authSlice';
 
 import authReducer from './slices/authSlice';
+import agentsReducer from './slices/agentsSlice';
+import directMessagesReducer from './slices/directMessagesSlice';
 import gmailReducer from './features/gmail/gmailSlice';
 import searchReducer from './features/search/searchSlice';
 import chatReducer from './features/chat/chatSlice';
@@ -16,6 +18,8 @@ import notificationReducer from './features/notifications/notificationSlice';
 // 1️⃣ Combine reducers
 const appReducer = combineReducers({
     auth: authReducer,
+    agents: agentsReducer,
+    directMessages: directMessagesReducer,
     gmail: gmailReducer,
     search: searchReducer,
     chat: chatReducer,

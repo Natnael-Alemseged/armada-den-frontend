@@ -851,3 +851,183 @@ export interface UserWithStatus extends User {
     is_online?: boolean;
     last_seen_at?: string;
 }
+
+// Agent Types
+export interface Agent {
+    id: string;
+    name: string;
+    description: string;
+    role: string;
+    capabilities: string[];
+    avatar_url?: string | null;
+    is_active: boolean;
+    created_by: string;
+    created_at: string;
+    updated_at: string;
+}
+
+export interface CreateAgentRequest {
+    name: string;
+    description: string;
+    role: string;
+    capabilities?: string[];
+    avatar_url?: string;
+}
+
+export interface UpdateAgentRequest {
+    name?: string;
+    description?: string;
+    role?: string;
+    capabilities?: string[];
+    avatar_url?: string;
+    is_active?: boolean;
+}
+
+export interface AgentsResponse {
+    agents: Agent[];
+    total: number;
+    page: number;
+    page_size: number;
+    has_more: boolean;
+}
+
+// Direct Message Types
+export interface DMAttachment {
+    url: string;
+    filename: string;
+    size: number;
+    mime_type: string;
+}
+
+export interface DMReaction {
+    emoji: string;
+    count: number;
+    users: string[]; // Array of user IDs
+    user_reacted: boolean;
+}
+
+export interface DirectMessage {
+    id: string;
+    sender_id: string;
+    receiver_id: string;
+    content: string;
+    reply_to_id: string | null;
+    is_read: boolean;
+    read_at: string | null;
+    is_edited: boolean;
+    edited_at: string | null;
+    is_deleted: boolean;
+    deleted_at: string | null;
+    created_at: string;
+    attachments: DMAttachment[];
+    reactions: DMReaction[];
+    sender_email: string;
+    sender_full_name: string | null;
+    receiver_email: string;
+    receiver_full_name: string | null;
+}
+
+export interface DMConversationUser {
+    id: string;
+    email: string;
+    full_name: string | null;
+    is_online: boolean;
+    last_seen_at: string | null;
+}
+
+export interface DMConversation {
+    user: DMConversationUser;
+    last_message: {
+        id: string;
+        content: string;
+        created_at: string;
+        is_read: boolean;
+    } | null;
+    unread_count: number;
+    last_message_at: string | null;
+}
+
+export interface DMConversationsResponse {
+    conversations: DMConversation[];
+    total: number;
+}
+
+export interface DMMessagesResponse {
+    messages: DirectMessage[];
+    total: number;
+    page: number;
+    page_size: number;
+    has_more: boolean;
+}
+
+export interface SendDMRequest {
+    receiver_id: string;
+    content: string;
+    reply_to_id?: string;
+    attachments?: DMAttachment[];
+}
+
+export interface EditDMRequest {
+    content: string;
+}
+
+export interface AddDMReactionRequest {
+    emoji: string;
+}
+
+export interface DMEligibleUser {
+    id: string;
+    email: string;
+    full_name: string | null;
+    is_online: boolean;
+    last_seen_at: string | null;
+}
+
+// Direct Message Socket Events
+export interface SocketDMJoinData {
+    user_id: string;
+}
+
+export interface SocketDMTypingData {
+    user_id: string;
+    is_typing: boolean;
+}
+
+export interface SocketDMNewMessageEvent {
+    message: DirectMessage;
+}
+
+export interface SocketDMMessageEditedEvent {
+    message_id: string;
+    content: string;
+    edited_at: string;
+}
+
+export interface SocketDMMessageDeletedEvent {
+    message_id: string;
+    deleted_at: string;
+}
+
+export interface SocketDMMessageReadEvent {
+    message_id: string;
+    read_at: string;
+}
+
+export interface SocketDMReactionEvent {
+    message_id: string;
+    reactions: DMReaction[];
+}
+
+export interface SocketDMTypingEvent {
+    user_id: string;
+    is_typing: boolean;
+}
+
+// Direct Message Types (using existing UserWithChatInfo)
+export interface DirectMessagesResponse {
+    users: UserWithChatInfo[];
+    total: number;
+    page: number;
+    page_size: number;
+    has_more: boolean;
+}
