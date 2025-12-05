@@ -1,11 +1,13 @@
 'use client';
 
 import React, {useState, useRef, useEffect} from 'react';
-import {Channel} from '@/lib/types';
-import {Plus, LogOut, ChevronDown, Settings, Bell, BellOff} from 'lucide-react';
+import {Channel, UserWithChatInfo} from '@/lib/types';
+import {Plus, LogOut, ChevronDown, Settings, Bell, BellOff, Bot, MessageCircle} from 'lucide-react';
 import {useAppDispatch, useAppSelector} from '@/lib/hooks';
 import {logoutUser} from '@/lib/slices/authThunk';
 import {notificationService} from '@/lib/services/notificationService';
+import {fetchAgents} from '@/lib/slices/agentsSlice';
+import {fetchDirectMessages} from '@/lib/slices/directMessagesSlice';
 
 interface ChannelsListProps {
     channels: Channel[];
@@ -14,6 +16,10 @@ interface ChannelsListProps {
     onCreateChannel?: () => void;
     isAdmin?: boolean;
     onOpenSettings?: () => void;
+    onDirectMessagesClick?: () => void;
+    onAgentsClick?: () => void;
+    agentsActive?: boolean;
+    directMessagesActive?: boolean;
 }
 
 export function ChannelsList({
@@ -23,9 +29,15 @@ export function ChannelsList({
                                  onCreateChannel,
                                  isAdmin,
                                  onOpenSettings,
+                                 onDirectMessagesClick,
+                                 onAgentsClick,
+                                 agentsActive = false,
+                                 directMessagesActive = false,
                              }: ChannelsListProps) {
     const dispatch = useAppDispatch();
     const {user, token} = useAppSelector((state) => state.auth);
+    const {agents} = useAppSelector((state) => state.agents);
+    const {users: directMessageUsers} = useAppSelector((state) => state.directMessages);
     const [isExpanded, setIsExpanded] = useState(false);
     const [showDropdown, setShowDropdown] = useState(false);
     const [isNotificationEnabled, setIsNotificationEnabled] = useState(false);
@@ -40,6 +52,12 @@ export function ChannelsList({
         };
         checkNotificationStatus();
     }, []);
+
+    // Fetch agents and direct messages on mount
+    useEffect(() => {
+        dispatch(fetchAgents());
+        dispatch(fetchDirectMessages());
+    }, [dispatch]);
 
     const handleLogout = () => {
         dispatch(logoutUser());
@@ -103,18 +121,24 @@ export function ChannelsList({
         };
     }, [showDropdown]);
 
+    const getNavButtonClasses = (active: boolean) => `w-full flex items-center gap-3 px-2 py-2 rounded-md text-sm font-medium transition-colors ${
+        active
+            ? 'bg-[#1A73E8] text-white'
+            : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
+    }`;
+
     return (
         <div
-            className={`bg-[#F2F2F7] flex flex-col transition-all duration-300 ease-in-out ${isExpanded ? 'w-64' : 'w-16'
+            className={`bg-[#F2F2F7] flex flex-col transition-all duration-300 ease-in-out ${isExpanded ? 'w-64' : 'w-14.5'
             }`}
             onMouseEnter={() => setIsExpanded(true)}
             onMouseLeave={() => setIsExpanded(false)}
         >
-            {/* User Info */}
+            {/* User Info / Workspace Header */}
             <div className="px-3 pt-4 pb-3 flex items-center gap-3 relative">
                 <div
-                    className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center flex-shrink-0">
-                    <span className="text-sm font-semibold text-white">{getUserInitials()}</span>
+                    className="w-10 h-10 rounded-lg bg-black flex items-center justify-center flex-shrink-0">
+                    <span className="text-sm font-bold text-white">A</span>
                 </div>
                 <div
                     className={`flex-1 min-w-0 overflow-hidden transition-all duration-300 ${isExpanded ? 'opacity-100 w-auto' : 'opacity-0 w-0'
@@ -123,9 +147,9 @@ export function ChannelsList({
                     <div className="flex items-center justify-between gap-2">
                         <div className="flex-1 min-w-0">
                             <div className="text-sm font-semibold text-gray-900 truncate">
-                                {user?.full_name || 'User'}
+                                Armada Dan
                             </div>
-                            <div className="text-xs text-gray-500 truncate">{user?.email}</div>
+                            <div className="text-xs text-gray-500 truncate">Workspace</div>
                         </div>
                         <button
                             onClick={(e) => {
@@ -234,6 +258,68 @@ export function ChannelsList({
 
             </div>
 
+            {/* Agents Section */}
+            <div className="px-2 pt-2">
+                <button
+                    onClick={onAgentsClick}
+                    className={`w-full flex items-center gap-3 px-2 py-2 rounded-md text-sm font-medium transition-colors
+      ${agentsActive
+                        ? "bg-[#1A73E8] text-white"
+                        : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
+                    }`}
+                    title="Agents"
+                >
+                    <Bot
+                        className={`w-6 h-6 flex-shrink-0 ${agentsActive ? "text-white" : "text-gray-800"}`}
+                    />
+                    <span
+                        className={`truncate transition-all duration-300 
+        ${isExpanded ? "opacity-100 w-auto" : "opacity-0 w-0"}
+      `}
+                    >
+      Agents
+    </span>
+                </button>
+            </div>
+
+            {/* Direct Messages Section */}
+            <div className="px-2 pb-2">
+                <button
+                    onClick={onDirectMessagesClick}
+                    className={`w-full flex items-center gap-3 px-2 py-2 rounded-md text-sm font-medium transition-colors
+      ${directMessagesActive
+                        ? "bg-[#1A73E8] text-white"
+                        : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
+                    }`}
+                    title="Direct Messages"
+                >
+                    <MessageCircle
+                        className={`w-6 h-6 flex-shrink-0 ${directMessagesActive ? "text-white" : "text-gray-700"}`}
+                    />
+
+                    <span
+                        className={`truncate transition-all duration-300 
+        ${isExpanded ? "opacity-100 w-auto" : "opacity-0 w-0"}
+      `}
+                    >
+      Direct Messages
+    </span>
+
+                    {/* Unread badge */}
+                    {directMessageUsers.reduce((sum, u) => sum + u.unread_count, 0) > 0 && (
+                        <span
+                            className={`
+          ml-auto text-white text-xs font-semibold px-2 py-0.5 rounded-full 
+          ${directMessagesActive ? "bg-white/20" : "bg-blue-600"}
+          ${isExpanded ? "opacity-100" : "opacity-0"}
+        `}
+                        >
+        {directMessageUsers.reduce((sum, u) => sum + u.unread_count, 0)}
+      </span>
+                    )}
+                </button>
+            </div>
+
             {/* Channels Header */}
             <div
                 className={`px-3 py-2 overflow-hidden transition-all duration-300 ${isExpanded ? 'opacity-100' : 'opacity-0 h-0 py-0'
@@ -245,7 +331,7 @@ export function ChannelsList({
                     fontWeight: 450,
                 }}
             >
-                Channels
+                CHANNELS
             </div>
 
             {/* Channels */}
@@ -304,21 +390,7 @@ export function ChannelsList({
                 )}
             </div>
 
-            {/* Bottom Section - Armada Den */}
-            <div className="mt-auto px-3 py-3">
-                <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-md bg-black flex items-center justify-center flex-shrink-0">
-                        <span className="text-lg font-bold text-white">A</span>
-                    </div>
-                    <div
-                        className={`flex-1 min-w-0 overflow-hidden transition-all duration-300 ${isExpanded ? 'opacity-100 w-auto' : 'opacity-0 w-0'
-                        }`}
-                    >
-                        <div className="text-sm font-semibold text-gray-900">Armada Den</div>
-                        <div className="text-xs text-gray-500">workspace</div>
-                    </div>
-                </div>
-            </div>
+
         </div>
     );
 } 
