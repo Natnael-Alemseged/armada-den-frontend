@@ -168,9 +168,10 @@ export function ChannelsList({
                     <div
                         ref={dropdownRef}
                         className="
-      absolute top-full left-3 right-3 mt-2
+      absolute top-full left-0 right-0 mt-1
       bg-white rounded-xl shadow-xl border border-gray-200
-      py-3 z-50
+      py-2 z-50 mx-3
+      animate-in slide-in-from-top-2 duration-200
     "
                     >
                         {/* Workspace Section */}
@@ -306,7 +307,7 @@ export function ChannelsList({
     </span>
 
                     {/* Unread badge */}
-                    {directMessageUsers.reduce((sum, u) => sum + u.unread_count, 0) > 0 && (
+                    {directMessageUsers.reduce((sum: number, u: UserWithChatInfo) => sum + u.unread_count, 0) > 0 && (
                         <span
                             className={`
           ml-auto text-white text-xs font-semibold px-2 py-0.5 rounded-full 
@@ -314,7 +315,7 @@ export function ChannelsList({
           ${isExpanded ? "opacity-100" : "opacity-0"}
         `}
                         >
-        {directMessageUsers.reduce((sum, u) => sum + u.unread_count, 0)}
+        {directMessageUsers.reduce((sum: number, u: UserWithChatInfo) => sum + u.unread_count, 0)}
       </span>
                     )}
                 </button>

@@ -10,7 +10,7 @@ interface MessageContentProps {
 
 export function MessageContent({ content, className = '' }: MessageContentProps) {
     return (
-        <div className={`markdown-content ${className}`}>
+        <div className={`markdown-content break-words overflow-hidden ${className}`}>
             <ReactMarkdown
                 remarkPlugins={[remarkGfm]}
                 components={{
@@ -54,18 +54,18 @@ export function MessageContent({ content, className = '' }: MessageContentProps)
 
                         if (isInline) {
                             return (
-                                <code className="bg-black/10 dark:bg-white/10 px-1.5 py-0.5 rounded text-[0.9em] font-mono text-pink-600 dark:text-pink-400" {...props}>
+                                <code className="bg-black/10 dark:bg-white/10 px-1.5 py-0.5 rounded text-[0.9em] font-mono text-pink-600 dark:text-pink-400 break-all" {...props}>
                                     {children}
                                 </code>
                             );
                         }
 
                         return (
-                            <div className="relative my-2 rounded-md overflow-hidden bg-[#1e1e1e] text-gray-200">
+                            <div className="relative my-2 rounded-md overflow-hidden bg-[#1e1e1e] text-gray-200 max-w-full">
                                 <div className="flex items-center justify-between px-3 py-1.5 bg-[#2d2d2d] text-xs text-gray-400 border-b border-gray-700">
                                     <span>{match?.[1] || 'text'}</span>
                                 </div>
-                                <pre className="p-3 overflow-x-auto text-sm font-mono custom-scrollbar">
+                                <pre className="p-3 overflow-x-auto text-sm font-mono custom-scrollbar max-w-full">
                                     <code className={className} {...props}>
                                         {children}
                                     </code>
@@ -76,7 +76,7 @@ export function MessageContent({ content, className = '' }: MessageContentProps)
 
                     // Tables
                     table: ({ children }) => (
-                        <div className="overflow-x-auto my-2 border border-gray-200 rounded-lg max-w-full">
+                        <div className="overflow-x-auto my-2 border border-gray-200 rounded-lg w-full">
                             <table className="min-w-full divide-y divide-gray-200 text-sm">
                                 {children}
                             </table>

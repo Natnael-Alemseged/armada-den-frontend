@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { DMConversationsList } from '@/components/directMessages/DMConversationsList';
-import { DMMessageThread } from '@/components/directMessages/DMMessageThread';
+import  DMMessageThread  from '@/components/directMessages/DMMessageThread';
 
 interface DirectMessagesViewProps {
   onClose?: () => void;
