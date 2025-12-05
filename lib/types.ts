@@ -925,6 +925,11 @@ export interface DirectMessage {
     sender_full_name: string | null;
     receiver_email: string;
     receiver_full_name: string | null;
+    // Optimistic update flags
+    _optimistic?: boolean;
+    _pending?: boolean;
+    _failed?: boolean;
+    _tempId?: string;
 }
 
 export interface DMConversationUser {
