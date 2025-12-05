@@ -6,6 +6,13 @@ import {
   fetchDMMessages,
   sendDM,
 } from '@/lib/features/directMessages/directMessagesThunk';
+import { 
+  addIncomingMessage,
+  addOptimisticMessage,
+  updateOptimisticMessage,
+  markMessageAsFailed,
+  removeOptimisticMessage,
+} from '@/lib/slices/directMessagesSlice';
 import { DirectMessage, Attachment } from '@/lib/types';
 import { Send, Loader2, Paperclip, X, MessageSquare, Smile } from 'lucide-react';
 import EmojiPicker, { EmojiClickData } from 'emoji-picker-react';
@@ -70,7 +77,7 @@ export default function DMMessageThread() {
     const handleNewMessage = (data: any) => {
       if (data.message.sender_id === currentConversation.user.id || 
           data.message.receiver_id === currentConversation.user.id) {
-        // Message will be added via Redux
+        dispatch(addIncomingMessage(data.message));
       }
     };
 
@@ -222,27 +229,67 @@ export default function DMMessageThread() {
   const handleSendMessage = async () => {
     if ((!messageContent.trim() && attachments.length === 0) || !currentConversation || sending) return;
 
-    const messageData = {
+    const content = messageContent.trim();
+    const tempId = `temp-${Date.now()}-${Math.random()}`;
+
+    // Create optimistic message
+    const optimisticMessage: DirectMessage = {
+      id: tempId,
+      sender_id: user!.id,
       receiver_id: currentConversation.user.id,
-      content: messageContent.trim(),
-      reply_to_id: replyToMessage?.id,
-      attachments: attachments.length > 0 ? attachments : undefined,
+      content: content,
+      reply_to_id: replyToMessage?.id || null,
+      is_read: false,
+      read_at: null,
+      is_edited: false,
+      edited_at: null,
+      is_deleted: false,
+      deleted_at: null,
+      created_at: new Date().toISOString(),
+      attachments: attachments.map(att => ({
+        ...att,
+        id: `temp-${Date.now()}`,
+        created_at: new Date().toISOString(),
+      })),
+      reactions: [],
+      sender_email: user!.email,
+      sender_full_name: user!.full_name || null,
+      receiver_email: currentConversation.user.email,
+      receiver_full_name: currentConversation.user.full_name || null,
+      _optimistic: true,
+      _pending: true,
+      _failed: false,
+      _tempId: tempId,
     };
 
+    // Add optimistic message immediately and clear input
+    dispatch(addOptimisticMessage(optimisticMessage));
+    setMessageContent('');
+    setReplyToMessage(null);
+    setAttachments([]);
+    textareaRef.current?.focus();
+
+    // Stop typing indicator
+    if (socketService.isConnected()) {
+      socketService.sendDMTyping(currentConversation.user.id, false);
+    }
+
+    // Send to server in background
     setSending(true);
     try {
-      await dispatch(sendDM(messageData)).unwrap();
-      setMessageContent('');
-      setReplyToMessage(null);
-      setAttachments([]);
-      textareaRef.current?.focus();
+      const result = await dispatch(sendDM({
+        receiver_id: currentConversation.user.id,
+        content: content,
+        reply_to_id: replyToMessage?.id,
+        attachments: attachments.length > 0 ? attachments : undefined,
+      })).unwrap();
 
-      // Stop typing indicator
-      if (socketService.isConnected()) {
-        socketService.sendDMTyping(currentConversation.user.id, false);
-      }
+      // Replace optimistic message with real message from server
+      dispatch(updateOptimisticMessage({ tempId, message: result }));
     } catch (error) {
       console.error('Failed to send message:', error);
+      // Mark message as failed
+      dispatch(markMessageAsFailed(tempId));
     } finally {
       setSending(false);
     }

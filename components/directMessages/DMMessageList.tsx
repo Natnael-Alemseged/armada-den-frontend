@@ -3,7 +3,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { DirectMessage, DMEligibleUser, DMReaction } from '@/lib/types';
 import { formatDistanceToNow } from 'date-fns';
-import { MoreVertical, Reply, Smile, Edit2, Trash2, X, User } from 'lucide-react';
+import { MoreVertical, Reply, Smile, Edit2, Trash2, X, User, Loader2 } from 'lucide-react';
 import { useAppDispatch } from '@/lib/hooks';
 import EmojiPicker, { EmojiClickData } from 'emoji-picker-react';
 import {
@@ -181,10 +181,22 @@ export function DMMessageList({ messages, currentUserId, otherUser }: DMMessageL
                 {message.is_edited && (
                   <span className="text-[10px] text-gray-600">(edited)</span>
                 )}
+                {message._pending && (
+                  <span className="text-[10px] text-gray-400 flex items-center gap-1">
+                    <Loader2 className="w-2.5 h-2.5 animate-spin" />
+                    Sending...
+                  </span>
+                )}
+                {message._failed && (
+                  <span className="text-[10px] text-red-500 flex items-center gap-1">
+                    <X className="w-2.5 h-2.5" />
+                    Failed
+                  </span>
+                )}
               </div>
 
               {/* Message Bubble */}
-              <div className="relative group/message">
+              <div className={`relative group/message ${message._failed ? 'opacity-50' : ''}`}>
                 {isEditing ? (
                   <div className="space-y-2 min-w-[300px]">
                     <textarea

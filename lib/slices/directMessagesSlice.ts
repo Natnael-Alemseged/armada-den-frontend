@@ -151,6 +151,22 @@ const directMessagesSlice = createSlice({
         addOptimisticMessage: (state, action: PayloadAction<DirectMessage>) => {
             state.messages.push(action.payload);
         },
+        updateOptimisticMessage: (state, action: PayloadAction<{ tempId: string; message: DirectMessage }>) => {
+            const index = state.messages.findIndex(m => m._tempId === action.payload.tempId);
+            if (index !== -1) {
+                state.messages[index] = action.payload.message;
+            }
+        },
+        markMessageAsFailed: (state, action: PayloadAction<string>) => {
+            const message = state.messages.find(m => m._tempId === action.payload);
+            if (message) {
+                message._pending = false;
+                message._failed = true;
+            }
+        },
+        removeOptimisticMessage: (state, action: PayloadAction<string>) => {
+            state.messages = state.messages.filter(m => m._tempId !== action.payload);
+        },
         updateMessageInList: (state, action: PayloadAction<DirectMessage>) => {
             const index = state.messages.findIndex(m => m.id === action.payload.id);
             if (index !== -1) {
@@ -159,6 +175,42 @@ const directMessagesSlice = createSlice({
         },
         removeMessageFromList: (state, action: PayloadAction<string>) => {
             state.messages = state.messages.filter(m => m.id !== action.payload);
+        },
+        addIncomingMessage: (state, action: PayloadAction<DirectMessage>) => {
+            // Add message to the list
+            state.messages.push(action.payload);
+            state.messagesTotalCount += 1;
+
+            // Update conversation list with the new message
+            const senderId = action.payload.sender_id;
+            const receiverId = action.payload.receiver_id;
+            const otherUserId = senderId === state.currentConversation?.user.id ? senderId : receiverId;
+
+            const conversationIndex = state.conversations.findIndex(
+                (conv) => conv.user.id === otherUserId
+            );
+
+            if (conversationIndex !== -1) {
+                // Update existing conversation
+                const conversation = state.conversations[conversationIndex];
+                state.conversations[conversationIndex] = {
+                    ...conversation,
+                    last_message: {
+                        id: action.payload.id,
+                        content: action.payload.content,
+                        created_at: action.payload.created_at,
+                        is_read: action.payload.is_read || false,
+                    },
+                    last_message_at: action.payload.created_at,
+                };
+
+                // Sort conversations by last_message_at (most recent first)
+                state.conversations.sort((a, b) => {
+                    const dateA = a.last_message_at ? new Date(a.last_message_at).getTime() : 0;
+                    const dateB = b.last_message_at ? new Date(b.last_message_at).getTime() : 0;
+                    return dateB - dateA;
+                });
+            }
         },
     },
     extraReducers: (builder) => {
@@ -188,7 +240,12 @@ const directMessagesSlice = createSlice({
             })
             .addCase(fetchDMConversations.fulfilled, (state, action) => {
                 state.conversationsLoading = false;
-                state.conversations = action.payload.conversations;
+                // Sort conversations by last_message_at (most recent first)
+                state.conversations = action.payload.conversations.sort((a, b) => {
+                    const dateA = a.last_message_at ? new Date(a.last_message_at).getTime() : 0;
+                    const dateB = b.last_message_at ? new Date(b.last_message_at).getTime() : 0;
+                    return dateB - dateA;
+                });
             })
             .addCase(fetchDMConversations.rejected, (state, action) => {
                 state.conversationsLoading = false;
@@ -221,8 +278,45 @@ const directMessagesSlice = createSlice({
             })
             .addCase(sendDM.fulfilled, (state, action) => {
                 state.sendingMessage = false;
-                state.messages.push(action.payload);
-                state.messagesTotalCount += 1;
+                // Don't add message here - it's already added optimistically
+                // The updateOptimisticMessage reducer will replace it with the real one
+
+                // Update or create conversation in the list
+                if (state.currentConversation) {
+                    const conversationIndex = state.conversations.findIndex(
+                        (conv) => conv.user.id === state.currentConversation?.user.id
+                    );
+
+                    const updatedConversation: DMConversation = {
+                        user: state.currentConversation.user,
+                        last_message: {
+                            id: action.payload.id,
+                            content: action.payload.content,
+                            created_at: action.payload.created_at,
+                            is_read: action.payload.is_read || false,
+                        },
+                        unread_count: state.currentConversation.unread_count,
+                        last_message_at: action.payload.created_at,
+                    };
+
+                    if (conversationIndex !== -1) {
+                        // Update existing conversation
+                        state.conversations[conversationIndex] = updatedConversation;
+                    } else {
+                        // Add new conversation to the list
+                        state.conversations.unshift(updatedConversation);
+                    }
+
+                    // Update current conversation
+                    state.currentConversation = updatedConversation;
+
+                    // Sort conversations by last_message_at (most recent first)
+                    state.conversations.sort((a, b) => {
+                        const dateA = a.last_message_at ? new Date(a.last_message_at).getTime() : 0;
+                        const dateB = b.last_message_at ? new Date(b.last_message_at).getTime() : 0;
+                        return dateB - dateA;
+                    });
+                }
             })
             .addCase(sendDM.rejected, (state, action) => {
                 state.sendingMessage = false;
@@ -409,8 +503,12 @@ export const {
     resetDirectMessages,
     updateUserUnreadCount,
     addOptimisticMessage,
+    updateOptimisticMessage,
+    markMessageAsFailed,
+    removeOptimisticMessage,
     updateMessageInList,
     removeMessageFromList,
+    addIncomingMessage,
 } = directMessagesSlice.actions;
 
 export default directMessagesSlice.reducer;
