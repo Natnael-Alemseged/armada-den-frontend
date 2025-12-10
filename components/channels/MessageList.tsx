@@ -224,7 +224,7 @@ export function MessageList({ messages, currentUserId, onRetryMessage, onCancelM
             </div>
 
             {/* Message Content */}
-            <div className={`flex flex-col min-w-0 w-full max-w-[85%] sm:max-w-[75%] md:max-w-[70%] lg:max-w-[65%] xl:max-w-[60%] ${isOwnMessage ? 'items-end' : 'items-start'}`}>
+            <div className={`flex flex-col min-w-0 w-full max-w-[90%] sm:max-w-[85%] md:max-w-[80%] lg:max-w-[75%] xl:max-w-[70%] ${isOwnMessage ? 'items-end' : 'items-start'}`}>
               {/* Header */}
               <div className={`flex items-baseline gap-2 mb-1 px-1 ${isOwnMessage ? 'flex-row-reverse' : 'flex-row'}`}>
                 <span className="font-medium text-gray-900 text-xs">
@@ -251,7 +251,7 @@ export function MessageList({ messages, currentUserId, onRetryMessage, onCancelM
               </div>
 
               {/* Message Bubble */}
-              <div className="relative group/message">
+              <div className="relative group/message max-w-full">
                 {isEditing ? (
                   <div className="space-y-2 min-w-[300px]">
                     <textarea
