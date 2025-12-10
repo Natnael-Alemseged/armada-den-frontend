@@ -14,6 +14,7 @@ export interface User {
     is_active?: boolean
     is_superuser?: boolean
     is_verified?: boolean
+    is_approved?: boolean
 }
 
 export interface AuthState {

@@ -16,7 +16,7 @@ export function DMConversationsList() {
     eligibleUsers,
     eligibleUsersLoading,
   } = useAppSelector((state) => state.directMessages);
-  
+
   const [searchQuery, setSearchQuery] = useState('');
   const [showNewChat, setShowNewChat] = useState(false);
 
@@ -72,19 +72,19 @@ export function DMConversationsList() {
   const filteredConversations = conversations.filter((conv: DMConversation) =>
     searchQuery && !showNewChat
       ? conv.user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        conv.user.full_name?.toLowerCase().includes(searchQuery.toLowerCase())
+      conv.user.full_name?.toLowerCase().includes(searchQuery.toLowerCase())
       : true
   );
 
   const filteredUsers = eligibleUsers.filter((user: DMEligibleUser) =>
     searchQuery
       ? user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        user.full_name?.toLowerCase().includes(searchQuery.toLowerCase())
+      user.full_name?.toLowerCase().includes(searchQuery.toLowerCase())
       : true
   );
 
   return (
-    <div className="w-80 bg-white border-r border-gray-200 flex flex-col h-full">
+    <div className="w-96 bg-white border-r border-gray-200 flex flex-col h-full">
       {/* Header */}
       <div className="p-4 border-b border-gray-200 space-y-3">
         <h2 className="text-lg font-semibold text-gray-900">
@@ -107,11 +107,10 @@ export function DMConversationsList() {
           {/* Toggle New Message Button */}
           <button
             onClick={() => setShowNewChat(!showNewChat)}
-            className={`flex items-center justify-center w-8 h-8 rounded-md transition-all ${
-              showNewChat
+            className={`flex items-center justify-center w-8 h-8 rounded-md transition-all ${showNewChat
                 ? 'bg-gray-200 text-gray-700 hover:bg-gray-300'
                 : 'bg-[#1A73E8] text-white hover:bg-[#1557B0]'
-            }`}
+              }`}
             title={showNewChat ? 'Back to conversations' : 'New message'}
           >
             {showNewChat ? (
@@ -202,9 +201,8 @@ export function DMConversationsList() {
                   <button
                     key={conversation.user.id}
                     onClick={() => handleSelectConversation(conversation)}
-                    className={`w-full p-3 text-left hover:bg-gray-50 transition-colors ${
-                      isSelected ? 'bg-blue-50' : ''
-                    }`}
+                    className={`w-full p-3 text-left hover:bg-gray-50 transition-colors ${isSelected ? 'bg-blue-50' : ''
+                      }`}
                   >
                     <div className="flex items-center gap-3">
                       <div className="relative">

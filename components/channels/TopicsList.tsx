@@ -27,7 +27,7 @@ export function TopicsList({
   const [searchQuery, setSearchQuery] = useState('');
   const [showManageChannel, setShowManageChannel] = useState(false);
   const [managingTopic, setManagingTopic] = useState<Topic | null>(null);
-  
+
   // Get real-time unread counts
   let getUnreadCount = (topicId: string) => 0;
   try {
@@ -75,17 +75,31 @@ export function TopicsList({
         </div>
       </div>
 
-      {/* Search Bar */}
+      {/* Search Bar and Add Topic Button */}
       <div className="px-6 py-3">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-500" />
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search topics..."
-            className="w-full pl-9 pr-3 py-2 bg-gray-100 border-none rounded-lg text-sm text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-[#1A73E8]"
-          />
+        <div className="flex items-center gap-2">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-500" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search topics..."
+              className="w-full pl-9 pr-3 py-2 bg-gray-100 border-none rounded-lg text-sm text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-[#1A73E8]"
+            />
+          </div>
+          {/* Add Topic Button */}
+          {isAdmin && onCreateTopic && (
+            <button
+              onClick={onCreateTopic}
+              className="flex items-center gap-2 px-3 py-2 text-gray-500 hover:bg-gray-100 rounded-lg transition-colors flex-shrink-0"
+              title="Add Topic"
+            >
+              <div className="bg-blue-500 rounded p-1">
+                <Plus className="w-4 h-4 text-white" />
+              </div>
+            </button>
+          )}
         </div>
       </div>
 
@@ -150,23 +164,6 @@ export function TopicsList({
           </div>
         )}
       </div>
-      {/* Create Topic Button */}
-      {isAdmin && onCreateTopic  && (
-        <div className="border-t border-gray-200 p-2">
-          <button
-            onClick={onCreateTopic}
-            className="w-full flex items-center gap-2 px-3 py-2 text-gray-500 hover:bg-gray-100 rounded-md transition-colors"
-          >
-            {/* The container for the icon is now styled with blue background and white content */}
-            <div className="bg-blue-500 rounded p-1">
-              <Plus className="w-4 h-4 text-white" />
-            </div>
-
-            {/* The text remains grey as defined in the button's main class */}
-            <span className="text-sm">Add Topic</span>
-          </button>
-        </div>
-      )}
 
       {/* Modals */}
       {showManageChannel && channel && (

@@ -127,4 +127,9 @@ export const ENDPOINTS = {
     
     // Legacy Direct Messages (reusing users endpoint with chat info)
     DIRECT_MESSAGES_LIST: '/users/users',
+
+    // Admin
+    ADMIN_PENDING_USERS: '/admin/users/pending',
+    ADMIN_APPROVE_USER: (userId: string) => `/admin/users/${userId}/approve`,
+    ADMIN_REJECT_USER: (userId: string) => `/admin/users/${userId}/reject`,
 };

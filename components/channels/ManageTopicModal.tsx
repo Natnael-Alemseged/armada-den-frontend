@@ -224,7 +224,7 @@ export function ManageTopicModal({ topic, onClose }: ManageTopicModalProps) {
   }, [dispatch, topic.id]);
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
+    <div className="fixed inset-0 bg-black/20 flex items-center justify-center z-50 p-4 backdrop-blur-md">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl h-[700px] max-h-[90vh] flex flex-col overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between px-8 py-6 border-b border-gray-100">
@@ -371,7 +371,7 @@ export function ManageTopicModal({ topic, onClose }: ManageTopicModalProps) {
                 </div>
 
                 <div className="grid grid-cols-2 gap-6">
-             
+
 
                   {/* Current Members */}
                   <div className="space-y-4">

@@ -14,6 +14,7 @@ import chatReducer from './features/chat/chatSlice';
 import realtimeChatReducer from './features/realTimeChat/realtimeChatSlice';
 import channelsReducer from './features/channels/channelsSlice';
 import notificationReducer from './features/notifications/notificationSlice';
+import adminReducer from './features/admin/adminSlice';
 
 // 1️⃣ Combine reducers
 const appReducer = combineReducers({
@@ -26,6 +27,7 @@ const appReducer = combineReducers({
     realtimeChat: realtimeChatReducer,
     channels: channelsReducer,
     notifications: notificationReducer,
+    admin: adminReducer,
 });
 
 const rootReducer = (state: any, action: any) => {

@@ -20,6 +20,7 @@ interface ChannelsListProps {
     onAgentsClick?: () => void;
     agentsActive?: boolean;
     directMessagesActive?: boolean;
+    adminViewActive?: boolean;
 }
 
 export function ChannelsList({
@@ -33,6 +34,7 @@ export function ChannelsList({
                                  onAgentsClick,
                                  agentsActive = false,
                                  directMessagesActive = false,
+        adminViewActive = false,
                              }: ChannelsListProps) {
     const dispatch = useAppDispatch();
     const {user, token} = useAppSelector((state) => state.auth);
@@ -123,6 +125,9 @@ export function ChannelsList({
             : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
     }`;
 
+    const effectiveDirectMessagesActive = directMessagesActive && !adminViewActive;
+    const effectiveAgentsActive = agentsActive && !adminViewActive;
+
     return (
         <div
             className={`bg-[#e8e8eb] flex flex-col transition-all duration-300 ease-in-out ${isExpanded ? 'w-64' : 'w-14'
@@ -133,17 +138,19 @@ export function ChannelsList({
             {/* User Info / Workspace Header */}
             <div className={`${isExpanded ? 'px-2' : 'px-1.5'} pt-3 pb-2`} ref={dropdownRef}>
                 <div
-                    className={`rounded-2xl border transition-all ${showDropdown ? 'bg-white border-gray-200 shadow-xl' : 'border-transparent'}`}
+                    className={`rounded-2xl border transition-all ${showDropdown || adminViewActive ? 'bg-white border-gray-200 shadow-xl ring-1 ring-[#1A73E8]/30' : 'border-transparent'}`}
                 >
                     <button
                         type="button"
                         onClick={() => setShowDropdown((prev) => !prev)}
-                        className={`w-full flex items-center rounded-2xl transition-all ${
-                            isExpanded ? 'gap-3 px-2.5 py-2.5' : 'gap-0 justify-center px-1.5 py-1.5'
-                        }`}
+                        className={`w-full flex items-center rounded-2xl transition-all ${isExpanded ? 'gap-3 px-2.5 py-2.5' : 'gap-0 justify-center px-1.5 py-1.5'
+                        } ${adminViewActive ? 'text-[#1A73E8]' : ''}`}
                     >
-                        <div className="w-8 h-8 rounded-lg bg-black flex items-center justify-center flex-shrink-0">
+                        <div className="w-8 h-8 rounded-lg bg-black flex items-center justify-center flex-shrink-0 relative">
                             <span className="text-[15px] font-bold text-white">A</span>
+                            {adminViewActive && !isExpanded && (
+                                <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-[#1A73E8] border border-white shadow-sm" />
+                            )}
                         </div>
                         <div
                             className={`flex-1 min-w-0 overflow-hidden transition-all duration-300 text-left ${isExpanded ? 'opacity-100 w-auto' : 'opacity-0 w-0'
@@ -267,14 +274,14 @@ export function ChannelsList({
                 <button
                     onClick={onDirectMessagesClick}
                     className={`w-full flex items-center gap-3 px-2 py-2 rounded-md text-sm font-medium transition-colors
-      ${directMessagesActive
+      ${effectiveDirectMessagesActive
                         ? "bg-white text-[#1A73E8]"
                         : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
                     }`}
                     title="Direct Messages"
                 >
                     <MessageCircle
-                        className={`w-6 h-6 flex-shrink-0 ${directMessagesActive ? "text-[#1A73E8]" : "text-gray-700"}`}
+                        className={`w-6 h-6 flex-shrink-0 ${effectiveDirectMessagesActive ? "text-[#1A73E8]" : "text-gray-700"}`}
                     />
 
                     <span
@@ -290,7 +297,7 @@ export function ChannelsList({
                         <span
                             className={`
           ml-auto text-xs font-semibold px-2 py-0.5 rounded-full 
-          ${directMessagesActive ? "bg-[#E3EEFF] text-[#1A73E8]" : "bg-blue-600 text-white"}
+          ${effectiveDirectMessagesActive ? "bg-[#E3EEFF] text-[#1A73E8]" : "bg-blue-600 text-white"}
           ${isExpanded ? "opacity-100" : "opacity-0"}
         `}
                         >
@@ -317,7 +324,7 @@ export function ChannelsList({
             {/* Channels */}
             <div className="flex-1 flex flex-col gap-1 px-2 overflow-y-auto">
                 {channels.map((channel) => {
-                    const isSelected = selectedChannelId === channel.id;
+                    const isSelected = selectedChannelId === channel.id && !adminViewActive;
                     const iconBaseClasses =
                         'w-6 h-6 rounded flex items-center justify-center flex-shrink-0';
                     const iconColorClasses = isSelected
