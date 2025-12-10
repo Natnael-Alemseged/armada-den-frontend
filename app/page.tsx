@@ -3,6 +3,7 @@
 import { useAppSelector } from '@/lib/hooks';
 import { LoginForm } from '@/components/auth/LoginForm';
 import { MainLayout } from '@/components/layout/MainLayout';
+import { WaitingApprovalScreen } from '@/components/auth/WaitingApprovalScreen';
 import { Loader2 } from 'lucide-react';
 import React from "react";
 
@@ -25,6 +26,11 @@ export default function Home() {
 
   if (!isAuthenticated) {
     return <LoginForm />;
+  }
+
+  // Check if user is verified but not approved
+  if (user && user.is_verified && !user.is_approved) {
+    return <WaitingApprovalScreen />;
   }
 
   return <MainLayout />;

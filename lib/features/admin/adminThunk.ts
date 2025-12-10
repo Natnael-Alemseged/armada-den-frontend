@@ -23,8 +23,14 @@ export const fetchPendingUsers = createAsyncThunk<
 >("admin/fetchPendingUsers", async (_, { rejectWithValue }) => {
     try {
         const res = await ApiService.get(ENDPOINTS.ADMIN_PENDING_USERS);
-        const data = res.data as { users: User[] };
-        return data.users || []; 
+        const data = res.data as User[] | { users: User[] };
+        if (Array.isArray(data)) {
+            return data;
+        }
+        if (Array.isArray((data as { users?: User[] }).users)) {
+            return (data as { users: User[] }).users;
+        }
+        return [];
     } catch (err: unknown) {
         return rejectWithValue(getErrorMessage(err, "Failed to fetch pending users"));
     }
@@ -37,7 +43,7 @@ export const approveUser = createAsyncThunk<
     { rejectValue: string }
 >("admin/approveUser", async (userId, { rejectWithValue }) => {
     try {
-        await ApiService.post(ENDPOINTS.ADMIN_APPROVE_USER(userId));
+        await ApiService.patch(ENDPOINTS.ADMIN_APPROVE_USER(userId));
         return userId;
     } catch (err: unknown) {
         return rejectWithValue(getErrorMessage(err, "Failed to approve user"));

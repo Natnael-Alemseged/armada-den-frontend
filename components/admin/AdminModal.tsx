@@ -107,14 +107,14 @@ export function AdminApprovalView({ onBack }: AdminApprovalViewProps) {
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-2">
-                                    <button
-                                        onClick={() => handleReject(user.id)}
-                                        className="px-4 py-2 rounded-xl border border-red-100 text-red-600 font-medium text-sm hover:bg-red-50 transition-colors flex items-center gap-2"
-                                        title="Reject"
-                                    >
-                                        <XCircle className="w-4 h-4" />
-                                        Reject
-                                    </button>
+                                    {/*<button*/}
+                                    {/*    onClick={() => handleReject(user.id)}*/}
+                                    {/*    className="px-4 py-2 rounded-xl border border-red-100 text-red-600 font-medium text-sm hover:bg-red-50 transition-colors flex items-center gap-2"*/}
+                                    {/*    title="Reject"*/}
+                                    {/*>*/}
+                                    {/*    <XCircle className="w-4 h-4" />*/}
+                                    {/*    Reject*/}
+                                    {/*</button>*/}
                                     <button
                                         onClick={() => handleApprove(user.id)}
                                         className="px-4 py-2 rounded-xl bg-blue-600 text-white font-semibold text-sm hover:bg-blue-700 transition-colors flex items-center gap-2 shadow-sm"
