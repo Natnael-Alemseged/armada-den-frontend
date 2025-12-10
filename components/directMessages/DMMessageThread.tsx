@@ -16,9 +16,10 @@ import {
 import { DirectMessage, Attachment } from '@/lib/types';
 import { Send, Loader2, Paperclip, X, MessageSquare, Smile } from 'lucide-react';
 import EmojiPicker, { EmojiClickData } from 'emoji-picker-react';
-import { formatBytes, getFileIcon } from '@/lib/util/fileUpload';
+import { uploadFilesToTopic, formatBytes, getFileIcon } from '@/lib/util/fileUpload';
 import { socketService } from '@/lib/services/socketService';
 import { DMMessageList } from './DMMessageList';
+import { OnlineIndicator } from '@/components/ui/OnlineIndicator';
 
 export default function DMMessageThread() {
   const dispatch = useAppDispatch();
@@ -29,7 +30,6 @@ export default function DMMessageThread() {
   const [messageContent, setMessageContent] = useState('');
   const [sending, setSending] = useState(false);
   const [replyToMessage, setReplyToMessage] = useState<DirectMessage | null>(null);
-  const [attachments, setAttachments] = useState<Omit<Attachment, 'id' | 'created_at'>[]>([]);
   const [uploading, setUploading] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [filePreviews, setFilePreviews] = useState<{ file: File; preview: string }[]>([]);
@@ -146,43 +146,10 @@ export default function DMMessageThread() {
     });
   };
 
-  // Handle file upload
-  const handleUploadFiles = async () => {
-    if (selectedFiles.length === 0 || !currentConversation) return;
-
-    setUploading(true);
-    try {
-      // TODO: Create DM-specific file upload endpoint
-      // For now, create attachment objects from files
-      const uploadedAttachments = selectedFiles.map(file => ({
-        url: URL.createObjectURL(file),
-        filename: file.name,
-        size: file.size,
-        mime_type: file.type
-      }));
-      
-      setAttachments((prev) => [...prev, ...uploadedAttachments]);
-      setSelectedFiles([]);
-      setFilePreviews([]);
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
-      }
-    } catch (error) {
-      console.error('Failed to upload files:', error);
-    } finally {
-      setUploading(false);
-    }
-  };
-
-  // Remove file before upload
+  // Remove file before sending
   const handleRemoveFile = (index: number) => {
     setSelectedFiles((prev) => prev.filter((_, i) => i !== index));
     setFilePreviews((prev) => prev.filter((_, i) => i !== index));
-  };
-
-  // Remove uploaded attachment
-  const handleRemoveAttachment = (index: number) => {
-    setAttachments((prev) => prev.filter((_, i) => i !== index));
   };
 
   // Handle emoji selection
@@ -227,71 +194,87 @@ export default function DMMessageThread() {
 
   // Handle send message
   const handleSendMessage = async () => {
-    if ((!messageContent.trim() && attachments.length === 0) || !currentConversation || sending) return;
+    if ((!messageContent.trim() && selectedFiles.length === 0) || !currentConversation || !user) return;
 
-    const content = messageContent.trim();
+    const content = messageContent.trim() || '';
     const tempId = `temp-${Date.now()}-${Math.random()}`;
 
-    // Create optimistic message
-    const optimisticMessage: DirectMessage = {
-      id: tempId,
-      sender_id: user!.id,
-      receiver_id: currentConversation.user.id,
-      content: content,
-      reply_to_id: replyToMessage?.id || null,
-      is_read: false,
-      read_at: null,
-      is_edited: false,
-      edited_at: null,
-      is_deleted: false,
-      deleted_at: null,
-      created_at: new Date().toISOString(),
-      attachments: attachments.map(att => ({
-        ...att,
-        id: `temp-${Date.now()}`,
-        created_at: new Date().toISOString(),
-      })),
-      reactions: [],
-      sender_email: user!.email,
-      sender_full_name: user!.full_name || null,
-      receiver_email: currentConversation.user.email,
-      receiver_full_name: currentConversation.user.full_name || null,
-      _optimistic: true,
-      _pending: true,
-      _failed: false,
-      _tempId: tempId,
-    };
-
-    // Add optimistic message immediately and clear input
-    dispatch(addOptimisticMessage(optimisticMessage));
-    setMessageContent('');
-    setReplyToMessage(null);
-    setAttachments([]);
-    textareaRef.current?.focus();
-
-    // Stop typing indicator
-    if (socketService.isConnected()) {
-      socketService.sendDMTyping(currentConversation.user.id, false);
-    }
-
-    // Send to server in background
     setSending(true);
+
     try {
+      // Upload files first if any (using topic upload endpoint with generic ID)
+      let uploadedAttachments: Omit<Attachment, 'id' | 'created_at'>[] = [];
+      if (selectedFiles.length > 0) {
+        setUploading(true);
+        // Use a generic topic ID for file uploads (files are stored independently)
+        uploadedAttachments = await uploadFilesToTopic('dm-uploads', selectedFiles);
+        setUploading(false);
+      }
+
+      // Create optimistic message
+      const optimisticMessage: DirectMessage = {
+        id: tempId,
+        sender_id: user.id,
+        receiver_id: currentConversation.user.id,
+        content: content,
+        reply_to_id: replyToMessage?.id || null,
+        is_read: false,
+        read_at: null,
+        is_edited: false,
+        edited_at: null,
+        is_deleted: false,
+        deleted_at: null,
+        created_at: new Date().toISOString(),
+        attachments: uploadedAttachments.map(att => ({
+          ...att,
+          id: `temp-${Date.now()}`,
+          created_at: new Date().toISOString(),
+        })),
+        reactions: [],
+        sender_email: user.email,
+        sender_full_name: user.full_name || null,
+        receiver_email: currentConversation.user.email,
+        receiver_full_name: currentConversation.user.full_name || null,
+        _optimistic: true,
+        _pending: true,
+        _failed: false,
+        _tempId: tempId,
+      };
+
+      // Add optimistic message immediately and clear input
+      dispatch(addOptimisticMessage(optimisticMessage));
+      setMessageContent('');
+      setReplyToMessage(null);
+      setSelectedFiles([]);
+      setFilePreviews([]);
+      setSending(false);
+      textareaRef.current?.focus();
+
+      // Stop typing indicator
+      if (socketService.isConnected()) {
+        socketService.sendDMTyping(currentConversation.user.id, false);
+      }
+
+      // Send to server in background
       const result = await dispatch(sendDM({
         receiver_id: currentConversation.user.id,
         content: content,
         reply_to_id: replyToMessage?.id,
-        attachments: attachments.length > 0 ? attachments : undefined,
+        attachments: uploadedAttachments.length > 0 ? uploadedAttachments.map(att => ({
+          ...att,
+          id: `temp-${Date.now()}`,
+          created_at: new Date().toISOString(),
+        })) : undefined,
       })).unwrap();
 
       // Replace optimistic message with real message from server
       dispatch(updateOptimisticMessage({ tempId, message: result }));
     } catch (error) {
       console.error('Failed to send message:', error);
+      setSending(false);
+      setUploading(false);
       // Mark message as failed
       dispatch(markMessageAsFailed(tempId));
-    } finally {
-      setSending(false);
     }
   };
 
@@ -340,9 +323,11 @@ export default function DMMessageThread() {
           <div className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white font-semibold text-sm">
             {(currentConversation.user.full_name || currentConversation.user.email)[0].toUpperCase()}
           </div>
-          {currentConversation.user.is_online && (
-            <div className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 border-2 border-white rounded-full"></div>
-          )}
+          <OnlineIndicator
+            isOnline={!!currentConversation.user.is_online}
+            size="sm"
+            className="absolute bottom-0.5 right-0.5 shadow-sm"
+          />
         </div>
         
         {/* Name and Status */}
@@ -369,7 +354,12 @@ export default function DMMessageThread() {
       <div className="flex-1 overflow-y-auto px-5 py-4 custom-scrollbar">
         {messagesLoading && messages.length === 0 ? (
           <div className="flex items-center justify-center h-full">
-            <Loader2 className="w-6 h-6 animate-spin text-gray-400" />
+            <div className="relative p-5 rounded-3xl border-2 border-white bg-white/30 backdrop-blur-md shadow-lg">
+              <div className="relative w-10 h-10">
+                <div className="absolute inset-0 rounded-full border-[4px] border-gray-200"></div>
+                <div className="absolute inset-0 rounded-full border-[4px] border-transparent border-t-blue-500 border-l-blue-400 animate-spin"></div>
+              </div>
+            </div>
           </div>
         ) : messages.length === 0 ? (
           <div className="flex items-center justify-center h-full text-gray-600">
@@ -446,33 +436,6 @@ export default function DMMessageThread() {
               );
             })}
           </div>
-          <button
-            onClick={handleUploadFiles}
-            disabled={uploading}
-            className="mt-2 px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 disabled:opacity-50"
-          >
-            {uploading ? 'Uploading...' : 'Upload Files'}
-          </button>
-        </div>
-      )}
-
-      {/* Uploaded Attachments */}
-      {attachments.length > 0 && (
-        <div className="px-4 py-2 bg-blue-50 border-t border-blue-200">
-          <p className="text-xs text-blue-700 mb-2">Attachments:</p>
-          <div className="flex flex-wrap gap-2">
-            {attachments.map((attachment, index) => (
-              <div key={index} className="flex items-center gap-2 bg-white px-2 py-1 rounded border border-blue-300">
-                <span className="text-xs text-gray-700 truncate max-w-32">{attachment.filename}</span>
-                <button
-                  onClick={() => handleRemoveAttachment(index)}
-                  className="p-0.5 hover:bg-gray-200 rounded"
-                >
-                  <X className="w-3 h-3 text-gray-500" />
-                </button>
-              </div>
-            ))}
-          </div>
         </div>
       )}
 
@@ -536,7 +499,7 @@ export default function DMMessageThread() {
           <button
             type="button"
             onClick={handleSendMessage}
-            disabled={(!messageContent.trim() && attachments.length === 0) || sending}
+            disabled={(!messageContent.trim() && selectedFiles.length === 0) || sending || uploading}
             className="flex-shrink-0 w-8 h-8 bg-gray-400 text-white rounded-full flex items-center justify-center hover:bg-gray-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             {sending ? (

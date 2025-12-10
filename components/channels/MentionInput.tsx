@@ -84,10 +84,8 @@ export function MentionInput({
   // Filter users and AI agents based on mention search
   const filteredUsers = users.filter((user) => {
     const searchLower = mentionSearch.toLowerCase();
-    return (
-      user.email.toLowerCase().includes(searchLower) ||
-      user.full_name?.toLowerCase().includes(searchLower)
-    );
+    const fallbackName = user.full_name || user.email;
+    return fallbackName.toLowerCase().includes(searchLower);
   }).slice(0, 5); // Limit to 5 results
 
   const filteredAgents = aiAgents.filter((agent) => {
@@ -326,9 +324,6 @@ export function MentionInput({
                     <div className="text-sm font-medium truncate">
                       {user.full_name || user.email}
                     </div>
-                    {user.full_name && (
-                      <div className="text-xs opacity-70 truncate">{user.email}</div>
-                    )}
                   </div>
                 </button>
               );

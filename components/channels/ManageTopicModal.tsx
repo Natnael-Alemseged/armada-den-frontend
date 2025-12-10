@@ -271,17 +271,17 @@ export function ManageTopicModal({ topic, onClose }: ManageTopicModalProps) {
           </div>
 
           {/* Content */}
-          <div className="flex-1 overflow-y-auto p-8 bg-white custom-scrollbar">
+          <div className="flex-1 overflow-y-auto p-6 bg-white custom-scrollbar">
             {activeTab === 'general' ? (
-              <div className="max-w-2xl space-y-8">
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900">Topic Information</h3>
-                  <p className="text-gray-500 text-sm mt-1">Update your topic's public details.</p>
+              <div className="max-w-2xl space-y-4">
+                <div className="flex flex-col gap-1">
+                  <h3 className="text-base font-semibold text-gray-900">Topic Information</h3>
+                  <p className="text-gray-500 text-xs">Update your topic's public details.</p>
                 </div>
 
-                <form onSubmit={handleUpdate} className="space-y-6">
+                <form onSubmit={handleUpdate} className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-1.5">
                       Topic Name
                     </label>
                     <input
@@ -294,19 +294,19 @@ export function ManageTopicModal({ topic, onClose }: ManageTopicModalProps) {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-gray-700 mb-1.5">
                       Description
                     </label>
                     <textarea
                       value={description}
                       onChange={(e) => setDescription(e.target.value)}
-                      className="w-full px-4 py-1 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all resize-none"
+                      className="w-full px-4 py-2 bg-white border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all resize-none"
                       placeholder="What this topic is about?"
-                      rows={4}
+                      rows={3}
                     />
                   </div>
 
-                  <div className="flex justify-end">
+                  <div className="flex justify-end pt-1">
                     <button
                       type="submit"
                       disabled={loading || !name.trim()}
@@ -317,32 +317,32 @@ export function ManageTopicModal({ topic, onClose }: ManageTopicModalProps) {
                   </div>
                 </form>
 
-                <div className="pt-4 border-t border-gray-100">
-                  <div className="bg-red-50 rounded-2xl p-6 border border-red-100">
-                    <div className="flex items-start gap-4">
-                      <div className="p-2 bg-red-100 rounded-lg">
-                        <Trash2 className="w-6 h-6 text-red-600" />
+                <div className="pt-3 border-t border-gray-100">
+                  <div className="bg-red-50 rounded-2xl p-4 border border-red-100">
+                    <div className="flex items-start gap-3">
+                      <div className="p-2 bg-red-100 rounded-xl">
+                        <Trash2 className="w-5 h-5 text-red-600" />
                       </div>
                       <div className="flex-1">
-                        <h3 className="text-lg font-semibold text-red-900">Delete Topic</h3>
-                        <p className="text-red-700 text-sm mt-1 font-medium">
+                        <h3 className="text-base font-semibold text-red-900">Delete Topic</h3>
+                        <p className="text-red-700 text-xs mt-1 font-medium">
                           Irreversible actions for this topic.
                         </p>
-                        <p className="text-red-600 text-sm mt-4 mb-2">
-                          To delete <span className="font-bold">{topic.name}</span>, please type the topic name below.
+                        <p className="text-red-600 text-xs mt-3 mb-2">
+                          Type <span className="font-semibold">{topic.name}</span> to confirm deletion.
                         </p>
-                        <div className="flex gap-3">
+                        <div className="flex gap-3 flex-wrap">
                           <input
                             type="text"
                             value={deleteConfirmation}
                             onChange={(e) => setDeleteConfirmation(e.target.value)}
                             placeholder={topic.name}
-                            className="flex-1 px-4 py-2 bg-white border border-red-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-500/10 transition-all"
+                            className="flex-1 min-w-[180px] px-4 py-2 bg-white border border-red-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:border-red-500 focus:ring-4 focus:ring-red-500/10 transition-all"
                           />
                           <button
                             onClick={handleDelete}
                             disabled={loading || deleteConfirmation !== topic.name}
-                            className="px-6 py-2 bg-red-500 text-white rounded-xl font-medium hover:bg-red-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-red-500/20 whitespace-nowrap"
+                            className="px-5 py-2 bg-red-500 text-white rounded-xl font-medium hover:bg-red-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-red-500/20 whitespace-nowrap"
                           >
                             {loading ? 'Deleting...' : 'Delete Topic'}
                           </button>
@@ -353,10 +353,10 @@ export function ManageTopicModal({ topic, onClose }: ManageTopicModalProps) {
                 </div>
               </div>
             ) : (
-              <div className="space-y-6">
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900">Manage members</h3>
-                  <p className="text-gray-500 text-sm mt-1">Add or remove people from the topic.</p>
+              <div className="space-y-4">
+                <div className="flex flex-col gap-1">
+                  <h3 className="text-base font-semibold text-gray-900">Manage members</h3>
+                  <p className="text-gray-500 text-xs">Add or remove people from the topic.</p>
                 </div>
 
                 <div className="relative">
@@ -370,7 +370,9 @@ export function ManageTopicModal({ topic, onClose }: ManageTopicModalProps) {
                   />
                 </div>
 
-                <div className="grid grid-cols-2 gap-8">
+                <div className="grid grid-cols-2 gap-6">
+             
+
                   {/* Current Members */}
                   <div className="space-y-4">
                     <div className="flex items-center gap-3">
@@ -378,8 +380,8 @@ export function ManageTopicModal({ topic, onClose }: ManageTopicModalProps) {
                         <Users className="w-5 h-5" />
                       </div>
                       <div>
-                        <h4 className="font-semibold text-gray-900">Current Members ({currentMembers.length})</h4>
-                        <p className="text-xs text-gray-500">This are added members</p>
+                        <h4 className="font-semibold text-gray-900 text-sm">Current Members ({currentMembers.length})</h4>
+                        <p className="text-[11px] text-gray-500">Already part of this topic</p>
                       </div>
                     </div>
 

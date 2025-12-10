@@ -62,10 +62,8 @@ export function InlineMentionInput({
 
   const filteredUsers = mentionableUsers.filter((user) => {
     const searchLower = mentionSearch.toLowerCase();
-    return (
-      user.email.toLowerCase().includes(searchLower) ||
-      user.full_name?.toLowerCase().includes(searchLower)
-    );
+    const fallbackName = user.full_name || user.email;
+    return fallbackName.toLowerCase().includes(searchLower);
   }).slice(0, 10);
 
   type MentionOption = { type: 'agent'; agent: AIAgent } | { type: 'user'; user: User };
@@ -314,9 +312,6 @@ export function InlineMentionInput({
                     <div className="text-sm font-medium truncate">
                       {user.full_name || user.email}
                     </div>
-                    {user.full_name && (
-                      <div className="text-xs opacity-70 truncate">{user.email}</div>
-                    )}
                   </div>
                 </button>
               );

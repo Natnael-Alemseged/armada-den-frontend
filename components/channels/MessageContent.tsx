@@ -10,22 +10,22 @@ interface MessageContentProps {
 
 export function MessageContent({ content, className = '' }: MessageContentProps) {
     return (
-        <div className={`markdown-content break-words overflow-hidden ${className}`}>
+        <div className={`markdown-content break-words overflow-hidden [overflow-wrap:anywhere] max-w-full ${className}`}>
             <ReactMarkdown
                 remarkPlugins={[remarkGfm]}
                 components={{
                     // Paragraphs
-                    p: ({ children }) => <p className="mb-1 last:mb-0 leading-relaxed break-words">{children}</p>,
+                    p: ({ children }) => <p className="mb-1 last:mb-0 leading-relaxed break-words [overflow-wrap:anywhere]">{children}</p>,
 
                     // Headings
-                    h1: ({ children }) => <h1 className="text-xl font-bold mb-2 mt-3 first:mt-0">{children}</h1>,
-                    h2: ({ children }) => <h2 className="text-lg font-bold mb-2 mt-3 first:mt-0">{children}</h2>,
-                    h3: ({ children }) => <h3 className="text-base font-bold mb-1 mt-2 first:mt-0">{children}</h3>,
+                    h1: ({ children }) => <h1 className="text-xl font-bold mb-2 mt-3 first:mt-0 break-words">{children}</h1>,
+                    h2: ({ children }) => <h2 className="text-lg font-bold mb-2 mt-3 first:mt-0 break-words">{children}</h2>,
+                    h3: ({ children }) => <h3 className="text-base font-bold mb-1 mt-2 first:mt-0 break-words">{children}</h3>,
 
                     // Lists
                     ul: ({ children }) => <ul className="list-disc pl-5 mb-2 space-y-0.5">{children}</ul>,
                     ol: ({ children }) => <ol className="list-decimal pl-5 mb-2 space-y-0.5">{children}</ol>,
-                    li: ({ children }) => <li className="pl-1">{children}</li>,
+                    li: ({ children }) => <li className="pl-1 break-words">{children}</li>,
 
                     // Links
                     a: ({ href, children }) => (
@@ -42,7 +42,7 @@ export function MessageContent({ content, className = '' }: MessageContentProps)
 
                     // Blockquotes
                     blockquote: ({ children }) => (
-                        <blockquote className="border-l-4 border-gray-300 pl-3 py-1 my-2 text-gray-600 italic bg-gray-50/50 rounded-r">
+                        <blockquote className="border-l-4 border-gray-300 pl-3 py-1 my-2 text-gray-600 italic bg-gray-50/50 rounded-r break-words">
                             {children}
                         </blockquote>
                     ),
@@ -61,11 +61,11 @@ export function MessageContent({ content, className = '' }: MessageContentProps)
                         }
 
                         return (
-                            <div className="relative my-2 rounded-md overflow-hidden bg-[#1e1e1e] text-gray-200 max-w-full">
+                            <div className="relative my-2 rounded-md overflow-hidden bg-[#1e1e1e] text-gray-200 max-w-full min-w-0">
                                 <div className="flex items-center justify-between px-3 py-1.5 bg-[#2d2d2d] text-xs text-gray-400 border-b border-gray-700">
                                     <span>{match?.[1] || 'text'}</span>
                                 </div>
-                                <pre className="p-3 overflow-x-auto text-sm font-mono custom-scrollbar max-w-full">
+                                <pre className="p-3 overflow-x-auto text-sm font-mono custom-scrollbar max-w-full whitespace-pre">
                                     <code className={className} {...props}>
                                         {children}
                                     </code>

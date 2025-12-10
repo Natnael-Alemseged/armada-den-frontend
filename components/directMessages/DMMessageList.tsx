@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { DirectMessage, DMEligibleUser, DMReaction } from '@/lib/types';
 import { formatDistanceToNow } from 'date-fns';
 import { MoreVertical, Reply, Smile, Edit2, Trash2, X, User, Loader2 } from 'lucide-react';
@@ -11,6 +11,7 @@ import {
   deleteDM,
   addDMReaction,
   removeDMReaction,
+  markDMAsRead,
 } from '@/lib/features/directMessages/directMessagesThunk';
 import {
   AlertDialog,
@@ -41,6 +42,8 @@ export function DMMessageList({ messages, currentUserId, otherUser }: DMMessageL
   const [messageToDelete, setMessageToDelete] = useState<DirectMessage | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const emojiPickerRef = useRef<HTMLDivElement>(null);
+  const messageRefs = useRef<Record<string, HTMLDivElement | null>>({});
+  const markingInFlight = useRef<Set<string>>(new Set());
 
   // Close emoji picker when clicking outside
   useEffect(() => {
@@ -53,6 +56,74 @@ export function DMMessageList({ messages, currentUserId, otherUser }: DMMessageL
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  const unreadMessageIds = useMemo(
+    () =>
+      messages
+        .filter(
+          (message) =>
+            !message.is_read &&
+            message.receiver_id === currentUserId &&
+            !message.is_deleted
+        )
+        .map((message) => message.id),
+    [messages, currentUserId]
+  );
+
+  const triggerMarkAsRead = useCallback(
+    (messageId: string) => {
+      if (markingInFlight.current.has(messageId)) {
+        return;
+      }
+
+      markingInFlight.current.add(messageId);
+      dispatch(markDMAsRead(messageId))
+        .unwrap()
+        .catch((error) => {
+          console.error('Failed to mark DM as read:', error);
+        })
+        .finally(() => {
+          markingInFlight.current.delete(messageId);
+        });
+    },
+    [dispatch]
+  );
+
+  useEffect(() => {
+    if (!unreadMessageIds.length) {
+      return;
+    }
+
+    if (typeof IntersectionObserver === 'undefined') {
+      unreadMessageIds.forEach(triggerMarkAsRead);
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            const target = entry.target as HTMLElement;
+            const messageId = target.dataset.messageId;
+            if (messageId) {
+              triggerMarkAsRead(messageId);
+              observer.unobserve(target);
+            }
+          }
+        });
+      },
+      { threshold: 0.6 }
+    );
+
+    unreadMessageIds.forEach((messageId) => {
+      const element = messageRefs.current[messageId];
+      if (element) {
+        observer.observe(element);
+      }
+    });
+
+    return () => observer.disconnect();
+  }, [unreadMessageIds, triggerMarkAsRead]);
 
   const handleStartEdit = (message: DirectMessage) => {
     setEditingMessageId(message.id);
@@ -150,23 +221,32 @@ export function DMMessageList({ messages, currentUserId, otherUser }: DMMessageL
             className={`flex gap-2 group ${isOwnMessage ? 'flex-row-reverse' : 'flex-row'}`}
             onMouseEnter={() => setHoveredMessageId(message.id)}
             onMouseLeave={() => setHoveredMessageId(null)}
+            ref={(el) => {
+              if (el) {
+                messageRefs.current[message.id] = el;
+              } else {
+                delete messageRefs.current[message.id];
+              }
+            }}
+            data-message-id={message.id}
           >
             {/* Avatar */}
-            <div className="relative flex-shrink-0">
-              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white font-semibold text-xs">
-                {isOwnMessage
-                  ? 'You'[0]
-                  : (otherUser.full_name || otherUser.email)[0].toUpperCase()}
-              </div>
-              {/* Online indicator */}
-              {!isOwnMessage && otherUser.is_online && (
-                <OnlineIndicator 
-                  isOnline={true} 
-                  size="sm"
-                  className="absolute -bottom-0.5 -right-0.5 shadow-md"
-                />
-              )}
-            </div>
+          <div className="relative flex-shrink-0 w-8 h-8">
+  <div className="w-full h-full rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white font-semibold text-xs">
+    {isOwnMessage
+      ? 'You'[0]
+      : (otherUser.full_name || otherUser.email)[0].toUpperCase()}
+  </div>
+
+  {!isOwnMessage && otherUser.is_online && (
+    <OnlineIndicator 
+      isOnline={true}
+      size="sm"
+      className="absolute bottom-0 right-0 shadow-md"
+    />
+  )}
+</div>
+
 
             {/* Message Content */}
             <div className={`flex flex-col w-full max-w-[85%] sm:max-w-[75%] md:max-w-[70%] lg:max-w-[65%] xl:max-w-[60%] ${isOwnMessage ? 'items-end' : 'items-start'}`}>

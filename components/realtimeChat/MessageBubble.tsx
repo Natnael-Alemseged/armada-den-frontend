@@ -19,6 +19,8 @@ import {
   AlertCircle,
   RefreshCw,
 } from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { cn } from '@/lib/utils';
 import {
   AlertDialog,
@@ -276,7 +278,102 @@ export function MessageBubble({ message, isOwn, onReply, onRetry }: MessageBubbl
             </div>
           </div>
         ) : (
-          <p className="whitespace-pre-wrap break-words">{message.content}</p>
+          <div className="prose prose-sm max-w-full break-words overflow-hidden">
+            <ReactMarkdown
+              remarkPlugins={[remarkGfm]}
+              components={{
+                p: ({ children }) => (
+                  <p className="mb-1 last:mb-0 whitespace-pre-wrap break-words overflow-wrap-anywhere">
+                    {children}
+                  </p>
+                ),
+                a: ({ href, children }) => (
+                  <a
+                    href={href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={cn(
+                      'underline break-all',
+                      isOwn ? 'text-blue-100 hover:text-white' : 'text-blue-600 hover:text-blue-800'
+                    )}
+                  >
+                    {children}
+                  </a>
+                ),
+                code: ({ className, children, ...props }: any) => {
+                  const match = /language-(\w+)/.exec(className || '');
+                  const isInline = !match;
+
+                  if (isInline) {
+                    return (
+                      <code
+                        className={cn(
+                          'px-1.5 py-0.5 rounded text-sm font-mono break-all',
+                          isOwn ? 'bg-blue-600/50' : 'bg-gray-200'
+                        )}
+                        {...props}
+                      >
+                        {children}
+                      </code>
+                    );
+                  }
+
+                  return (
+                    <div className="my-2 rounded-lg overflow-hidden max-w-full">
+                      <div className="bg-gray-800 text-gray-300 px-3 py-1 text-xs">
+                        {match?.[1] || 'code'}
+                      </div>
+                      <pre className="bg-gray-900 text-gray-100 p-3 overflow-x-auto text-sm max-w-full">
+                        <code className={className} {...props}>
+                          {children}
+                        </code>
+                      </pre>
+                    </div>
+                  );
+                },
+                pre: ({ children }) => <div className="max-w-full overflow-x-auto">{children}</div>,
+                ul: ({ children }) => <ul className="list-disc pl-5 mb-1 space-y-0.5">{children}</ul>,
+                ol: ({ children }) => <ol className="list-decimal pl-5 mb-1 space-y-0.5">{children}</ol>,
+                li: ({ children }) => <li className="break-words">{children}</li>,
+                blockquote: ({ children }) => (
+                  <blockquote className={cn(
+                    'border-l-4 pl-3 py-1 my-2 italic',
+                    isOwn ? 'border-blue-300' : 'border-gray-400'
+                  )}>
+                    {children}
+                  </blockquote>
+                ),
+                h1: ({ children }) => <h1 className="text-lg font-bold mb-1 mt-2 first:mt-0 break-words">{children}</h1>,
+                h2: ({ children }) => <h2 className="text-base font-bold mb-1 mt-2 first:mt-0 break-words">{children}</h2>,
+                h3: ({ children }) => <h3 className="text-sm font-bold mb-1 mt-1 first:mt-0 break-words">{children}</h3>,
+                table: ({ children }) => (
+                  <div className="overflow-x-auto my-2 max-w-full">
+                    <table className="min-w-full border-collapse border border-gray-300">
+                      {children}
+                    </table>
+                  </div>
+                ),
+                th: ({ children }) => (
+                  <th className={cn(
+                    'border px-2 py-1 text-left text-xs font-semibold',
+                    isOwn ? 'border-blue-300 bg-blue-600/30' : 'border-gray-300 bg-gray-100'
+                  )}>
+                    {children}
+                  </th>
+                ),
+                td: ({ children }) => (
+                  <td className={cn(
+                    'border px-2 py-1 text-xs',
+                    isOwn ? 'border-blue-300' : 'border-gray-300'
+                  )}>
+                    {children}
+                  </td>
+                ),
+              }}
+            >
+              {message.content}
+            </ReactMarkdown>
+          </div>
         )}
 
         {/* Message Footer */}

@@ -118,6 +118,7 @@ export const ENDPOINTS = {
     DM_CONVERSATIONS: '/direct-messages/conversations',
     DM_MESSAGES_WITH_USER: (userId: string) => `/direct-messages/with/${userId}`,
     DM_ELIGIBLE_USERS: '/direct-messages/users',
+    DM_UPLOAD: (userId: string) => `/direct-messages/upload/${userId}`,
     DM_EDIT: (messageId: string) => `/direct-messages/${messageId}`,
     DM_DELETE: (messageId: string) => `/direct-messages/${messageId}`,
     DM_MARK_READ: (messageId: string) => `/direct-messages/${messageId}/read`,

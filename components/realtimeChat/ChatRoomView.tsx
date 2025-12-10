@@ -314,7 +314,8 @@ export function ChatRoomView() {
             onChange={handleInputChange}
             placeholder="Type a message..."
             disabled={sendingMessage}
-            className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50"
+            className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50 resize-none"
+            style={{ minHeight: '40px', maxHeight: '120px' }}
           />
 
           <button

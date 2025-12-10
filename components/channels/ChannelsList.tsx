@@ -2,12 +2,12 @@
 
 import React, {useState, useRef, useEffect} from 'react';
 import {Channel, UserWithChatInfo} from '@/lib/types';
-import {Plus, LogOut, ChevronDown, Settings, Bell, BellOff, Bot, MessageCircle} from 'lucide-react';
+import {Plus, LogOut, ChevronDown, Settings, Bot, MessageCircle, Check, Loader2} from 'lucide-react';
 import {useAppDispatch, useAppSelector} from '@/lib/hooks';
 import {logoutUser} from '@/lib/slices/authThunk';
-import {notificationService} from '@/lib/services/notificationService';
 import {fetchAgents} from '@/lib/slices/agentsSlice';
 import {fetchDirectMessages} from '@/lib/slices/directMessagesSlice';
+import {notificationService} from '@/lib/services/notificationService';
 
 interface ChannelsListProps {
     channels: Channel[];
@@ -44,7 +44,12 @@ export function ChannelsList({
     const [isTogglingNotification, setIsTogglingNotification] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
 
-    // Check notification status on mount
+    // Fetch agents and direct messages on mount
+    useEffect(() => {
+        dispatch(fetchAgents());
+        dispatch(fetchDirectMessages());
+    }, [dispatch]);
+
     useEffect(() => {
         const checkNotificationStatus = async () => {
             const isSubscribed = await notificationService.isSubscribed();
@@ -52,12 +57,6 @@ export function ChannelsList({
         };
         checkNotificationStatus();
     }, []);
-
-    // Fetch agents and direct messages on mount
-    useEffect(() => {
-        dispatch(fetchAgents());
-        dispatch(fetchDirectMessages());
-    }, [dispatch]);
 
     const handleLogout = () => {
         dispatch(logoutUser());
@@ -68,20 +67,17 @@ export function ChannelsList({
 
         setIsTogglingNotification(true);
         try {
-            // Import thunks dynamically
             const {
                 subscribeToNotifications,
                 unsubscribeFromNotifications
             } = await import('@/lib/features/notifications/notificationSlice');
 
             if (isNotificationEnabled) {
-                // Unsubscribe
                 const resultAction = await dispatch(unsubscribeFromNotifications());
                 if (unsubscribeFromNotifications.fulfilled.match(resultAction)) {
                     setIsNotificationEnabled(false);
                 }
             } else {
-                // Subscribe
                 const resultAction = await dispatch(subscribeToNotifications());
                 if (subscribeToNotifications.fulfilled.match(resultAction)) {
                     setIsNotificationEnabled(true);
@@ -129,60 +125,76 @@ export function ChannelsList({
 
     return (
         <div
-            className={`bg-[#F2F2F7] flex flex-col transition-all duration-300 ease-in-out ${isExpanded ? 'w-64' : 'w-14.5'
+            className={`bg-[#e8e8eb] flex flex-col transition-all duration-300 ease-in-out ${isExpanded ? 'w-64' : 'w-14'
             }`}
             onMouseEnter={() => setIsExpanded(true)}
             onMouseLeave={() => setIsExpanded(false)}
         >
             {/* User Info / Workspace Header */}
-            <div className="px-3 pt-4 pb-3 flex items-center gap-3 relative">
+            <div className={`${isExpanded ? 'px-2' : 'px-1.5'} pt-3 pb-2`} ref={dropdownRef}>
                 <div
-                    className="w-10 h-10 rounded-lg bg-black flex items-center justify-center flex-shrink-0">
-                    <span className="text-sm font-bold text-white">A</span>
-                </div>
-                <div
-                    className={`flex-1 min-w-0 overflow-hidden transition-all duration-300 ${isExpanded ? 'opacity-100 w-auto' : 'opacity-0 w-0'
-                    }`}
+                    className={`rounded-2xl border transition-all ${showDropdown ? 'bg-white border-gray-200 shadow-xl' : 'border-transparent'}`}
                 >
-                    <div className="flex items-center justify-between gap-2">
-                        <div className="flex-1 min-w-0">
-                            <div className="text-sm font-semibold text-gray-900 truncate">
-                                Armada Dan
-                            </div>
+                    <button
+                        type="button"
+                        onClick={() => setShowDropdown((prev) => !prev)}
+                        className={`w-full flex items-center rounded-2xl transition-all ${
+                            isExpanded ? 'gap-3 px-2.5 py-2.5' : 'gap-0 justify-center px-1.5 py-1.5'
+                        }`}
+                    >
+                        <div className="w-8 h-8 rounded-lg bg-black flex items-center justify-center flex-shrink-0">
+                            <span className="text-[15px] font-bold text-white">A</span>
+                        </div>
+                        <div
+                            className={`flex-1 min-w-0 overflow-hidden transition-all duration-300 text-left ${isExpanded ? 'opacity-100 w-auto' : 'opacity-0 w-0'
+                            }`}
+                        >
+                            <div className="text-sm font-semibold text-gray-900 truncate">Armada Dan</div>
                             <div className="text-xs text-gray-500 truncate">Workspace</div>
                         </div>
-                        <button
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                setShowDropdown(!showDropdown);
-                            }}
-                            className="p-1 hover:bg-gray-200 rounded transition-colors flex-shrink-0"
-                        >
-                            <ChevronDown className="w-4 h-4 text-gray-600"/>
-                        </button>
-                    </div>
-                </div>
+                        <ChevronDown
+                            className={`w-4 h-4 text-gray-600 transition-transform ${showDropdown ? 'rotate-180' : ''}`}
+                        />
+                    </button>
 
-                {/* Dropdown Menu */}
-                {showDropdown && isExpanded && (
-                    <div
-                        ref={dropdownRef}
-                        className="
-      absolute top-full left-0 right-0 mt-1
-      bg-white rounded-xl shadow-xl border border-gray-200
-      py-2 z-50 mx-3
-      animate-in slide-in-from-top-2 duration-200
-    "
-                    >
-                        {/* Profile Section */}
-                        <div className="px-4 pb-3">
-                            <div className="text-xs font-semibold text-gray-400 uppercase mb-2">
-                                Profile
+                    {showDropdown && isExpanded && (
+                        <div className="px-2.5 pb-3 space-y-3 border-t border-gray-100">
+                            <div className="space-y-2">
+                                <div className="text-xs font-semibold text-gray-400 uppercase tracking-wide">
+                                    Notifications
+                                </div>
+                                <div className="rounded-xl border border-gray-100 bg-white/90 px-3 py-2 flex items-center justify-between gap-3">
+                                    <div className="min-w-0">
+                                        <p className="text-sm font-medium text-gray-900">Push notifications</p>
+                                        <p className="text-xs text-gray-500 truncate">Stay updated from Armada Den</p>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        {isTogglingNotification && (
+                                            <Loader2 className="w-4 h-4 text-gray-400 animate-spin"/>
+                                        )}
+                                        <button
+                                            onClick={handleToggleNotifications}
+                                            disabled={isTogglingNotification}
+                                            className={`relative inline-flex h-6 w-11 items-center rounded-full transition ${
+                                                isNotificationEnabled ? 'bg-[#1A73E8]' : 'bg-gray-300'
+                                            } ${isTogglingNotification ? 'opacity-60 cursor-not-allowed' : 'hover:opacity-90'}`}
+                                            aria-pressed={isNotificationEnabled}
+                                        >
+                                            <span className="sr-only">Toggle notifications</span>
+                                            <span
+                                                className={`block h-5 w-5 rounded-full bg-white shadow-sm transform transition ${
+                                                    isNotificationEnabled ? 'translate-x-5' : 'translate-x-1'
+                                                }`}
+                                            />
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
 
-                            <div className="flex items-center gap-3 mb-3">
+                            <div className="flex items-center gap-2 rounded-xl border border-white px-2 py-2">
                                 <div
-                                    className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center">
+                                    className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center"
+                                >
                                     <span className="text-sm font-semibold text-white">{getUserInitials()}</span>
                                 </div>
 
@@ -195,51 +207,35 @@ export function ChannelsList({
                                     </div>
                                 </div>
                             </div>
+
+                            <div className="grid gap-1.5">
+                                {/* Settings */}
+                                <button
+                                    onClick={() => {
+                                        setShowDropdown(false);
+                                        onOpenSettings?.();
+                                    }}
+                                    className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                                >
+                                    <Settings className="w-4 h-4"/>
+                                    Settings
+                                </button>
+
+                                {/* Logout */}
+                                <button
+                                    onClick={() => {
+                                        setShowDropdown(false);
+                                        handleLogout();
+                                    }}
+                                    className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-sm text-red-600 hover:bg-red-50 transition-colors"
+                                >
+                                    <LogOut className="w-4 h-4"/>
+                                    Log out
+                                </button>
+                            </div>
                         </div>
-
-                        <div className="border-t my-2"/>
-
-                        {/* Notification Toggle */}
-                        <button
-                            onClick={handleToggleNotifications}
-                            disabled={isTogglingNotification}
-                            className={`
-        w-full flex items-center gap-3 px-4 py-2 text-sm
-        transition-colors
-        ${isNotificationEnabled ? 'text-green-600 hover:bg-green-50' : 'text-gray-700 hover:bg-gray-100'}
-        ${isTogglingNotification ? 'opacity-50 cursor-not-allowed' : ''}
-      `}
-                        >
-                            {isNotificationEnabled ? <Bell className="w-4 h-4"/> : <BellOff className="w-4 h-4"/>}
-                            {isNotificationEnabled ? "Notifications On" : "Enable Notifications"}
-                        </button>
-
-                        {/* Settings */}
-                        <button
-                            onClick={() => {
-                                setShowDropdown(false);
-                                onOpenSettings?.();
-                            }}
-                            className="w-full flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
-                        >
-                            <Settings className="w-4 h-4"/>
-                            Settings
-                        </button>
-
-                        {/* Logout */}
-                        <button
-                            onClick={() => {
-                                setShowDropdown(false);
-                                handleLogout();
-                            }}
-                            className="w-full flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-red-50 hover:text-red-600 transition-colors"
-                        >
-                            <LogOut className="w-4 h-4"/>
-                            Log out
-                        </button>
-                    </div>
-                )}
-
+                    )}
+                </div>
             </div>
 
             {/* Agents Section */}
@@ -272,13 +268,13 @@ export function ChannelsList({
                     onClick={onDirectMessagesClick}
                     className={`w-full flex items-center gap-3 px-2 py-2 rounded-md text-sm font-medium transition-colors
       ${directMessagesActive
-                        ? "bg-[#1A73E8] text-white"
+                        ? "bg-white text-[#1A73E8]"
                         : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
                     }`}
                     title="Direct Messages"
                 >
                     <MessageCircle
-                        className={`w-6 h-6 flex-shrink-0 ${directMessagesActive ? "text-white" : "text-gray-700"}`}
+                        className={`w-6 h-6 flex-shrink-0 ${directMessagesActive ? "text-[#1A73E8]" : "text-gray-700"}`}
                     />
 
                     <span
@@ -293,8 +289,8 @@ export function ChannelsList({
                     {directMessageUsers.reduce((sum: number, u: UserWithChatInfo) => sum + u.unread_count, 0) > 0 && (
                         <span
                             className={`
-          ml-auto text-white text-xs font-semibold px-2 py-0.5 rounded-full 
-          ${directMessagesActive ? "bg-white/20" : "bg-blue-600"}
+          ml-auto text-xs font-semibold px-2 py-0.5 rounded-full 
+          ${directMessagesActive ? "bg-[#E3EEFF] text-[#1A73E8]" : "bg-blue-600 text-white"}
           ${isExpanded ? "opacity-100" : "opacity-0"}
         `}
                         >
@@ -320,39 +316,48 @@ export function ChannelsList({
 
             {/* Channels */}
             <div className="flex-1 flex flex-col gap-1 px-2 overflow-y-auto">
-                {channels.map((channel) => (
-                    <button
-                        key={channel.id}
-                        onClick={() => onChannelSelect(channel)}
-                        className={`w-full flex items-center gap-3 px-2 py-2 rounded-md text-sm font-medium transition-colors ${selectedChannelId === channel.id
-                            ? 'bg-[#1A73E8] text-white'
-                            : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
-                        }`}
-                        title={channel.name}
-                    >
-                        {channel.name.includes('HireArmada') ? (
-                            <span
-                                className="w-6 h-6 rounded bg-black flex items-center justify-center flex-shrink-0 overflow-hidden p-0.5">
-                <img
-                    src="/logo_black.png"
-                    alt="HireArmada"
-                    className="w-full h-full object-contain invert"
-                />
-              </span>
-                        ) : (
-                            <span
-                                className="w-6 h-6 rounded bg-black flex items-center justify-center text-xs font-bold text-white flex-shrink-0">
-                {channel.name.charAt(0).toUpperCase()}
-              </span>
-                        )}
-                        <span
-                            className={`truncate transition-all duration-300 ${isExpanded ? 'opacity-100 w-auto' : 'opacity-0 w-0'
+                {channels.map((channel) => {
+                    const isSelected = selectedChannelId === channel.id;
+                    const iconBaseClasses =
+                        'w-6 h-6 rounded flex items-center justify-center flex-shrink-0';
+                    const iconColorClasses = isSelected
+                        ? 'bg-[#E3EEFF] text-[#1A73E8]'
+                        : 'bg-black text-white';
+
+                    return (
+                        <button
+                            key={channel.id}
+                            onClick={() => onChannelSelect(channel)}
+                            className={`w-full flex items-center gap-3 px-2 py-2 rounded-md text-sm font-medium transition-colors ${isSelected
+                                ? 'bg-white text-[#1A73E8]'
+                                : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
                             }`}
+                            title={channel.name}
                         >
-              {channel.name}
-            </span>
-                    </button>
-                ))}
+                            {channel.name.includes('HireArmada') ? (
+                                <span
+                                    className={`${iconBaseClasses} ${iconColorClasses} overflow-hidden p-0.5`}>
+                  <img
+                      src="/logo_black.png"
+                      alt="HireArmada"
+                      className={`w-full h-full object-contain ${isSelected ? '' : 'invert'}`}
+                  />
+                </span>
+                            ) : (
+                                <span
+                                    className={`${iconBaseClasses} ${iconColorClasses} text-xs font-bold`}>
+                  {channel.name.charAt(0).toUpperCase()}
+                </span>
+                            )}
+                            <span
+                                className={`truncate transition-all duration-300 ${isExpanded ? 'opacity-100 w-auto' : 'opacity-0 w-0'
+                                }`}
+                            >
+                {channel.name}
+              </span>
+                        </button>
+                    );
+                })}
 
                 {/* Add Channel Button */}
                 {isAdmin && onCreateChannel && (
