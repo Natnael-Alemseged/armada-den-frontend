@@ -43,6 +43,60 @@ export default function DMMessageThread() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const prevMessageCountRef = useRef(messages.length);
 
+  const handleRetryMessage = async (tempId: string, message: DirectMessage) => {
+    if (!currentConversation || !user) return;
+
+    dispatch(removeOptimisticMessage(tempId));
+
+    const newTempId = `temp-${Date.now()}-${Math.random()}`;
+    const optimisticMessage: DirectMessage = {
+      id: newTempId,
+      sender_id: user.id,
+      receiver_id: currentConversation.user.id,
+      content: message.content,
+      reply_to_id: message.reply_to_id || null,
+      is_read: false,
+      read_at: null,
+      is_edited: false,
+      edited_at: null,
+      is_deleted: false,
+      deleted_at: null,
+      created_at: new Date().toISOString(),
+      attachments: message.attachments || [],
+      reactions: [],
+      sender_email: user.email,
+      sender_full_name: user.full_name || null,
+      receiver_email: currentConversation.user.email,
+      receiver_full_name: currentConversation.user.full_name || null,
+      _optimistic: true,
+      _pending: true,
+      _failed: false,
+      _tempId: newTempId,
+    };
+
+    dispatch(addOptimisticMessage(optimisticMessage));
+
+    try {
+      const result = await dispatch(
+        sendDM({
+          receiver_id: currentConversation.user.id,
+          content: message.content,
+          reply_to_id: message.reply_to_id || undefined,
+          attachments: message.attachments && message.attachments.length > 0 ? message.attachments : undefined,
+        })
+      ).unwrap();
+
+      dispatch(updateOptimisticMessage({ tempId: newTempId, message: result }));
+    } catch (error) {
+      console.error('Failed to retry message:', error);
+      dispatch(markMessageAsFailed(newTempId));
+    }
+  };
+
+  const handleCancelMessage = (tempId: string) => {
+    dispatch(removeOptimisticMessage(tempId));
+  };
+
   // Fetch messages when conversation changes
   useEffect(() => {
     if (currentConversation) {
@@ -373,6 +427,12 @@ export default function DMMessageThread() {
             messages={messages}
             currentUserId={user?.id || ''}
             otherUser={currentConversation.user}
+            onReply={(message: DirectMessage) => {
+              setReplyToMessage(message);
+              textareaRef.current?.focus();
+            }}
+            onRetryMessage={handleRetryMessage}
+            onCancelMessage={handleCancelMessage}
           />
         )}
         <div ref={messagesEndRef} />

@@ -43,6 +43,7 @@ export function TopicView({ topic }: TopicViewProps) {
   const [aiTyping, setAiTyping] = useState(false);
   const [aiTypingName, setAiTypingName] = useState('AI');
   const [showManageModal, setShowManageModal] = useState(false);
+  const [replyToMessage, setReplyToMessage] = useState<OptimisticMessage | null>(null);
   const [attachments, setAttachments] = useState<Omit<Attachment, 'id' | 'created_at'>[]>([]);
   const [uploading, setUploading] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
@@ -239,7 +240,7 @@ export function TopicView({ topic }: TopicViewProps) {
         topic_id: topic.id,
         sender_id: user.id,
         content: content,
-        reply_to_id: null,
+        reply_to_id: replyToMessage?.id || null,
         is_edited: false,
         edited_at: null,
         is_deleted: false,
@@ -264,16 +265,20 @@ export function TopicView({ topic }: TopicViewProps) {
       // Add optimistic message immediately
       dispatch(addOptimisticMessage(optimisticMessage));
       setMessageContent('');
+      setReplyToMessage(null);
       setSelectedFiles([]);
       setFilePreviews([]);
       setAttachments([]);
       setSending(false);
+
+      textareaRef.current?.focus();
 
       // Send to server in background
       const result = await dispatch(
         createTopicMessage({
           topic_id: topic.id,
           content: content,
+          reply_to_id: replyToMessage?.id,
           attachments: uploadedAttachments.length > 0 ? uploadedAttachments.map(att => ({
             ...att,
             id: `temp-${Date.now()}`,
@@ -471,6 +476,10 @@ export function TopicView({ topic }: TopicViewProps) {
             currentUserId={user?.id || ''}
             onRetryMessage={handleRetryMessage}
             onCancelMessage={handleCancelMessage}
+            onReply={(message: OptimisticMessage) => {
+              setReplyToMessage(message);
+              textareaRef.current?.focus();
+            }}
           />
         )}
 
@@ -496,6 +505,24 @@ export function TopicView({ topic }: TopicViewProps) {
 
       {/* Message Input */}
       <div className="border-t border-gray-200 px-5 py-3">
+        {/* Reply Preview */}
+        {replyToMessage && (
+          <div className="mb-2 flex items-center justify-between bg-gray-50 border border-gray-200 rounded-lg px-3 py-2">
+            <div className="flex-1 min-w-0">
+              <p className="text-xs text-gray-500">Replying to:</p>
+              <p className="text-sm text-gray-700 truncate">{replyToMessage.content || 'Message'}</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setReplyToMessage(null)}
+              className="p-1 hover:bg-gray-200 rounded"
+              title="Cancel reply"
+            >
+              <X className="w-4 h-4 text-gray-500" />
+            </button>
+          </div>
+        )}
+
         {/* File Previews - Compact Thumbnails */}
         {filePreviews.length > 0 && (
           <div className="mb-2 flex flex-wrap gap-2">

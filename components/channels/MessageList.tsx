@@ -1,10 +1,10 @@
 'use client';
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { TopicMessage, GroupedReaction } from '@/lib/types';
 import { OptimisticMessage } from '@/lib/features/channels/channelsSlice';
 import { formatDistanceToNow } from 'date-fns';
-import { MoreVertical, Reply, Smile, Edit2, Trash2, AlertCircle, RefreshCw, X, Clock } from 'lucide-react';
+import { MoreVertical, Reply, Smile, Edit2, Trash2, AlertCircle, RefreshCw, X, Clock, ArrowUpRight } from 'lucide-react';
 import { useAppDispatch } from '@/lib/hooks';
 import { useOnlineStatus } from '@/lib/hooks/useOnlineStatus';
 import EmojiPicker, { EmojiClickData } from 'emoji-picker-react';
@@ -35,9 +35,10 @@ interface MessageListProps {
   currentUserId: string;
   onRetryMessage?: (tempId: string, content: string) => void;
   onCancelMessage?: (tempId: string) => void;
+  onReply?: (message: OptimisticMessage) => void;
 }
 
-export function MessageList({ messages, currentUserId, onRetryMessage, onCancelMessage }: MessageListProps) {
+export function MessageList({ messages, currentUserId, onRetryMessage, onCancelMessage, onReply }: MessageListProps) {
   const dispatch = useAppDispatch();
   const { isUserOnline } = useOnlineStatus();
   const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
@@ -46,7 +47,26 @@ export function MessageList({ messages, currentUserId, onRetryMessage, onCancelM
   const [showEmojiPicker, setShowEmojiPicker] = useState<string | null>(null);
   const [messageToDelete, setMessageToDelete] = useState<TopicMessage | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [highlightedMessageId, setHighlightedMessageId] = useState<string | null>(null);
   const emojiPickerRef = useRef<HTMLDivElement>(null);
+  const messageRefs = useRef<Record<string, HTMLDivElement | null>>({});
+
+  const messageById = useMemo(() => {
+    const map = new Map<string, OptimisticMessage>();
+    messages.forEach((m) => map.set(m.id, m));
+    return map;
+  }, [messages]);
+
+  const scrollToMessage = useCallback((messageId: string) => {
+    const el = messageRefs.current[messageId];
+    if (!el) return;
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    setHighlightedMessageId(messageId);
+    window.setTimeout(
+      () => setHighlightedMessageId((prev) => (prev === messageId ? null : prev)),
+      1200
+    );
+  }, []);
 
   const handleEdit = (message: TopicMessage) => {
     setEditingMessageId(message.id);
@@ -185,6 +205,8 @@ export function MessageList({ messages, currentUserId, onRetryMessage, onCancelM
         const isOwnMessage = message.sender_id === currentUserId;
         const isEditing = editingMessageId === message.id;
         const isHovered = hoveredMessageId === message.id;
+        const replyMessage = message.reply_to_id ? messageById.get(message.reply_to_id) : undefined;
+        const isHighlighted = highlightedMessageId === message.id;
 
         if (message.is_deleted) {
           return (
@@ -204,9 +226,16 @@ export function MessageList({ messages, currentUserId, onRetryMessage, onCancelM
         return (
           <div
             key={message.id}
-            className={`flex gap-2 group ${isOwnMessage ? 'flex-row-reverse' : 'flex-row'} ${isFailed ? 'opacity-60' : ''}`}
+            className={`flex gap-2 group ${isOwnMessage ? 'flex-row-reverse' : 'flex-row'} ${isFailed ? 'opacity-60' : ''} ${isHighlighted ? 'ring-2 ring-yellow-300 ring-offset-2 rounded-xl p-1' : ''}`}
             onMouseEnter={() => setHoveredMessageId(message.id)}
             onMouseLeave={() => setHoveredMessageId(null)}
+            ref={(el) => {
+              if (el) {
+                messageRefs.current[message.id] = el;
+              } else {
+                delete messageRefs.current[message.id];
+              }
+            }}
           >
             {/* Avatar */}
             <div className="relative flex-shrink-0">
@@ -289,6 +318,44 @@ export function MessageList({ messages, currentUserId, onRetryMessage, onCancelM
                       ? isFailed ? 'bg-red-500/20 border border-red-500/50' : 'bg-[#007aff]'
                       : 'bg-gray-100'
                       }`}>
+                      {message.reply_to_id && (
+                        <div className={`px-3 py-2 border-l-2 ${isOwnMessage ? 'border-white/60 bg-white/15' : 'border-gray-400 bg-white/60'}`}>
+                          <div className="flex items-start gap-2">
+                            <div className="flex-1 min-w-0">
+                              <div className={`text-[11px] font-medium ${isOwnMessage ? 'text-white/90' : 'text-gray-700'}`}>
+                                Replying to{' '}
+                                {replyMessage
+                                  ? replyMessage.sender_id === currentUserId
+                                    ? 'You'
+                                    : (replyMessage.sender_full_name || replyMessage.sender_email || 'User')
+                                  : 'message'}
+                              </div>
+                              <div className={`text-[11px] ${isOwnMessage ? 'text-white/80' : 'text-gray-600'} truncate`}>
+                                {replyMessage
+                                  ? replyMessage.content
+                                    ? replyMessage.content
+                                    : replyMessage.attachments && replyMessage.attachments.length > 0
+                                      ? 'Attachment'
+                                      : 'Message'
+                                  : 'Original message not found'}
+                              </div>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (message.reply_to_id) {
+                                  scrollToMessage(message.reply_to_id);
+                                }
+                              }}
+                              disabled={!message.reply_to_id}
+                              className={`p-1 rounded transition-colors ${isOwnMessage ? 'hover:bg-white/20' : 'hover:bg-black/5'} disabled:opacity-40`}
+                              title="Jump to message"
+                            >
+                              <ArrowUpRight className={`w-3.5 h-3.5 ${isOwnMessage ? 'text-white/90' : 'text-gray-600'}`} />
+                            </button>
+                          </div>
+                        </div>
+                      )}
                       {/* Message Attachments at the top */}
                       {message.attachments && message.attachments.length > 0 && (
                         <div className="w-full">
@@ -405,6 +472,16 @@ export function MessageList({ messages, currentUserId, onRetryMessage, onCancelM
                             </div>
                           )}
                         </div>
+                        <button
+                          onClick={() => {
+                            onReply?.(message);
+                            setShowEmojiPicker(null);
+                          }}
+                          className="p-1.5 hover:bg-gray-100 rounded transition-colors"
+                          title="Reply"
+                        >
+                          <Reply className="w-3.5 h-3.5 text-gray-400" />
+                        </button>
                         {isOwnMessage && (
                           <>
                             <button

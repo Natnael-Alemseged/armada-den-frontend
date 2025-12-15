@@ -3,7 +3,7 @@
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { DirectMessage, DMEligibleUser, DMReaction } from '@/lib/types';
 import { formatDistanceToNow } from 'date-fns';
-import { MoreVertical, Reply, Smile, Edit2, Trash2, X, User, Loader2 } from 'lucide-react';
+import { MoreVertical, Reply, Smile, Edit2, Trash2, X, User, Loader2, ArrowUpRight, RefreshCw } from 'lucide-react';
 import { useAppDispatch } from '@/lib/hooks';
 import EmojiPicker, { EmojiClickData } from 'emoji-picker-react';
 import {
@@ -31,9 +31,12 @@ interface DMMessageListProps {
   messages: DirectMessage[];
   currentUserId: string;
   otherUser: DMEligibleUser;
+  onReply?: (message: DirectMessage) => void;
+  onRetryMessage?: (tempId: string, message: DirectMessage) => void;
+  onCancelMessage?: (tempId: string) => void;
 }
 
-export function DMMessageList({ messages, currentUserId, otherUser }: DMMessageListProps) {
+export function DMMessageList({ messages, currentUserId, otherUser, onReply, onRetryMessage, onCancelMessage }: DMMessageListProps) {
   const dispatch = useAppDispatch();
   const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
   const [editContent, setEditContent] = useState('');
@@ -41,6 +44,7 @@ export function DMMessageList({ messages, currentUserId, otherUser }: DMMessageL
   const [showEmojiPicker, setShowEmojiPicker] = useState<string | null>(null);
   const [messageToDelete, setMessageToDelete] = useState<DirectMessage | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [highlightedMessageId, setHighlightedMessageId] = useState<string | null>(null);
   const emojiPickerRef = useRef<HTMLDivElement>(null);
   const messageRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const markingInFlight = useRef<Set<string>>(new Set());
@@ -196,13 +200,33 @@ export function DMMessageList({ messages, currentUserId, otherUser }: DMMessageL
 
   const commonEmojis = ['👍', '❤️', '😊', '😂', '🎉', '🔥', '👏', '✅'];
 
+  const messageById = useMemo(() => {
+    const map = new Map<string, DirectMessage>();
+    messages.forEach((m) => map.set(m.id, m));
+    return map;
+  }, [messages]);
+
+  const scrollToMessage = useCallback((messageId: string) => {
+    const el = messageRefs.current[messageId];
+    if (!el) return;
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    setHighlightedMessageId(messageId);
+    window.setTimeout(
+      () => setHighlightedMessageId((prev) => (prev === messageId ? null : prev)),
+      1200
+    );
+  }, []);
+
   return (
     <div className="space-y-3 px-4">
       {messages.map((message) => {
         const isOwnMessage = message.sender_id === currentUserId;
         const isEditing = editingMessageId === message.id;
         const isHovered = hoveredMessageId === message.id;
-        const userReaction = getExistingReaction(message);
+        const replyMessage = message.reply_to_id ? messageById.get(message.reply_to_id) : undefined;
+        const isHighlighted = highlightedMessageId === message.id;
+        const isPending = !!message._pending;
+        const isFailed = !!message._failed;
 
         if (message.is_deleted) {
           return (
@@ -218,7 +242,7 @@ export function DMMessageList({ messages, currentUserId, otherUser }: DMMessageL
         return (
           <div
             key={message.id}
-            className={`flex gap-2 group ${isOwnMessage ? 'flex-row-reverse' : 'flex-row'}`}
+            className={`flex gap-2 group ${isOwnMessage ? 'flex-row-reverse' : 'flex-row'} ${isHighlighted ? 'ring-2 ring-yellow-300 ring-offset-2 rounded-xl p-1' : ''}`}
             onMouseEnter={() => setHoveredMessageId(message.id)}
             onMouseLeave={() => setHoveredMessageId(null)}
             ref={(el) => {
@@ -231,25 +255,24 @@ export function DMMessageList({ messages, currentUserId, otherUser }: DMMessageL
             data-message-id={message.id}
           >
             {/* Avatar */}
-          <div className="relative flex-shrink-0 w-8 h-8">
-  <div className="w-full h-full rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white font-semibold text-xs">
-    {isOwnMessage
-      ? 'You'[0]
-      : (otherUser.full_name || otherUser.email)[0].toUpperCase()}
-  </div>
+            <div className="relative flex-shrink-0 w-8 h-8">
+              <div className="w-full h-full rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white font-semibold text-xs">
+                {isOwnMessage
+                  ? 'You'[0]
+                  : (otherUser.full_name || otherUser.email)[0].toUpperCase()}
+              </div>
 
-  {!isOwnMessage && otherUser.is_online && (
-    <OnlineIndicator 
-      isOnline={true}
-      size="sm"
-      className="absolute bottom-0 right-0 shadow-md"
-    />
-  )}
-</div>
-
+              {!isOwnMessage && otherUser.is_online && (
+                <OnlineIndicator
+                  isOnline={true}
+                  size="sm"
+                  className="absolute bottom-0 right-0 shadow-md"
+                />
+              )}
+            </div>
 
             {/* Message Content */}
-            <div className={`flex flex-col w-full max-w-[85%] sm:max-w-[75%] md:max-w-[70%] lg:max-w-[65%] xl:max-w-[60%] ${isOwnMessage ? 'items-end' : 'items-start'}`}>
+            <div className={`flex flex-col min-w-0 w-full max-w-[90%] sm:max-w-[85%] md:max-w-[80%] lg:max-w-[75%] xl:max-w-[70%] ${isOwnMessage ? 'items-end' : 'items-start'}`}>
               {/* Header */}
               <div className={`flex items-baseline gap-2 mb-1 px-1 ${isOwnMessage ? 'flex-row-reverse' : 'flex-row'}`}>
                 <span className="font-medium text-gray-900 text-xs">
@@ -276,7 +299,7 @@ export function DMMessageList({ messages, currentUserId, otherUser }: DMMessageL
               </div>
 
               {/* Message Bubble */}
-              <div className={`relative group/message ${message._failed ? 'opacity-50' : ''}`}>
+              <div className={`relative group/message max-w-full ${message._failed ? 'opacity-50' : ''}`}>
                 {isEditing ? (
                   <div className="space-y-2 min-w-[300px]">
                     <textarea
@@ -311,16 +334,53 @@ export function DMMessageList({ messages, currentUserId, otherUser }: DMMessageL
                   <>
                     {/* WhatsApp-style card: attachments and content together */}
                     <div className={`rounded-2xl overflow-hidden max-w-full ${isOwnMessage ? 'bg-[#007aff]' : 'bg-gray-100'}`}>
+                      {message.reply_to_id && (
+                        <div className={`px-3 py-2 border-l-2 ${isOwnMessage ? 'border-white/60 bg-white/15' : 'border-gray-400 bg-white/60'}`}>
+                          <div className="flex items-start gap-2">
+                            <div className="flex-1 min-w-0">
+                              <div className={`text-[11px] font-medium ${isOwnMessage ? 'text-white/90' : 'text-gray-700'}`}>
+                                Replying to{' '}
+                                {replyMessage
+                                  ? replyMessage.sender_id === currentUserId
+                                    ? 'You'
+                                    : (otherUser.full_name || otherUser.email)
+                                  : 'message'}
+                              </div>
+                              <div className={`text-[11px] ${isOwnMessage ? 'text-white/80' : 'text-gray-600'} truncate`}>
+                                {replyMessage
+                                  ? replyMessage.content
+                                    ? replyMessage.content
+                                    : replyMessage.attachments && replyMessage.attachments.length > 0
+                                      ? 'Attachment'
+                                      : 'Message'
+                                  : 'Original message not found'}
+                              </div>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (message.reply_to_id) {
+                                  scrollToMessage(message.reply_to_id);
+                                }
+                              }}
+                              disabled={!message.reply_to_id}
+                              className={`p-1 rounded transition-colors ${isOwnMessage ? 'hover:bg-white/20' : 'hover:bg-black/5'} disabled:opacity-40`}
+                              title="Jump to message"
+                            >
+                              <ArrowUpRight className={`w-3.5 h-3.5 ${isOwnMessage ? 'text-white/90' : 'text-gray-600'}`} />
+                            </button>
+                          </div>
+                        </div>
+                      )}
                       {/* Message Attachments at the top */}
                       {message.attachments && message.attachments.length > 0 && (
                         <div className="w-full">
-                          <MessageAttachments 
+                          <MessageAttachments
                             attachments={message.attachments as any}
                             isOwnMessage={isOwnMessage}
                           />
                         </div>
                       )}
-                      
                       {/* Message Content below attachments */}
                       {message.content && (
                         <div className="px-3 py-2">
@@ -331,6 +391,25 @@ export function DMMessageList({ messages, currentUserId, otherUser }: DMMessageL
                         </div>
                       )}
                     </div>
+
+                    {isFailed && isOwnMessage && onRetryMessage && onCancelMessage && message._tempId && (
+                      <div className="flex items-center gap-2 mt-2">
+                        <button
+                          onClick={() => onRetryMessage(message._tempId!, message)}
+                          className="flex items-center gap-1 px-2 py-1 bg-[#1A73E8] text-white text-xs rounded-md hover:bg-[#1557B0] transition-colors"
+                        >
+                          <RefreshCw className="w-3 h-3" />
+                          Retry
+                        </button>
+                        <button
+                          onClick={() => onCancelMessage(message._tempId!)}
+                          className="flex items-center gap-1 px-2 py-1 bg-gray-200 text-gray-700 text-xs rounded-md hover:bg-gray-300 transition-colors"
+                        >
+                          <X className="w-3 h-3" />
+                          Cancel
+                        </button>
+                      </div>
+                    )}
 
                     {/* Reactions */}
                     {message.reactions && message.reactions.length > 0 && (
@@ -357,7 +436,7 @@ export function DMMessageList({ messages, currentUserId, otherUser }: DMMessageL
                     )}
 
                     {/* Action Buttons */}
-                    {!isEditing && isHovered && (
+                    {!isEditing && isHovered && !isFailed && !isPending && (
                       <div className={`absolute top-0 flex gap-0.5 bg-white border border-gray-200 rounded-lg shadow-lg p-0.5 opacity-0 group-hover/message:opacity-100 transition-opacity ${
                         isOwnMessage ? 'right-full mr-2' : 'left-full ml-2'
                       }`}>
@@ -380,6 +459,16 @@ export function DMMessageList({ messages, currentUserId, otherUser }: DMMessageL
                             </div>
                           )}
                         </div>
+                        <button
+                          onClick={() => {
+                            onReply?.(message);
+                            setShowEmojiPicker(null);
+                          }}
+                          className="p-1.5 hover:bg-gray-100 rounded transition-colors"
+                          title="Reply"
+                        >
+                          <Reply className="w-3.5 h-3.5 text-gray-400" />
+                        </button>
                         {isOwnMessage && (
                           <>
                             <button
