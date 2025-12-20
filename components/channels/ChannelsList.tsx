@@ -246,7 +246,7 @@ export function ChannelsList({
             </div>
 
             {/* Agents Section */}
-            {/* <div className="px-2 pt-2">
+             <div className="px-2 pt-2">
                 <button
                     onClick={onAgentsClick}
                     className={`w-full flex items-center gap-3 px-2 py-2 rounded-md text-sm font-medium transition-colors
@@ -267,7 +267,7 @@ export function ChannelsList({
       Agents
     </span>
                 </button>
-            </div> */}
+            </div>
 
             {/* Direct Messages Section */}
             <div className="px-2 py-2">
