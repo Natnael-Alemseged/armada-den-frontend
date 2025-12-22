@@ -1,13 +1,14 @@
 'use client';
 
-import React, {useState, useRef, useEffect} from 'react';
-import {Channel, UserWithChatInfo} from '@/lib/types';
-import {Plus, LogOut, ChevronDown, Settings, Bot, MessageCircle, Check, Loader2} from 'lucide-react';
-import {useAppDispatch, useAppSelector} from '@/lib/hooks';
-import {logoutUser} from '@/lib/slices/authThunk';
-import {fetchAgents} from '@/lib/slices/agentsSlice';
-import {fetchDirectMessages} from '@/lib/slices/directMessagesSlice';
-import {notificationService} from '@/lib/services/notificationService';
+import React, { useState, useRef, useEffect } from 'react';
+import { Channel, UserWithChatInfo } from '@/lib/types';
+import { Plus, LogOut, ChevronDown, Settings, Bot, MessageCircle, Check, Loader2 } from 'lucide-react';
+import { useAppDispatch, useAppSelector } from '@/lib/hooks';
+import { logoutUser } from '@/lib/slices/authThunk';
+import { fetchAgents } from '@/lib/slices/agentsSlice';
+import { fetchDirectMessages } from '@/lib/slices/directMessagesSlice';
+import { notificationService } from '@/lib/services/notificationService';
+import { ProfileUpdateModal } from './ProfileUpdateModal';
 
 interface ChannelsListProps {
     channels: Channel[];
@@ -24,24 +25,25 @@ interface ChannelsListProps {
 }
 
 export function ChannelsList({
-                                 channels,
-                                 selectedChannelId,
-                                 onChannelSelect,
-                                 onCreateChannel,
-                                 isAdmin,
-                                 onOpenSettings,
-                                 onDirectMessagesClick,
-                                 onAgentsClick,
-                                 agentsActive = false,
-                                 directMessagesActive = false,
-        adminViewActive = false,
-                             }: ChannelsListProps) {
+    channels,
+    selectedChannelId,
+    onChannelSelect,
+    onCreateChannel,
+    isAdmin,
+    onOpenSettings,
+    onDirectMessagesClick,
+    onAgentsClick,
+    agentsActive = false,
+    directMessagesActive = false,
+    adminViewActive = false,
+}: ChannelsListProps) {
     const dispatch = useAppDispatch();
-    const {user, token} = useAppSelector((state) => state.auth);
-    const {agents} = useAppSelector((state) => state.agents);
-    const {users: directMessageUsers} = useAppSelector((state) => state.directMessages);
+    const { user, token } = useAppSelector((state) => state.auth);
+    const { agents } = useAppSelector((state) => state.agents);
+    const { users: directMessageUsers } = useAppSelector((state) => state.directMessages);
     const [isExpanded, setIsExpanded] = useState(false);
     const [showDropdown, setShowDropdown] = useState(false);
+    const [showProfileModal, setShowProfileModal] = useState(false);
     const [isNotificationEnabled, setIsNotificationEnabled] = useState(false);
     const [isTogglingNotification, setIsTogglingNotification] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
@@ -119,11 +121,10 @@ export function ChannelsList({
         };
     }, [showDropdown]);
 
-    const getNavButtonClasses = (active: boolean) => `w-full flex items-center gap-3 px-2 py-2 rounded-md text-sm font-medium transition-colors ${
-        active
-            ? 'bg-[#1A73E8] text-white'
-            : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
-    }`;
+    const getNavButtonClasses = (active: boolean) => `w-full flex items-center gap-3 px-2 py-2 rounded-md text-sm font-medium transition-colors ${active
+        ? 'bg-[#1A73E8] text-white'
+        : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
+        }`;
 
     const effectiveDirectMessagesActive = directMessagesActive && !adminViewActive;
     const effectiveAgentsActive = agentsActive && !adminViewActive;
@@ -131,7 +132,7 @@ export function ChannelsList({
     return (
         <div
             className={`bg-[#e8e8eb] flex flex-col transition-all duration-300 ease-in-out ${isExpanded ? 'w-64' : 'w-14'
-            }`}
+                }`}
             onMouseEnter={() => setIsExpanded(true)}
             onMouseLeave={() => setIsExpanded(false)}
         >
@@ -144,7 +145,7 @@ export function ChannelsList({
                         type="button"
                         onClick={() => setShowDropdown((prev) => !prev)}
                         className={`w-full flex items-center rounded-2xl transition-all ${isExpanded ? 'gap-3 px-2.5 py-2.5' : 'gap-0 justify-center px-1.5 py-1.5'
-                        } ${adminViewActive ? 'text-[#1A73E8]' : ''}`}
+                            } ${adminViewActive ? 'text-[#1A73E8]' : ''}`}
                     >
                         <div className="w-8 h-8 rounded-lg bg-black flex items-center justify-center flex-shrink-0 relative">
                             <span className="text-[15px] font-bold text-white">A</span>
@@ -154,7 +155,7 @@ export function ChannelsList({
                         </div>
                         <div
                             className={`flex-1 min-w-0 overflow-hidden transition-all duration-300 text-left ${isExpanded ? 'opacity-100 w-auto' : 'opacity-0 w-0'
-                            }`}
+                                }`}
                         >
                             <div className="text-sm font-semibold text-gray-900 truncate">Armada Dan</div>
                             <div className="text-xs text-gray-500 truncate">Workspace</div>
@@ -177,35 +178,39 @@ export function ChannelsList({
                                     </div>
                                     <div className="flex items-center gap-2">
                                         {isTogglingNotification && (
-                                            <Loader2 className="w-4 h-4 text-gray-400 animate-spin"/>
+                                            <Loader2 className="w-4 h-4 text-gray-400 animate-spin" />
                                         )}
                                         <button
                                             onClick={handleToggleNotifications}
                                             disabled={isTogglingNotification}
-                                            className={`relative inline-flex h-6 w-11 items-center rounded-full transition ${
-                                                isNotificationEnabled ? 'bg-[#1A73E8]' : 'bg-gray-300'
-                                            } ${isTogglingNotification ? 'opacity-60 cursor-not-allowed' : 'hover:opacity-90'}`}
+                                            className={`relative inline-flex h-6 w-11 items-center rounded-full transition ${isNotificationEnabled ? 'bg-[#1A73E8]' : 'bg-gray-300'
+                                                } ${isTogglingNotification ? 'opacity-60 cursor-not-allowed' : 'hover:opacity-90'}`}
                                             aria-pressed={isNotificationEnabled}
                                         >
                                             <span className="sr-only">Toggle notifications</span>
                                             <span
-                                                className={`block h-5 w-5 rounded-full bg-white shadow-sm transform transition ${
-                                                    isNotificationEnabled ? 'translate-x-5' : 'translate-x-1'
-                                                }`}
+                                                className={`block h-5 w-5 rounded-full bg-white shadow-sm transform transition ${isNotificationEnabled ? 'translate-x-5' : 'translate-x-1'
+                                                    }`}
                                             />
                                         </button>
                                     </div>
                                 </div>
                             </div>
 
-                            <div className="flex items-center gap-2 rounded-xl border border-white px-2 py-2">
+                            <button
+                                onClick={() => {
+                                    setShowDropdown(false);
+                                    setShowProfileModal(true);
+                                }}
+                                className="w-full flex items-center gap-2 rounded-xl border border-white px-2 py-2 hover:bg-gray-50 transition-colors text-left"
+                            >
                                 <div
-                                    className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center"
+                                    className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center flex-shrink-0"
                                 >
                                     <span className="text-sm font-semibold text-white">{getUserInitials()}</span>
                                 </div>
 
-                                <div className="flex-1">
+                                <div className="flex-1 min-w-0">
                                     <div className="text-sm font-semibold text-gray-900 truncate">
                                         {user?.full_name || 'User'}
                                     </div>
@@ -213,7 +218,7 @@ export function ChannelsList({
                                         {user?.email}
                                     </div>
                                 </div>
-                            </div>
+                            </button>
 
                             <div className="grid gap-1.5">
                                 {/* Settings */}
@@ -224,7 +229,7 @@ export function ChannelsList({
                                     }}
                                     className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-sm text-gray-700 hover:bg-gray-100 transition-colors"
                                 >
-                                    <Settings className="w-4 h-4"/>
+                                    <Settings className="w-4 h-4" />
                                     Settings
                                 </button>
 
@@ -236,7 +241,7 @@ export function ChannelsList({
                                     }}
                                     className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-sm text-red-600 hover:bg-red-50 transition-colors"
                                 >
-                                    <LogOut className="w-4 h-4"/>
+                                    <LogOut className="w-4 h-4" />
                                     Log out
                                 </button>
                             </div>
@@ -246,14 +251,14 @@ export function ChannelsList({
             </div>
 
             {/* Agents Section */}
-             <div className="px-2 pt-2">
+            <div className="px-2 pt-2">
                 <button
                     onClick={onAgentsClick}
                     className={`w-full flex items-center gap-3 px-2 py-2 rounded-md text-sm font-medium transition-colors
       ${agentsActive
-                        ? "bg-[#1A73E8] text-white"
-                        : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
-                    }`}
+                            ? "bg-[#1A73E8] text-white"
+                            : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
+                        }`}
                     title="Agents"
                 >
                     <Bot
@@ -264,8 +269,8 @@ export function ChannelsList({
         ${isExpanded ? "opacity-100 w-auto" : "opacity-0 w-0"}
       `}
                     >
-      Agents
-    </span>
+                        Agents
+                    </span>
                 </button>
             </div>
 
@@ -275,9 +280,9 @@ export function ChannelsList({
                     onClick={onDirectMessagesClick}
                     className={`w-full flex items-center gap-3 px-2 py-2 rounded-md text-sm font-medium transition-colors
       ${effectiveDirectMessagesActive
-                        ? "bg-white text-[#1A73E8]"
-                        : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
-                    }`}
+                            ? "bg-white text-[#1A73E8]"
+                            : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
+                        }`}
                     title="Direct Messages"
                 >
                     <MessageCircle
@@ -289,8 +294,8 @@ export function ChannelsList({
         ${isExpanded ? "opacity-100 w-auto" : "opacity-0 w-0"}
       `}
                     >
-      Direct Messages
-    </span>
+                        Direct Messages
+                    </span>
 
                     {/* Unread badge */}
                     {directMessageUsers.reduce((sum: number, u: UserWithChatInfo) => sum + u.unread_count, 0) > 0 && (
@@ -301,8 +306,8 @@ export function ChannelsList({
           ${isExpanded ? "opacity-100" : "opacity-0"}
         `}
                         >
-        {directMessageUsers.reduce((sum: number, u: UserWithChatInfo) => sum + u.unread_count, 0)}
-      </span>
+                            {directMessageUsers.reduce((sum: number, u: UserWithChatInfo) => sum + u.unread_count, 0)}
+                        </span>
                     )}
                 </button>
             </div>
@@ -310,7 +315,7 @@ export function ChannelsList({
             {/* Channels Header */}
             <div
                 className={`px-3 py-2 overflow-hidden transition-all duration-300 ${isExpanded ? 'opacity-100' : 'opacity-0 h-0 py-0'
-                }`}
+                    }`}
                 style={{
                     color: '#3D3D3D',
                     fontFamily: '"General Sans Variable", system-ui, sans-serif',
@@ -338,30 +343,30 @@ export function ChannelsList({
                             className={`w-full flex items-center gap-3 px-2 py-2 rounded-md text-sm font-medium transition-colors ${isSelected
                                 ? 'bg-white text-[#1A73E8]'
                                 : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
-                            }`}
+                                }`}
                             title={channel.name}
                         >
                             {channel.name.includes('HireArmada') ? (
                                 <span
                                     className={`${iconBaseClasses} ${iconColorClasses} overflow-hidden p-0.5`}>
-                  <img
-                      src="/logo_black.png"
-                      alt="HireArmada"
-                      className={`w-full h-full object-contain ${isSelected ? '' : 'invert'}`}
-                  />
-                </span>
+                                    <img
+                                        src="/logo_black.png"
+                                        alt="HireArmada"
+                                        className={`w-full h-full object-contain ${isSelected ? '' : 'invert'}`}
+                                    />
+                                </span>
                             ) : (
                                 <span
                                     className={`${iconBaseClasses} ${iconColorClasses} text-xs font-bold`}>
-                  {channel.name.charAt(0).toUpperCase()}
-                </span>
+                                    {channel.name.charAt(0).toUpperCase()}
+                                </span>
                             )}
                             <span
                                 className={`truncate transition-all duration-300 ${isExpanded ? 'opacity-100 w-auto' : 'opacity-0 w-0'
-                                }`}
+                                    }`}
                             >
-                {channel.name}
-              </span>
+                                {channel.name}
+                            </span>
                         </button>
                     );
                 })}
@@ -373,20 +378,23 @@ export function ChannelsList({
                         className="w-full flex items-center gap-3 px-2 py-2 rounded-md text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition-colors"
                         title="Create Channel"
                     >
-            <span className="w-6 h-6 rounded bg-black flex items-center justify-center flex-shrink-0">
-              <Plus className="w-4 h-4 text-white"/>
-            </span>
+                        <span className="w-6 h-6 rounded bg-black flex items-center justify-center flex-shrink-0">
+                            <Plus className="w-4 h-4 text-white" />
+                        </span>
                         <span
                             className={`truncate transition-all duration-300 ${isExpanded ? 'opacity-100 w-auto' : 'opacity-0 w-0'
-                            }`}
+                                }`}
                         >
-              Create Channel
-            </span>
+                            Create Channel
+                        </span>
                     </button>
                 )}
             </div>
 
-
+            <ProfileUpdateModal
+                isOpen={showProfileModal}
+                onClose={() => setShowProfileModal(false)}
+            />
         </div>
     );
-} 
+}

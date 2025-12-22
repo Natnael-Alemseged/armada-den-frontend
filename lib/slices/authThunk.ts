@@ -149,3 +149,18 @@ export const handleGoogleAuthCallback = createAsyncThunk<
         }
     }
 )
+export const updateUserProfile = createAsyncThunk<
+    User,
+    { full_name?: string; password?: string },
+    { rejectValue: string }
+>(
+    'auth/updateUserProfile',
+    async (updateData, { rejectWithValue }) => {
+        try {
+            const res = await ApiService.patch(ENDPOINTS.AUTH_ME, updateData, undefined, true)
+            return res.data as User
+        } catch (err: any) {
+            return rejectWithValue(err.response?.data?.detail || 'Failed to update user profile')
+        }
+    }
+)

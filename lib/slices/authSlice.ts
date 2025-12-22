@@ -1,5 +1,5 @@
 import { createSlice } from '@reduxjs/toolkit'
-import { loginUser, registerUser, logoutUser, fetchUserProfile } from './authThunk'
+import { loginUser, registerUser, logoutUser, fetchUserProfile, updateUserProfile } from './authThunk'
 
 // Types
 export interface User {
@@ -147,6 +147,23 @@ const authSlice = createSlice({
                 state.loading = false
                 state.error = action.payload || 'Failed to fetch user profile'
                 state.user = null
+            })
+
+        // Update user profile
+        builder
+            .addCase(updateUserProfile.pending, (state) => {
+                state.loading = true
+                state.error = null
+            })
+            .addCase(updateUserProfile.fulfilled, (state, action) => {
+                state.loading = false
+                state.user = action.payload
+                state.error = null
+                state.message = 'Profile updated successfully'
+            })
+            .addCase(updateUserProfile.rejected, (state, action) => {
+                state.loading = false
+                state.error = action.payload || 'Failed to update user profile'
             })
     },
 })
