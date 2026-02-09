@@ -31,6 +31,9 @@
 # Firebase SW (generated from template with env vars - may contain keys)
 public/firebase-messaging-sw.js
 
+# git-filter-repo replacements (used for history purge only)
+.git-filter-repo-replacements
+
 # debug
 npm-debug.log*
 yarn-debug.log*
