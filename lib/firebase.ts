@@ -3,12 +3,12 @@ import { initializeApp, getApps, getApp } from "firebase/app";
 import { getMessaging, Messaging } from "firebase/messaging";
 
 const firebaseConfig = {
-    apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || "[REDACTED]",
-    authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN || "[REDACTED]",
-    projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || "[REDACTED]",
-    storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || "[REDACTED]",
-    messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || "[REDACTED]",
-    appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID || "1:[REDACTED]:web:c40568e62307f3bab4e5ff"
+    apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY ?? "",
+    authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN ?? "",
+    projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID ?? "",
+    storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET ?? "",
+    messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID ?? "",
+    appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID ?? "",
 };
 
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
@@ -24,8 +24,8 @@ if (typeof window !== "undefined") {
 }
 
 export { app, messaging };
-export const VAPID_KEY = process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY || "YOUR_FIREBASE_VAPID_KEY";
+export const VAPID_KEY = process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY ?? "";
 
-if (VAPID_KEY === "YOUR_FIREBASE_VAPID_KEY") {
-    console.warn("VAPID_KEY is not set in environment variables. Push notifications will fail.");
+if (!VAPID_KEY) {
+    console.warn("NEXT_PUBLIC_FIREBASE_VAPID_KEY is not set. Push notifications will fail.");
 }

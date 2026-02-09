@@ -42,18 +42,18 @@ NEXT_PUBLIC_FIREBASE_VAPID_KEY=your_vapid_key_here
 
 ## Step 4: Update Service Worker
 
-Edit `public/firebase-messaging-sw.js` and replace the placeholder values with your actual Firebase config:
+The service worker is generated from `public/firebase-messaging-sw.template.js` at install/build time. Set these environment variables in `.env.local` and run `pnpm install` or `pnpm build`:
 
-```javascript
-firebase.initializeApp({
-  apiKey: "YOUR_ACTUAL_API_KEY",
-  authDomain: "[REDACTED]",
-  projectId: "[REDACTED]",
-  storageBucket: "h-armada-den.appspot.com",
-  messagingSenderId: "YOUR_ACTUAL_SENDER_ID",
-  appId: "YOUR_ACTUAL_APP_ID"
-});
+```env
+NEXT_PUBLIC_FIREBASE_API_KEY=your_api_key
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=[REDACTED]
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=h-armada-den
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=h-armada-den.appspot.com
+NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
+NEXT_PUBLIC_FIREBASE_APP_ID=your_app_id
 ```
+
+**Never commit Firebase keys to the repo.** The generated `public/firebase-messaging-sw.js` is gitignored.
 
 ## Step 5: Restart Development Server
 

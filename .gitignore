@@ -24,6 +24,13 @@
 .DS_Store
 *.pem
 
+# Firebase Admin SDK (never commit - contains private keys)
+*firebase*adminsdk*.json
+*-firebase-adminsdk-*.json
+
+# Firebase SW (generated from template with env vars - may contain keys)
+public/firebase-messaging-sw.js
+
 # debug
 npm-debug.log*
 yarn-debug.log*
